@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-04-27T14:52:37.198Z",
+  "lessonReports": [
+    {
+      "file": "openstax_precalculus_composition_of_functions.json",
+      "problemCount": 3,
+      "stepCount": 6,
+      "missingBktParams": [],
+      "stepsWithoutSkillMappings": [],
+      "unsupportedAnswerTypes": []
+    },
+    {
+      "file": "openstax_precalculus_fitting_linear_models.json",
+      "problemCount": 3,
+      "stepCount": 3,
+      "missingBktParams": [],
+      "stepsWithoutSkillMappings": [],
+      "unsupportedAnswerTypes": []
+    },
+    {
+      "file": "openstax_elementary_algebra_multiply_polynomials.json",
+      "problemCount": 3,
+      "stepCount": 3,
+      "missingBktParams": [],
+      "stepsWithoutSkillMappings": [],
+      "unsupportedAnswerTypes": []
+    }
+  ],
+  "warnings": []
+}

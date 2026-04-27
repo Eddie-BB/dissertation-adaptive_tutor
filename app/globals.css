@@ -1,0 +1,276 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f7fa;
+  color: #172033;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fa;
+}
+
+.appShell {
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.topBar {
+  align-items: end;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 0 auto 24px;
+  max-width: 1440px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #516079;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h2,
+p {
+  margin: 0;
+}
+
+h2 {
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.consoleGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 1440px;
+}
+
+.sidebar,
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  padding: 16px;
+}
+
+.panelHeader {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.splitHeader select {
+  background: #ffffff;
+  border: 1px solid #b8c2d1;
+  border-radius: 6px;
+  color: #172033;
+  min-width: 120px;
+  padding: 8px 10px;
+}
+
+.lessonList,
+.optionStack,
+.contentStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lessonOption,
+.compactOption {
+  background: #ffffff;
+  border: 1px solid #d4dce8;
+  border-radius: 8px;
+  color: #172033;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+  width: 100%;
+}
+
+.lessonOption:hover,
+.compactOption:hover {
+  border-color: #8090aa;
+}
+
+.lessonOption.selected,
+.compactOption.selected {
+  background: #eef6f1;
+  border-color: #377e55;
+}
+
+.optionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.optionMeta,
+.secondaryText,
+.mutedText {
+  color: #40506a;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.metricRow,
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.metricRow span,
+.tagRow span {
+  background: #edf1f6;
+  border-radius: 999px;
+  color: #34435a;
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 6px 8px;
+}
+
+.detailPanel {
+  padding: 20px;
+}
+
+.teacherPanel {
+  border-color: #bad1c3;
+}
+
+.debugPanel {
+  border-color: #d6c799;
+}
+
+.debugPanel pre {
+  background: #1d2736;
+  border-radius: 8px;
+  color: #f4f7fb;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 460px;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+
+.fieldLabel {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.bodyText {
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.hintList {
+  color: #243149;
+  line-height: 1.45;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.hintList li + li {
+  margin-top: 8px;
+}
+
+.mathInline {
+  display: inline;
+}
+
+.mathDisplay {
+  display: inline-block;
+  margin: 0;
+  vertical-align: baseline;
+}
+
+.bodyText .katex-display,
+.secondaryText .katex-display,
+.hintList .katex-display {
+  display: inline;
+  margin: 0;
+}
+
+.bodyText .katex,
+.secondaryText .katex,
+.hintList .katex {
+  font-size: 1em;
+}
+
+.errorText {
+  color: #9f1d1d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.toggleControl {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  color: #26354d;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.toggleControl input {
+  accent-color: #377e55;
+}
+
+@media (max-width: 900px) {
+  .appShell {
+    padding: 18px;
+  }
+
+  .topBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .consoleGrid {
+    grid-template-columns: 1fr;
+  }
+}

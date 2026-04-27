@@ -1,0 +1,52 @@
+{
+  "source": "oatutor",
+  "version": "lesson_templates_v1",
+  "generatedAt": "2026-04-27T14:52:37.198Z",
+  "lessons": [
+    {
+      "file": "openstax_precalculus_composition_of_functions.json",
+      "courseId": "openstax_pre_calculus",
+      "courseName": "OpenStax: Pre-Calculus",
+      "lessonId": "openstax_pre_calculus__1_4_composition_of_functions",
+      "lessonLabel": "1.4 - Composition of Functions",
+      "problemIds": [
+        "a005bd5real1",
+        "a005bd5real2",
+        "a005bd5real3"
+      ],
+      "problemCount": 3,
+      "stepCount": 6,
+      "knowledgeComponentCount": 1
+    },
+    {
+      "file": "openstax_precalculus_fitting_linear_models.json",
+      "courseId": "openstax_pre_calculus",
+      "courseName": "OpenStax: Pre-Calculus",
+      "lessonId": "openstax_pre_calculus__2_4_fitting_linear_models_to_data",
+      "lessonLabel": "2.4 - Fitting Linear Models to Data",
+      "problemIds": [
+        "a01186breal2",
+        "a01186breal3",
+        "a01186breal4"
+      ],
+      "problemCount": 3,
+      "stepCount": 3,
+      "knowledgeComponentCount": 1
+    },
+    {
+      "file": "openstax_elementary_algebra_multiply_polynomials.json",
+      "courseId": "openstax_elementary_algebra",
+      "courseName": "OpenStax: Elementary Algebra",
+      "lessonId": "openstax_elementary_algebra__6_3_multiply_polynomials",
+      "lessonLabel": "6.3 Multiply Polynomials",
+      "problemIds": [
+        "a012999exa1",
+        "a012999exa2",
+        "a012999exa3"
+      ],
+      "problemCount": 3,
+      "stepCount": 3,
+      "knowledgeComponentCount": 1
+    }
+  ]
+}
