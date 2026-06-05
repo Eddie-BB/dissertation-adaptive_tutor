@@ -1,0 +1,488 @@
+## 1) Purpose and Scope
+This specification defines a turn-based appraisal process that evaluates each teacher message and updates the student’s internal states (monotony, reward, attention) for downstream behavioural simulation.
+
+### Objectives
+For each turn `t`, the system must:
+
+1. Appraise the **current teacher message** to compute:
+   - `M_t ∈ [0,1]` — monotony
+   - `R_t ∈ [0,1]` — reward
+
+2. Update persistent internal state:
+   - `reward_trace_t ∈ [0,1]`
+   - `kM_t ≥ 0` — turn-scaled monotony sensitivity
+   - `A_t ∈ [0,1]` — attention
+
+3. Emit:
+   - a strict behavioural handoff
+   - a hidden full appraisal log
+   - an updated persistent state object
+
+### Interpretation Constraint
+All appraisal decisions must be based only on:
+- the current teacher message
+- permitted history fields for `M1` and `M2`
+
+No other latent state may be inferred from transcript text alone.
+
+---
+
+## 2) Inputs
+
+### 2.1 External Inputs
+- `teacher_text: string`
+- `t: int` — turn index, starting at `1`
+
+### 2.2 Loaded Persistent State
+The following state must be loaded before computation:
+
+    {
+      "student_id": "...",
+      "turn_id": "...",
+      "A_prev": 0.0,
+      "reward_trace_prev": 0.0,
+      "student_profile": {},
+      "condition_id": "..."
+    }
+
+### 2.3 Student Profile Parameters
+Sampled once per student and fixed across turns:
+- `A_0` — initial attention
+- `R_0` — initial reward trace
+- `lambda` — reward trace update rate,
+- `kappa_i` — baseline monotony sensitivity
+- `kR` — reward sensitivity
+- `beta_base` — base attention decay
+
+These define stable behavioural tendencies and must be stored in the student profile.
+
+### 2.4 Global Constants
+- `s` - turn scaling rate, default `0.2`
+- `a` - sensitivity amplification factor, default `0.5`
+- `kM_max` - default `2.0`
+- `dt` - timestamp
+
+---
+
+## 3. Persistent State
+
+### 3.1 Required Rules
+- State **must** be loaded before computation.
+- State **must** be saved after computation.
+- Prior values **must not** be inferred from transcript text.
+- Missing required state → terminate the run.
+
+### 3.2 State Carried Across Turns
+The engine must persist:
+- `A_t`
+- `reward_trace_t`
+
+---
+
+## 4. Responsibility Split
+
+### 4.1 Appraisal Layer Responsibilities
+The appraisal layer may access:
+- `teacher_text`
+
+The appraisal layer must output:
+1. raw similarity / structure comparison features
+2. component scores
+3. one-line reasons for each score
+
+The appraisal layer must **not**:
+- apply temporal weighting
+- update persistent state
+- compute `reward_trace_t`
+- compute `A_t`
+
+### 4.2 Deterministic Engine Responsibilities
+The deterministic engine must:
+- clamp bounded values
+- compute aggregate scores
+- update `reward_trace_t`
+- compute `c_t`
+- compute `kM_t`
+- compute `beta_effective_t`
+- update `A_t`
+- emit the strict output objects
+
+---
+
+## 5. Scoring Rules
+
+### 5.1 General Scoring Rule
+Use anchored rubric scoring:
+- `0.0` = strong absence of target property
+- `0.5` = mixed or moderate evidence
+- `1.0` = strong presence of target property
+
+### 5.2 History Permissions
+- `M1` and `M2` may use permitted history only.
+- `M3`, `M4`, `R1`, `R2`, `R3`, `R4` must be scored from the current message only.
+
+### 5.3 Variable Definitions
+Each scored component must include:
+- `score`
+- `reason`
+
+---
+
+## 6. Computation Pipeline
+
+Execute the following steps in exact order.
+
+### Step 1. Input Ingestion
+**Inputs:** `teacher_text`, `t`, loaded persistent state, student profile, constants  
+**Outputs:** validated runtime inputs
+
+#### Executable Instructions
+- Load all required state.
+- Validate all required parameters.
+- If `t = 1`, initialise:
+  - `A_prev = A_0`
+  - `reward_trace_prev = R_0`
+
+#### Note
+This step only prepares runtime data. No scoring occurs here.
+
+---
+
+### Step 2. Component Scoring
+**Inputs:** current message, permitted history for `M1`/`M2`  
+**Outputs:** `M1`, `M2`, `M3`, `M4`, `R1`, `R2`, `R3`, `R4`
+
+#### 2.1 Monotony Components
+
+##### M1 - Task Repetition  
+Measures repetition of instructional goal or cognitive operation by comparing the current teacher message with the previous 3 teacher turns.
+
+**Interpretation principle:**  
+Repetition is defined as **re-presenting the same task demand or cognitive operation** regardless of wording. 
+
+**Observable cues:**
+- type of reasoning required
+- type of response required: (e.g. solve, explain, repeat steps)
+
+**Procedure**
+1. Retrieve up to the last 3 teacher turns.
+2. If none exist, assign `M1 = 0.2`.
+3. For each available prior turn `i`, score `sim_i` using the following anchored scale:
+   - `0.2` = clearly different task demand
+   - `0.4` = partial similarity in task framing but different demand
+   - `0.6` = similar task goal with minor variation in framing
+   - `0.8` = same task goal with minimal variation in framing
+   - `0.9` = explicit repetition or rephrasing of the same task
+4. Compute:
+
+   `n` = number of prior turns
+   `M1 = (1 / n) * Σ(sim_i)`
+
+**Required Output**
+- `M1`
+- `m1_similarity_list = [{turn_id, sim_i}]`
+- `reason`
+
+
+##### M2 - Structural Repetition  
+Measures repetition of instructional delivery format by comparing the current teacher message with the previous 3 teacher turns.
+
+**Interpretation principle**  
+Structure refers to **the format or style in which instruction is presented**, not what is being asked
+
+**Observable cues:**
+- Delivery format: (e.g. directive, stepwise, question-led)
+- Interaction pattern: (e.g. instructing, prompting, guiding, eliciting)
+- Presentation style: (e.g. example-based, dialogic, scenario-based) 
+
+**Procedure**
+1. Retrieve up to the last 3 teacher turns.
+2. If none exist, assign `M2 = 0.2`.
+3. For each available prior turn `i`, score `sim_i` using the following anchored scale:
+   - `0.2` = clear structural shift
+   - `0.4` = moderate variation
+   - `0.6` = similar structure with minor variation
+   - `0.8` = repeated structure with little change
+   - `0.9` = identical structure reused
+4. Compute:
+
+   `M2 = (1 / n) * Σ(sim_i)`
+
+**Required Output**
+- `M2`
+- `m2_similarity_list = [{turn_id, sim_i}]`
+- `reason`
+
+##### M3 - Linguistic Genericness  
+Measures the extent to which instructional language fails to provide attention-directing cues due to lack of specificity, salience, and task grounding.
+
+**Interpretation principle:**  
+Linguistic genericness lacks reference to the current task demand or steps, often open ended communication that fails to provide direction.
+
+**Scoring anchors:**
+- `0.0` = highly specific, references exact problem or student response
+- `0.3` = mostly specific with minor omission of task elements
+- `0.5` = mixed (some context, some generic scaffolding)
+- `0.7` = mostly generic procedural language
+- `1.0` = fully generic, no reference to specific task elements
+
+**Notes:**
+- This is **content grounding**, not repetition
+- Do not use history — message only
+
+**Required Output**
+- `M3`
+- `reason`
+
+##### M4 - Absence of Choice  
+Measures how constrained the student’s response options or decision space is.
+
+**Interpretation principle:**  
+Choice reflects **agency in how to proceed**, not whether the task has a correct answer.
+
+**Observable cues:**
+- Single fixed instruction (“do X now”)
+- Lack of alternative strategies or entry points
+- No invitation to explain, choose, or explore
+- Closed vs open-ended phrasing
+
+**Scoring anchors:**
+- `0.0` = multiple meaningful options or open-ended exploration
+- `0.3` = some flexibility in approach
+- `0.5` = limited choice but not fully rigid
+- `0.7` = mostly constrained path
+- `1.0` = fully rigid, single prescribed action
+
+**Notes:**
+- A question can still be rigid if only one path is implied
+- Focus on **decision space**, not surface phrasing
+
+**Required Output**
+- `M4`
+- `reason`
+
+#### 2.2 Reward Components (Current Message Only)
+
+##### R1 - Relevance / Purpose  
+Measures how clearly the message connects to a meaningful goal.
+
+**Interpretation principle:**  
+High relevance = the student understands why this step matters to them.
+
+**Observable cues:**
+- Explicit goal statements (“this helps you…”, “we’re doing this because…”)
+- Link to prior step or broader objective
+- Alignment with task progression
+
+**Scoring anchors:**
+- `0.0` = no purpose or relevance stated
+- `0.3` = weak or implicit relevance
+- `0.5` = partially clear connection
+- `0.7` = mostly clear purpose
+- `1.0` = explicit and well-integrated purpose
+
+**Required Output**
+- `R1`
+- `reason`
+
+##### R2 - Payoff / Outcome Clarity  
+Measures how clearly the student knows what to do in order to achieve a successful result.
+
+**Interpretation principle:**  
+Clarity reduces uncertainty in:
+- next action
+- expected output
+- success condition
+
+**Observable cues:**
+- explicit instruction (“calculate X”, “write Y”)
+- clear expected outcome
+- defined success criteria
+
+**Scoring anchors:**
+- `0.0` = unclear or ambiguous instruction
+- `0.3` = vague next step
+- `0.5` = partially clear but missing outcome
+- `0.7` = clear action but limited success framing
+- `1.0` = precise action and explicit success condition
+
+**Required Output**
+- `R2`
+- `reason`
+
+##### R3 - Encouragement / Safety  
+Measures whether the message supports a safe and motivating learning climate.
+
+**Interpretation principle:**  
+Encouragement reinforces students belief in their own ability and reduces the threat of failure.
+
+**Observable cues:**
+- positive reinforcement
+- reassurance after difficulty
+- neutral vs negative tone
+- absence of punitive or dismissive phrasing
+
+**Scoring anchors:**
+- `0.0` = negative, critical, or discouraging tone
+- `0.3` = slightly negative or unsupportive
+- `0.5` = neutral tone
+- `0.7` = mildly supportive
+- `1.0` = clearly encouraging and supportive
+
+**Required Output**
+- `R3`
+- `reason`
+
+##### R4 - Autonomy / Agency  
+Measures how much the student is invited to actively engage and make decisions.
+
+**Interpretation principle:**  
+Autonomy reflects perceived control over the learning process, agency is the ability to make decisions and act independently.
+
+**Observable cues:**
+- offering choices (“do you want to…”)
+- open-ended prompts (“what do you think…”)
+- invitation to explain reasoning
+- flexibility in approach
+
+**Scoring anchors:**
+- `0.0` = no autonomy (fully directive)
+- `0.3` = minimal autonomy
+- `0.5` = some limited agency
+- `0.7` = clear opportunity for input or reasoning
+- `1.0` = strong autonomy with multiple valid paths
+
+**Required Output**
+- `R4`
+- `reason`
+
+---
+
+### Step 3. Aggregate Computation
+**Inputs:** component scores  
+**Outputs:** `M_t`, `R_t`
+
+Compute raw aggregates:
+
+`M_raw = (M1 + M2 + M3 + M4) / 4`  
+`R_raw = (R1 + R2 + R3 + R4) / 4`
+
+Round to 2 significant figures:
+
+`M_t = round_dp(M_raw, 2)`  
+`R_t = round_dp(R_raw, 2)`
+
+---
+
+### Step 4. Reward Trace Update
+**Inputs:** `reward_trace_prev`, `R_t`, `lambda`  
+**Outputs:** `reward_trace_t`
+
+compute:
+
+`reward_trace_t = (1 - lambda) * reward_trace_prev + lambda * R_t`
+
+---
+
+### Step 5. Monotony Sensitivity Update
+**Inputs:** `t`, `s`, `a`, `kappa_i`, `kM_max`  
+**Outputs:** `c_t`, `kM_t`
+
+Apply the following deterministic utility rules:
+- `clamp01(x)` = `0` if `x < 0`, `x` if `0 ≤ x ≤ 1`, `1` if `x > 1`
+- `clamp_upper(x, max)` = `x` if `x ≤ max`, otherwise `max`
+
+Compute:
+
+`c_t = clamp01(s * t)`
+
+`kM_t = clamp_upper(kappa_i * (1 + a * c_t), kM_max)`
+
+---
+
+### Step 6. Attention Update
+**Inputs:** `A_prev`, `beta_base`, `kM_t`, `M_t`, `kR`, `reward_trace_t`, `dt`  
+**Outputs:** `beta_effective_t`, `A_t`
+
+`beta_effective_t = beta_base * ((1 + kM_t * M_t) / (1 + kR * reward_trace_t))`
+
+`A_t = clamp01(A_prev * exp(-beta_effective_t * dt))`
+
+---
+
+### Step 7. Output Generation
+**Inputs:** final scores and updated state  
+**Outputs:** behaviour handoff, hidden appraisal log
+
+#### 7.1 Behaviour Handoff
+
+    {
+      "student_id": "...",
+      "turn_id": "...",
+      "M_t": 0.0,
+      "R_t": 0.0,
+      "A_t": 0.0
+    }
+
+#### 7.2 Hidden Full Appraisal Log
+
+    {
+      "student_id": "...",
+      "turn_id": "...",
+      "TaskSignature": {},
+      "component_scores": {
+        "M1": {"value": 0.0, "reason": "..."},
+        "M2": {"value": 0.0, "reason": "..."},
+        "M3": {"value": 0.0, "reason": "..."},
+        "M4": {"value": 0.0, "reason": "..."},
+        "R1": {"value": 0.0, "reason": "..."},
+        "R2": {"value": 0.0, "reason": "..."},
+        "R3": {"value": 0.0, "reason": "..."},
+        "R4": {"value": 0.0, "reason": "..."}
+      },
+      "aggregates": {
+        "M_t": 0.0,
+        "R_t": 0.0
+      },
+      "intermediate_values": {
+        "reward_trace_t": 0.0,
+        "c_t": 0.0,
+        "kM_t": 0.0,
+        "beta_effective_t": 0.0,
+        "A_t": 0.0
+      }
+    }
+
+---
+
+### Step 8. State Save / Log Write
+**Inputs:** updated variables  
+**Outputs:** persisted next-turn state
+
+#### Executable Instructions
+Save:
+- `A_t` as next turn `A_prev`
+- `reward_trace_t`
+
+---
+
+## 7. Constraints / Guards
+
+### 7.1 General Guards:
+- Require `1 + kR * reward_trace_t > 0` before computing `beta_effective_t`
+- Require `beta_effective_t >= 0`
+- If either guard fails, terminate the turn update and log a parameter/state error
+- if required state is missing, terminate run and log missing state
+
+### 7.2 First-Turn Guards
+If `t = 1`:
+- use `A_prev = A_0`
+- use `reward_trace_prev = R_0`
+- assign low repetition defaults:
+  - `M1 = 0.2`
+  - `M2 = 0.2`
+
+### 7.3 History Guards
+If insufficient prior teacher turns exist:
+- use all available prior teacher turns up to 3
+- do not fabricate missing history

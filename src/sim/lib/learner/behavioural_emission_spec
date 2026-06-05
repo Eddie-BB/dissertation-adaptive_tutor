@@ -1,0 +1,296 @@
+﻿# Behavioural Emission Spec
+**Compatible with Appraisal Spec (`M_t`, `R_t`, `A_t` pre-computed)**
+
+---
+
+## 1) Purpose and Scope
+This specification defines a turn-based behavioural emission process that converts the pre-computed student state into:
+
+1. a single categorical behaviour label
+2. a corresponding student text emission
+3. a hidden behavioural log
+
+### Objectives
+For each turn `t`, the system must:
+
+1. consume the strict behavioural handoff:
+   - `M_t in [0,1]` - monotony
+   - `R_t in [0,1]` - reward
+   - `A_t in [0,1]` - attention
+
+2. compute:
+   - behaviour logits
+   - behaviour probabilities
+   - one sampled primary behaviour
+
+3. emit:
+   - one behavioural category
+   - one student-facing text response
+   - one hidden behavioural log
+
+### Interpretation Constraint
+All behavioural decisions must be based only on:
+- `M_t`
+- `R_t`
+- `A_t`
+
+The behavioural layer must NOT:
+- rescore appraisal components
+- infer hidden state from transcript
+- recompute any appraisal or temporal variables
+
+---
+
+## 2) Inputs
+
+### 2.1 External Inputs
+- `student_id: string`
+- `turn_id: string`
+- `t: int`
+- `teacher_text: string`
+- `task_state: object (optional)`
+- `rng_seed: int`
+
+### 2.2 Required Behaviour Handoff
+    {
+      "student_id": "...",
+      "turn_id": "...",
+      "M_t": 0.0,
+      "R_t": 0.0,
+      "A_t": 0.0
+    }
+
+### 2.3 Global Constants
+- `tau = 0.5`
+- `max_reasoning_steps = 4`
+- `max_response_sentences = 4`
+
+---
+
+## 3) Persistent State Rules
+
+- Behavioural handoff MUST exist before computation
+- Missing values -> terminate run
+- This layer does not maintain additional behavioural state across turns
+- Behaviour outputs must NOT affect appraisal variables
+
+---
+
+## 4) Responsibility Split
+
+### Appraisal Layer
+Produces:
+- `M_t`, `R_t`, `A_t`
+
+### Behaviour Layer
+Responsible for:
+1. validation
+2. logit computation
+3. gate adjustment
+4. probability conversion
+5. sampling
+6. text emission
+
+Must NOT:
+- modify appraisal values
+- compute new appraisal scores
+
+---
+
+## 5) Behaviour Set
+
+Exactly ONE behaviour per turn:
+
+1. `ENGAGED_ATTEMPT`
+2. `MINIMAL_COMPLIANCE`
+3. `HELP_SEEKING_CONFUSION`
+4. `CARELESS_GUESS`
+5. `OFF_TASK`
+6. `DISENGAGED_NON_RESPONSE`
+
+---
+
+## 6) Behaviour Model
+
+### 6.1 Feature Vector
+`x = [1, A_t, R_t, M_t]`
+
+### 6.2 Logit Function
+`s_i = w0 + wA*A_t + wR*R_t + wM*M_t`
+
+### 6.3 Weight Matrix
+
+| Behaviour | Bias | A | R | M |
+|----------|------|---|---|---|
+| ENGAGED_ATTEMPT | -0.2 | +2.0 | +1.0 | -1.2 |
+| MINIMAL_COMPLIANCE | 0.1 | +0.8 | 0.0 | -0.3 |
+| HELP_SEEKING_CONFUSION | -0.1 | -0.8 | -0.4 | 0.0 |
+| CARELESS_GUESS | -0.2 | -1.0 | -0.5 | +0.8 |
+| OFF_TASK | -0.3 | -0.6 | -1.2 | +1.5 |
+| DISENGAGED_NON_RESPONSE | -1.0 | -2.5 | -1.0 | +0.7 |
+
+---
+
+## 7) Deterministic Gates
+
+Apply AFTER logits, BEFORE softmax.
+
+### 7.1 Disengagement Gate
+IF `A_t < 0.12`
+-> `disengaged += 2.0`
+
+### 7.2 Off-Task Gate
+IF `R_t < 0.25 AND M_t > 0.78 AND A_t < 0.50`
+-> `off_task += 1.4`
+
+### 7.3 High Engagement Gate
+IF `A_t > 0.78 AND R_t > 0.68 AND M_t < 0.35`
+-> `engaged += 0.7`
+
+### 7.4 Help-Seeking Gate
+IF `0.35 <= A_t <= 0.60 AND R_t < 0.38 AND M_t < 0.60`
+-> `help_seeking += 0.6`
+
+---
+
+## 8) Probability Conversion
+
+### Step 1: Scale
+`z_i = s_i / tau`
+
+### Step 2: Stabilise
+`z_i = z_i - max(z)`
+
+### Step 3: Softmax
+`P(i) = exp(z_i) / sum(exp(z_j))`
+
+---
+
+## 9) Sampling
+
+### Deterministic Seed
+`turn_seed = hash(rng_seed, student_id, turn_id, t)`
+
+### Selection Rule
+- sample exactly ONE behaviour
+- must be reproducible
+
+---
+
+## 10) Execution Pipeline
+
+### Step 1 - Validate Inputs
+### Step 2 - Compute Logits
+### Step 3 - Apply Gates
+### Step 4 - Compute Probabilities
+### Step 5 - Sample Behaviour
+### Step 6 - Generate Text
+### Step 7 - Output Results
+
+---
+
+## 11) Text Emission Rules
+
+### General Constraints
+- must reflect selected behaviour
+- must not expose latent variables
+- 1-4 sentences
+- grounded in teacher input
+
+---
+
+### ENGAGED_ATTEMPT
+- provide step-by-step reasoning grounded in task
+- final answer
+- `steps = 1 + round(3*A_t)`
+
+#### Behavioural modulation
+- If `A_t > 0.75`:
+  - more precise, confident, and complete reasoning
+
+---
+
+### MINIMAL_COMPLIANCE
+- provide correct or near-correct answer
+- no reasoning
+- minimal explanation
+
+#### Behavioural modulation
+- If `M_t > 0.60`:
+  - include mild boredom tone
+
+---
+
+### HELP_SEEKING_CONFUSION
+IF `R_t > 0.55`:
+- express uncertainty about how to begin or structure the task
+- for example, difficulty identifying first step, approach, or method
+
+ELSE:
+- express lack of understanding of task content or instructions
+- for example, confusion about concepts, requirements, or meaning
+
+---
+
+### CARELESS_GUESS
+- short answer
+- weak or incorrect logic
+- minimal effort
+- often wrong answer
+
+#### Behavioural modulation
+- If `M_t > 0.60`:
+  - signs of impatience or reduced care
+
+---
+
+### OFF_TASK
+- response deviates from task:
+  - introduces unrelated content
+  - shifts focus away from instruction
+  - avoids solving the problem
+
+#### Behavioural modulation
+- If `M_t > 0.80`:
+  - explicit boredom or topic shift
+
+---
+
+### DISENGAGED_NON_RESPONSE
+Options:
+- "..."
+- "I can't be bothered"
+- "I need a break"
+
+If `M_t > 0.75`:
+- stronger disengagement tone
+
+---
+
+## 12) Output Contract
+
+### 12.1 Student Text
+    {
+      "text": generated_text
+    }
+
+### 12.2 Researcher Log Update
+Update the existing turn record created by the appraisal layer.
+
+It MUST append:
+- `base_logits`
+- `gates_fired`
+- `adjusted_logits` or final logits
+- `probabilities`
+- `selected_behaviour`
+- `generated_text`
+
+---
+
+## 13) Critical Guarantees
+
+- exactly ONE behaviour per turn
+- deterministic reproducibility
+- no leakage of latent variables
+- strict separation from appraisal system
+- full compatibility with simulation logging pipeline

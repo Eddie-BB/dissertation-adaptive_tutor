@@ -1,0 +1,1072 @@
+{
+  "version": "adaptive_lesson_v1",
+  "course": {
+    "courseId": "openstax_pre_calculus",
+    "courseName": "OpenStax: Pre-Calculus",
+    "language": "en"
+  },
+  "lesson": {
+    "lessonId": "systems_linear_equations_two_variables",
+    "lessonLabel": "Systems of Linear Equations: Two Variables",
+    "name": "Consolidated Systems Lesson",
+    "topics": "Systems of Linear Equations: Two Variables",
+    "allowRecycle": true,
+    "doMasteryUpdate": true,
+    "learningObjectives": {
+      "systems_of_linear_equations:_two_variables": 0.85
+    }
+  },
+  "conditionMetadata": {
+    "compatibleConditions": [
+      "baseline",
+      "enhanced_sensitivity",
+      "state_aware"
+    ],
+    "validationMode": "deterministic",
+    "controllerId": "baseline",
+    "masteryThreshold": 0.95
+  },
+  "knowledgeComponents": [
+    {
+      "kcId": "systems_of_linear_equations:_two_variables",
+      "label": "Systems Of Linear Equations Two Variables",
+      "bktParams": {
+        "pInit": 0.1,
+        "pLearn": 0.1,
+        "pGuess": 0.1,
+        "pSlip": 0.1
+      }
+    }
+  ],
+  "problems": [
+    {
+      "id": "problem_01_identify_independent_system",
+      "sequence": 1,
+      "title": "Identify an independent system",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_01_identify_independent_system_step_01",
+          "simulationStepId": "problem_01_identify_independent_system:0",
+          "index": 0,
+          "problemType": "MultipleChoice",
+          "stepTitle": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)?",
+          "stepBody": "",
+          "answerType": "string",
+          "expectedAnswers": [
+            "independent system"
+          ],
+          "requiredConcepts": [
+            "independent system",
+            "exactly one solution"
+          ],
+          "acceptedAnswers": [
+            "independent system",
+            "an independent system",
+            "independent"
+          ],
+          "misconceptions": [
+            {
+              "id": "confuses_dependent_with_independent",
+              "description": "Treats infinitely many solutions as the same as exactly one solution.",
+              "patterns": [
+                "dependent system",
+                "dependent"
+              ],
+              "feedback": "A dependent system has infinitely many solutions. The system with exactly one solution is independent."
+            },
+            {
+              "id": "confuses_inconsistent_with_independent",
+              "description": "Treats no solution as the same as exactly one solution.",
+              "patterns": [
+                "inconsistent system",
+                "inconsistent"
+              ],
+              "feedback": "An inconsistent system has no solution. The system with exactly one solution is independent."
+            }
+          ],
+          "skillIds": [
+            "systems_of_linear_equations:_two_variables"
+          ],
+          "difficulty": 1,
+          "feedback": {
+            "correct": "Correct. A system with exactly one solution pair is independent.",
+            "partiallyCorrect": "You identified part of the definition.",
+            "misconception": "Check the difference between independent, dependent, and inconsistent systems.",
+            "incorrect": "Review the three system types before trying again.",
+            "unknown": "Clarify which system type you mean."
+          },
+          "validationExamples": {
+            "correct": "independent system",
+            "partially_correct": "exactly one solution",
+            "misconception": "dependent system",
+            "incorrect": "unrelated answer",
+            "unknown": "?"
+          },
+          "choices": [
+            "independent system",
+            "inconsistent system",
+            "dependent system"
+          ],
+          "validation": {
+            "mode": "normalized_string_equality",
+            "requiresKas": false,
+            "acceptedFormats": [
+              "string"
+            ]
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_01_identify_independent_system_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "When there is only one solution, what do we call it? Independent, inconsistent, or dependent?",
+              "text": "When there is only one solution, what do we call it? Independent, inconsistent, or dependent?",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_01_identify_independent_system_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Look up definitions in the textbook or online to clarify!",
+              "text": "Look up definitions in the textbook or online to clarify!",
+              "dependsOn": [
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_02_identify_inconsistent_system",
+      "sequence": 2,
+      "title": "Identify an inconsistent system",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_02_identify_inconsistent_system_step_01",
+          "simulationStepId": "problem_02_identify_inconsistent_system:0",
+          "index": 0,
+          "problemType": "MultipleChoice",
+          "stepTitle": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+          "stepBody": "",
+          "answerType": "string",
+          "expectedAnswers": [
+            "inconsistent system"
+          ],
+          "choices": [
+            "independent system",
+            "inconsistent system",
+            "dependent system"
+          ],
+          "validation": {
+            "mode": "normalized_string_equality",
+            "requiresKas": false,
+            "acceptedFormats": [
+              "string"
+            ]
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_02_identify_inconsistent_system_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "When there is no solution, what do we call it? Independent, inconsistent, or dependent?",
+              "text": "When there is no solution, what do we call it? Independent, inconsistent, or dependent?",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_02_identify_inconsistent_system_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Look up definitions in the textbook or online to clarify!",
+              "text": "Look up definitions in the textbook or online to clarify!",
+              "dependsOn": [
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_03_identify_dependent_system",
+      "sequence": 3,
+      "title": "Identify a dependent system",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_03_identify_dependent_system_step_01",
+          "simulationStepId": "problem_03_identify_dependent_system:0",
+          "index": 0,
+          "problemType": "MultipleChoice",
+          "stepTitle": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?",
+          "stepBody": "",
+          "answerType": "string",
+          "expectedAnswers": [
+            "dependent system"
+          ],
+          "choices": [
+            "independent system",
+            "inconsistent system",
+            "dependent system"
+          ],
+          "validation": {
+            "mode": "normalized_string_equality",
+            "requiresKas": false,
+            "acceptedFormats": [
+              "string"
+            ]
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_03_identify_dependent_system_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "When there is infinitely many solutions, what do we call it? independent, inconsistent, or dependent? Think about how to change that to words.",
+              "text": "When there is infinitely many solutions, what do we call it? independent, inconsistent, or dependent? Think about how to change that to words.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_03_identify_dependent_system_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Look up definitions in the textbook or online to clarify!",
+              "text": "Look up definitions in the textbook or online to clarify!",
+              "dependsOn": [
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_04_check_ordered_pair_not_solution",
+      "sequence": 4,
+      "title": "Check that an ordered pair is not a solution",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_04_check_ordered_pair_not_solution_step_01",
+          "simulationStepId": "problem_04_check_ordered_pair_not_solution:0",
+          "index": 0,
+          "problemType": "MultipleChoice",
+          "stepTitle": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$",
+          "stepBody": "",
+          "answerType": "string",
+          "expectedAnswers": [
+            "no"
+          ],
+          "choices": [
+            "yes",
+            "no"
+          ],
+          "validation": {
+            "mode": "normalized_string_equality",
+            "requiresKas": false,
+            "acceptedFormats": [
+              "string"
+            ]
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_04_check_ordered_pair_not_solution_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Plug the point into the first equation and check if the left side and the right side are the same.",
+              "text": "Plug the point into the first equation and check if the left side and the right side are the same.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_04_check_ordered_pair_not_solution_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Plug the point into the second equation and check if the left side and the right side are the same.",
+              "text": "Plug the point into the second equation and check if the left side and the right side are the same.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_04_check_ordered_pair_not_solution_step_01_hint_03",
+              "index": 2,
+              "type": "scaffold",
+              "title": "For the second equation, what is the left side equal to?",
+              "text": "For the second equation, what is the left side equal to?",
+              "dependsOn": [
+                1
+              ],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$17$$"
+                ]
+              }
+            },
+            {
+              "id": "problem_04_check_ordered_pair_not_solution_step_01_hint_04",
+              "index": 3,
+              "type": "scaffold",
+              "title": "For the second equation, what is the right side equal to?",
+              "text": "For the second equation, what is the right side equal to?",
+              "dependsOn": [
+                2
+              ],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$15$$"
+                ]
+              }
+            },
+            {
+              "id": "problem_04_check_ordered_pair_not_solution_step_01_hint_05",
+              "index": 4,
+              "type": "scaffold",
+              "title": "If the LHS doesn't equal the RHS, is our point a solution?",
+              "text": "If the LHS doesn't equal the RHS, is our point a solution?",
+              "dependsOn": [
+                3
+              ],
+              "scaffold": {
+                "problemType": "MultipleChoice",
+                "answerType": "string",
+                "expectedAnswers": [
+                  "no"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_05_substitution_solve_x",
+      "sequence": 5,
+      "title": "Solve by substitution: x-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_05_substitution_solve_x_step_01",
+          "simulationStepId": "problem_05_substitution_solve_x:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the following system of equations by substitution. $$-x+y=-5$$, $$2x-5y=1$$. What is the resulting $$x$$ value?",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$8$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_05_substitution_solve_x_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Try to make the first equation in a slope-intercept form. $$y=$$",
+              "text": "Try to make the first equation in a slope-intercept form. $$y=$$",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_05_substitution_solve_x_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Plug the $$y$$, represented as in terms of $$x$$, into the second equation to solve for $$x$$.",
+              "text": "Plug the $$y$$, represented as in terms of $$x$$, into the second equation to solve for $$x$$.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_05_substitution_solve_x_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Group the common terms, $$x$$ with $$x$$ and constants with constants to find the $$x$$ value.",
+              "text": "Group the common terms, $$x$$ with $$x$$ and constants with constants to find the $$x$$ value.",
+              "dependsOn": [
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_06_substitution_solve_y",
+      "sequence": 6,
+      "title": "Solve by substitution: y-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_06_substitution_solve_y_step_01",
+          "simulationStepId": "problem_06_substitution_solve_y:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the following system of equations by substitution. $$-x+y=-5$$, $$2x-5y=1$$. What is the resulting $$y$$ value?",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$3$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_06_substitution_solve_y_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Try to make the first equation in a slope-intercept form. $$y=$$",
+              "text": "Try to make the first equation in a slope-intercept form. $$y=$$",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_06_substitution_solve_y_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Plug the $$y$$, represented as in terms of $$x$$, into the second equation to solve for $$x$$.",
+              "text": "Plug the $$y$$, represented as in terms of $$x$$, into the second equation to solve for $$x$$.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_06_substitution_solve_y_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Group the common terms, $$x$$ with $$x$$ and constants with constants to find the $$x$$ value first.",
+              "text": "Group the common terms, $$x$$ with $$x$$ and constants with constants to find the $$x$$ value first.",
+              "dependsOn": [
+                1
+              ]
+            },
+            {
+              "id": "problem_06_substitution_solve_y_step_01_hint_04",
+              "index": 3,
+              "type": "hint",
+              "title": "Plug the $$x$$ value you found into any equation with two variables, $$x$$ and $$y$$ and solve for $$y$$.",
+              "text": "Plug the $$x$$ value you found into any equation with two variables, $$x$$ and $$y$$ and solve for $$y$$.",
+              "dependsOn": [
+                2
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_07_addition_fraction_solve_x",
+      "sequence": 7,
+      "title": "Solve by addition with fractions: x-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_07_addition_fraction_solve_x_step_01",
+          "simulationStepId": "problem_07_addition_fraction_solve_x:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$\\frac{4}{3}$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_07_addition_fraction_solve_x_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Observe that the $$y$$ values cancel out and only the $$x$$ terms are left.",
+              "text": "Observe that the $$y$$ values cancel out and only the $$x$$ terms are left.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_07_addition_fraction_solve_x_step_01_hint_02",
+              "index": 1,
+              "type": "scaffold",
+              "title": "Now, divide both sides by a number in front of $$x$$ to solve for $$x$$. What number is this?",
+              "text": "Now, divide both sides by a number in front of $$x$$ to solve for $$x$$. What number is this?",
+              "dependsOn": [
+                0
+              ],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$6$$"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_08_addition_fraction_solve_y",
+      "sequence": 8,
+      "title": "Solve by addition with fractions: y-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_08_addition_fraction_solve_y_step_01",
+          "simulationStepId": "problem_08_addition_fraction_solve_y:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$y$$ value of the solution. Please simplify too, if needed.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$\\frac{13}{9}$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_08_addition_fraction_solve_y_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Observe that the $$y$$ values cancel out and only the $$x$$ terms are left.",
+              "text": "Observe that the $$y$$ values cancel out and only the $$x$$ terms are left.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_08_addition_fraction_solve_y_step_01_hint_02",
+              "index": 1,
+              "type": "scaffold",
+              "title": "Now, divide both sides by a number in front of $$x$$ to solve for $$x$$. What number is this?",
+              "text": "Now, divide both sides by a number in front of $$x$$ to solve for $$x$$. What number is this?",
+              "dependsOn": [
+                0
+              ],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$6$$"
+                ]
+              }
+            },
+            {
+              "id": "problem_08_addition_fraction_solve_y_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Pick one of the two original equations with $$x$$ and $$y$$ and plug the $$x$$ value in to solve for the $$y$$ value.",
+              "text": "Pick one of the two original equations with $$x$$ and $$y$$ and plug the $$x$$ value in to solve for the $$y$$ value.",
+              "dependsOn": [
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_09_addition_one_multiplier_solve_x",
+      "sequence": 9,
+      "title": "Solve by addition with one equation multiplied: x-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_09_addition_one_multiplier_solve_x_step_01",
+          "simulationStepId": "problem_09_addition_one_multiplier_solve_x:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations by the addition method. $$3x+5y=-11$$, $$x-2y=11$$. Solve for the $$x$$ value of the solution.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$3$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_09_addition_one_multiplier_solve_x_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Choose whether to match the coefficient in front of the $$x$$ or the $$y$$.",
+              "text": "Choose whether to match the coefficient in front of the $$x$$ or the $$y$$.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_09_addition_one_multiplier_solve_x_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Multiply by a constant to match the other equation. Then subtract both equations.",
+              "text": "Multiply by a constant to match the other equation. Then subtract both equations.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_09_addition_one_multiplier_solve_x_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Solve for the single remaining variable by combining like terms and dividing.",
+              "text": "Solve for the single remaining variable by combining like terms and dividing.",
+              "dependsOn": [
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_10_addition_one_multiplier_solve_y",
+      "sequence": 10,
+      "title": "Solve by addition with one equation multiplied: y-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_10_addition_one_multiplier_solve_y_step_01",
+          "simulationStepId": "problem_10_addition_one_multiplier_solve_y:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations by the addition method. $$3x+5y=-11$$, $$x-2y=11$$. Solve for the $$y$$ value of the solution.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$-4$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_10_addition_one_multiplier_solve_y_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Choose whether to match the coefficient in front of the $$x$$ or the $$y$$.",
+              "text": "Choose whether to match the coefficient in front of the $$x$$ or the $$y$$.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_10_addition_one_multiplier_solve_y_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Multiply by a constant to match the other equation. Then subtract both equations.",
+              "text": "Multiply by a constant to match the other equation. Then subtract both equations.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_10_addition_one_multiplier_solve_y_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Solve for the single remaining variable by combining like terms and dividing.",
+              "text": "Solve for the single remaining variable by combining like terms and dividing.",
+              "dependsOn": [
+                1
+              ]
+            },
+            {
+              "id": "problem_10_addition_one_multiplier_solve_y_step_01_hint_04",
+              "index": 3,
+              "type": "hint",
+              "title": "If you solved for $$x$$ first, then plug the $$x$$ value into one of the starting equations to solve for $$y$$.",
+              "text": "If you solved for $$x$$ first, then plug the $$x$$ value into one of the starting equations to solve for $$y$$.",
+              "dependsOn": [
+                2
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_11_addition_two_multipliers_solve_x",
+      "sequence": 11,
+      "title": "Solve by addition with both equations multiplied: x-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_11_addition_two_multipliers_solve_x_step_01",
+          "simulationStepId": "problem_11_addition_two_multipliers_solve_x:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations in two variables by addition. $$2x+3y=-16$$, $$5x-10y=30$$. Solve for the $$x$$ value of the solution.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$-2$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_11_addition_two_multipliers_solve_x_step_01_hint_01",
+              "index": 0,
+              "type": "scaffold",
+              "title": "Find the least common multiple for the $$y$$ values. What is it?",
+              "text": "Find the least common multiple for the $$y$$ values. What is it?",
+              "dependsOn": [],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$-30$$"
+                ]
+              }
+            },
+            {
+              "id": "problem_11_addition_two_multipliers_solve_x_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Then, subtract the two eqauations and combine the like terms and solve for $$x$$.",
+              "text": "Then, subtract the two eqauations and combine the like terms and solve for $$x$$.",
+              "dependsOn": [
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_12_addition_two_multipliers_solve_y",
+      "sequence": 12,
+      "title": "Solve by addition with both equations multiplied: y-value",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_12_addition_two_multipliers_solve_y_step_01",
+          "simulationStepId": "problem_12_addition_two_multipliers_solve_y:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the given system of equations in two variables by addition. $$2x+3y=-16$$, $$5x-10y=30$$. Solve for the $$y$$ value of the solution.",
+          "stepBody": "",
+          "answerType": "arithmetic",
+          "expectedAnswers": [
+            "$$-2$$"
+          ],
+          "validation": {
+            "mode": "arithmetic_equivalence",
+            "requiresKas": true,
+            "acceptedFormats": [
+              "latex",
+              "expression",
+              "number"
+            ],
+            "fallbackMode": "normalized_string_equality"
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_12_addition_two_multipliers_solve_y_step_01_hint_01",
+              "index": 0,
+              "type": "scaffold",
+              "title": "Find the least common multiple for the $$x$$ values. What is it?",
+              "text": "Find the least common multiple for the $$x$$ values. What is it?",
+              "dependsOn": [],
+              "scaffold": {
+                "problemType": "TextBox",
+                "answerType": "arithmetic",
+                "expectedAnswers": [
+                  "$$10$$"
+                ]
+              }
+            },
+            {
+              "id": "problem_12_addition_two_multipliers_solve_y_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Then, subtract the two eqauations and combine the like terms and solve for $$y$$.",
+              "text": "Then, subtract the two eqauations and combine the like terms and solve for $$y$$.",
+              "dependsOn": [
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "problem_13_identify_inconsistent_from_equations",
+      "sequence": 13,
+      "title": "Identify an inconsistent system from equations",
+      "body": "",
+      "stepCount": 1,
+      "steps": [
+        {
+          "id": "problem_13_identify_inconsistent_from_equations_step_01",
+          "simulationStepId": "problem_13_identify_inconsistent_from_equations:0",
+          "index": 0,
+          "problemType": "TextBox",
+          "stepTitle": "Solve the following system of equations. $$x=y-2y$$, $$x+2y=13$$. If inconsistent or dependent, please pick type \"inconsistent\" or \"dependent\". If not find the $$x$$ and $$y$$ values in (x,y) format.",
+          "stepBody": "",
+          "answerType": "string",
+          "expectedAnswers": [
+            "inconsistent"
+          ],
+          "validation": {
+            "mode": "normalized_string_equality",
+            "requiresKas": false,
+            "acceptedFormats": [
+              "string"
+            ]
+          },
+          "knowledgeComponents": [
+            {
+              "kcId": "systems_of_linear_equations:_two_variables",
+              "label": "Systems Of Linear Equations Two Variables",
+              "bktParams": {
+                "pInit": 0.1,
+                "pLearn": 0.1,
+                "pGuess": 0.1,
+                "pSlip": 0.1
+              }
+            }
+          ],
+          "hints": [
+            {
+              "id": "problem_13_identify_inconsistent_from_equations_step_01_hint_01",
+              "index": 0,
+              "type": "hint",
+              "title": "Observe that the first equation is $$x=$$ some equation in term of y's format.",
+              "text": "Observe that the first equation is $$x=$$ some equation in term of y's format.",
+              "dependsOn": []
+            },
+            {
+              "id": "problem_13_identify_inconsistent_from_equations_step_01_hint_02",
+              "index": 1,
+              "type": "hint",
+              "title": "Plug in the first equation into the second equation. The $$y$$ cancels out and the constants remain.",
+              "text": "Plug in the first equation into the second equation. The $$y$$ cancels out and the constants remain.",
+              "dependsOn": [
+                0
+              ]
+            },
+            {
+              "id": "problem_13_identify_inconsistent_from_equations_step_01_hint_03",
+              "index": 2,
+              "type": "hint",
+              "title": "Does the equality hold? If not, what system can we conclude it as? If so, what system is it?",
+              "text": "Does the equality hold? If not, what system can we conclude it as? If so, what system is it?",
+              "dependsOn": [
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

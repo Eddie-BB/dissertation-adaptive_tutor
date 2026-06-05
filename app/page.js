@@ -1,5 +1,5 @@
-import SimulationConsole from "../src/components/simulation/SimulationConsole";
+import ExperimentWorkspace from "../src/components/experiment/ExperimentWorkspace";
 
 export default function Home() {
-  return <SimulationConsole />;
+  return <ExperimentWorkspace />;
 }

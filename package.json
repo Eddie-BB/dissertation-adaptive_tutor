@@ -2,10 +2,12 @@
   "name": "adaptive_teaching_simulation",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --test"
   },
   "dependencies": {
     "katex": "^0.16.45",
