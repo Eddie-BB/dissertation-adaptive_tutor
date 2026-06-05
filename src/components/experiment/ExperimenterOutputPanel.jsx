@@ -39,6 +39,7 @@ function distributionToMarkdown(title, distribution = {}) {
 }
 
 function buildExperimentMarkdown(output) {
+  const metadata = output.runMetadata || {};
   const metrics = output.summaryMetrics || {};
   const traits = Array.isArray(metadata.studentProfileTraits)
     ? metadata.studentProfileTraits

@@ -192,6 +192,7 @@ export default function ExperimentWorkspace() {
             lessonPlan={selectedLessonPlan}
             result={result}
             condition={selectedCondition}
+            student={student}
           />
           <StudentProfilePanel
             disabled={running}

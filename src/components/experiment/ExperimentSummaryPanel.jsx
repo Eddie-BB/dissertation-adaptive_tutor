@@ -1,6 +1,6 @@
 "use client";
 
-export default function ExperimentSummaryPanel({ condition, lessonPlan, result }) {
+export default function ExperimentSummaryPanel({ condition, lessonPlan, result, student }) {
   const status = result?.status || "idle";
   const totalTurns = new Set(result?.transcript?.map((message) => message.turn) || []).size;
 
@@ -33,7 +33,12 @@ export default function ExperimentSummaryPanel({ condition, lessonPlan, result }
         </div>
         <div>
           <dt>Student ID</dt>
-          <dd>{result?.config?.student?.student_id || result?.config?.studentId || "Not generated"}</dd>
+          <dd>
+            {result?.config?.student?.student_id ||
+              result?.config?.studentId ||
+              student?.student_id ||
+              "Not generated"}
+          </dd>
         </div>
       </dl>
     </section>
