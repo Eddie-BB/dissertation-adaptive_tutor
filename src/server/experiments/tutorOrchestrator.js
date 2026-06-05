@@ -116,7 +116,7 @@ function summarizeLesson(lesson, steps) {
 
 function buildActionDistribution(turnLogs) {
   return turnLogs.reduce((distribution, turnLog) => {
-    const action = turnLog.teacher_action || "unknown";
+    const action = normalizeReportLabel(turnLog.teacher_action || "unknown");
     distribution[action] = (distribution[action] || 0) + 1;
     return distribution;
   }, {});
@@ -124,7 +124,7 @@ function buildActionDistribution(turnLogs) {
 
 function buildBehaviourDistribution(turnLogs) {
   return turnLogs.reduce((distribution, turnLog) => {
-    const behaviour = turnLog.hidden_student_behaviour || "unknown";
+    const behaviour = normalizeReportLabel(turnLog.hidden_student_behaviour || "unknown");
     distribution[behaviour] = (distribution[behaviour] || 0) + 1;
     return distribution;
   }, {});
@@ -171,6 +171,25 @@ function roundMetric(value) {
   return Number.isFinite(number) ? Number(number.toFixed(4)) : null;
 }
 
+function normalizeReportLabel(value) {
+  return String(value || "unknown").toLowerCase();
+}
+
+function usesTutorCues(conditionId) {
+  return conditionId === "enhanced_sensitivity" || conditionId === "state_aware";
+}
+
+function usesTutorStateEstimate(conditionId) {
+  return conditionId === "state_aware";
+}
+
+function summarizeTutorCues(cues = {}) {
+  const hiddenCueKeys = new Set(["tokenCount", "tokenTrendSlopeLastK"]);
+  return Object.fromEntries(
+    Object.entries(cues || {}).filter(([key]) => !hiddenCueKeys.has(key))
+  );
+}
+
 function buildStudentTraitSummary(studentRecord = {}) {
   const profile = studentRecord.student_profile || {};
   const definitions = Array.isArray(studentRecord.factor_definitions)
@@ -209,6 +228,40 @@ function summarizeEstimatedArm(stateEstimate = null) {
     M_t: roundMetric(stateEstimate.estimated_M_t),
     scorerType: stateEstimate.scorer_type || null,
     evidence: stateEstimate.evidence || []
+  };
+}
+
+function summarizeComponentScores(componentScores = {}) {
+  return Object.fromEntries(
+    Object.entries(componentScores || {}).map(([key, payload]) => [
+      key,
+      {
+        value: roundMetric(payload?.value),
+        reason: payload?.reason || ""
+      }
+    ])
+  );
+}
+
+function summarizeArmComputation(appraisalLog = null) {
+  if (!appraisalLog) {
+    return null;
+  }
+
+  return {
+    componentScores: summarizeComponentScores(appraisalLog.component_scores),
+    aggregates: {
+      M_t: roundMetric(appraisalLog.aggregates?.M_t),
+      R_t: roundMetric(appraisalLog.aggregates?.R_t)
+    },
+    intermediateValues: {
+      reward_trace_t: roundMetric(appraisalLog.intermediate_values?.reward_trace_t),
+      c_t: roundMetric(appraisalLog.intermediate_values?.c_t),
+      kM_t: roundMetric(appraisalLog.intermediate_values?.kM_t),
+      beta_effective_t: roundMetric(appraisalLog.intermediate_values?.beta_effective_t),
+      A_t: roundMetric(appraisalLog.intermediate_values?.A_t)
+    },
+    scorerType: appraisalLog.scorer_type || null
   };
 }
 
@@ -264,19 +317,19 @@ function categorizeAttention(value) {
 
 function buildDistribution(values) {
   return values.reduce((distribution, value) => {
-    const key = value || "unknown";
+    const key = normalizeReportLabel(value || "unknown");
     distribution[key] = (distribution[key] || 0) + 1;
     return distribution;
   }, {});
 }
 
-function calculateAttentionDeclineRate(turnLogs) {
+function calculateArmDeclineRate(turnLogs, key) {
   if (turnLogs.length < 2) {
     return null;
   }
 
-  const first = Number(turnLogs[0].hidden_arm?.A_t);
-  const last = Number(turnLogs[turnLogs.length - 1].hidden_arm?.A_t);
+  const first = Number(turnLogs[0].hidden_arm?.[key]);
+  const last = Number(turnLogs[turnLogs.length - 1].hidden_arm?.[key]);
   if (!Number.isFinite(first) || !Number.isFinite(last)) {
     return null;
   }
@@ -288,12 +341,14 @@ function buildTurnSummaries(turnLogs) {
   return turnLogs.map((turnLog, index) => {
     const actualArm = summarizeArm(turnLog.hidden_arm);
     const previousArm = index > 0 ? summarizeArm(turnLogs[index - 1].hidden_arm) : null;
-    const estimatedArm = summarizeEstimatedArm(
-      turnLog.teacher_decision_debug?.stateEstimate || null
-    );
+    const showStateEstimate = usesTutorStateEstimate(turnLog.teacher_condition);
+    const estimatedArm = showStateEstimate
+      ? summarizeEstimatedArm(turnLog.teacher_decision_debug?.stateEstimate || null)
+      : null;
 
     return {
       turn: turnLog.turn,
+      condition: turnLog.teacher_condition,
       lessonStep: {
         lessonId: turnLog.lesson_id,
         problemId: turnLog.problem_id,
@@ -302,9 +357,12 @@ function buildTurnSummaries(turnLogs) {
       },
       tutor: {
         text: turnLog.public_teacher_message,
-        action: turnLog.teacher_action,
-        rationale: turnLog.teacher_rationale,
-        cues: turnLog.tutor_cues || {},
+        action: normalizeReportLabel(turnLog.teacher_action),
+        rationale: turnLog.teacher_condition === "baseline" ? null : turnLog.teacher_rationale,
+        cues: usesTutorCues(turnLog.teacher_condition)
+          ? summarizeTutorCues(turnLog.tutor_cues)
+          : null,
+        showCueStateEstimates: usesTutorCues(turnLog.teacher_condition) || showStateEstimate,
         estimatedArm,
         estimateVsActualArm: diffArmEstimate(estimatedArm, actualArm)
       },
@@ -321,11 +379,12 @@ function buildTurnSummaries(turnLogs) {
       student: {
         text: turnLog.public_student_message,
         structuredAnswer: turnLog.structured_student_answer,
-        action: turnLog.student_action,
+        action: normalizeReportLabel(turnLog.student_action),
         explanation: turnLog.student_explanation,
-        behaviourState: turnLog.hidden_student_behaviour,
+        behaviourState: normalizeReportLabel(turnLog.hidden_student_behaviour),
         arm: actualArm,
-        armChangeFromPreviousTurn: diffArm(actualArm, previousArm)
+        armChangeFromPreviousTurn: diffArm(actualArm, previousArm),
+        armComputation: summarizeArmComputation(turnLog.hidden_appraisal_log)
       }
     };
   });
@@ -341,13 +400,12 @@ function buildSummaryMetrics(turnLogs) {
     totalIncorrectResponses: totalIncorrect,
     tutorActionDistribution: buildDistribution(turnLogs.map((turnLog) => turnLog.teacher_action)),
     studentActionDistribution: buildDistribution(turnLogs.map((turnLog) => turnLog.student_action)),
-    studentStateDistribution: buildDistribution(
-      turnLogs.map((turnLog) => categorizeAttention(turnLog.hidden_arm?.A_t))
-    ),
     hiddenBehaviourDistribution: buildDistribution(
       turnLogs.map((turnLog) => turnLog.hidden_student_behaviour)
     ),
-    attentionDeclineRate: calculateAttentionDeclineRate(turnLogs),
+    attentionDeclineRate: calculateArmDeclineRate(turnLogs, "A_t"),
+    monotonyDeclineRate: calculateArmDeclineRate(turnLogs, "M_t"),
+    rewardDeclineRate: calculateArmDeclineRate(turnLogs, "R_t"),
     finalObservedLearnerState: turnLogs[turnLogs.length - 1]?.observed_learner_state?.overall || null
   };
 }

@@ -1,5 +1,15 @@
 "use client";
 
+function stripMathDelimiters(value) {
+  return String(value || "")
+    .replace(/\$\$([^$]+)\$\$/g, "$1")
+    .replace(/\$([^$]+)\$/g, "$1")
+    .replace(/\\\((.*?)\\\)/g, "$1")
+    .replace(/\\\[(.*?)\\\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default function TranscriptMessage({ message }) {
   return (
     <article className={`transcriptMessage ${message.role}`}>
@@ -7,7 +17,7 @@ export default function TranscriptMessage({ message }) {
         <span>Turn {message.turn}</span>
         <strong>{message.role === "tutor" ? "Tutor" : "Student"}</strong>
       </div>
-      <p>{message.text}</p>
+      <p>{stripMathDelimiters(message.text)}</p>
     </article>
   );
 }

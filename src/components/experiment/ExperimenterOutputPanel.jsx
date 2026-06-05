@@ -19,10 +19,20 @@ function markdownValue(value) {
 }
 
 function markdownText(value) {
-  return String(value || "n/a").replace(/\r?\n/g, " ").trim();
+  return stripMathDelimiters(String(value || "n/a")).replace(/\r?\n/g, " ").trim();
 }
 
-function distributionToMarkdown(title, distribution = {}) {
+function stripMathDelimiters(value) {
+  return String(value || "")
+    .replace(/\$\$([^$]+)\$\$/g, "$1")
+    .replace(/\$([^$]+)\$/g, "$1")
+    .replace(/\\\((.*?)\\\)/g, "$1")
+    .replace(/\\\[(.*?)\\\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function distributionToMarkdown(title, distribution = {}, total = 0) {
   const entries = Object.entries(distribution);
   if (entries.length === 0) {
     return [`## ${title}`, "", "No data recorded.", ""].join("\n");
@@ -31,11 +41,59 @@ function distributionToMarkdown(title, distribution = {}) {
   return [
     `## ${title}`,
     "",
-    "| Item | Count |",
-    "| --- | ---: |",
-    ...entries.map(([label, count]) => `| ${markdownValue(label)} | ${markdownValue(count)} |`),
+    "| # | Item | Count | Percentage |",
+    "| ---: | --- | ---: | ---: |",
+    ...entries.map(([label, count], index) => {
+      const percentage = total > 0 ? `${((Number(count) / total) * 100).toFixed(1)}%` : "0%";
+      return `| ${index + 1} | ${markdownValue(label)} | ${markdownValue(count)} | ${percentage} |`;
+    }),
     ""
   ].join("\n");
+}
+
+function componentScoresToMarkdown(componentScores = {}) {
+  const entries = Object.entries(componentScores || {});
+  if (entries.length === 0) {
+    return ["No ARM component scoring recorded."];
+  }
+
+  return [
+    "| Component | Value | Brief computation explanation |",
+    "| --- | ---: | --- |",
+    ...entries.map(([key, payload]) =>
+      `| ${markdownValue(key)} | ${markdownValue(payload?.value)} | ${markdownValue(payload?.reason || "No rationale recorded.")} |`
+    )
+  ];
+}
+
+function tutorCueStateLines(turn) {
+  if (!turn.tutor?.showCueStateEstimates) {
+    return [];
+  }
+
+  const lines = ["", "Teacher cue/state estimates:", ""];
+  const cueEntries = Object.entries(turn.tutor?.cues || {}).filter(([_key, value]) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return Math.abs(value) > 0;
+    return Boolean(value);
+  });
+
+  if (cueEntries.length > 0) {
+    lines.push("| Cue | Value |", "| --- | --- |");
+    cueEntries.forEach(([key, value]) => {
+      lines.push(`| ${markdownValue(key)} | ${markdownValue(value)} |`);
+    });
+  }
+
+  if (turn.tutor?.estimatedArm) {
+    lines.push(
+      "",
+      `- Estimated ARM: ${markdownText(formatArm(turn.tutor.estimatedArm))}`,
+      `- Estimate minus actual ARM: ${turn.tutor?.estimateVsActualArm ? markdownText(formatArm(turn.tutor.estimateVsActualArm)) : "n/a"}`
+    );
+  }
+
+  return lines;
 }
 
 function buildExperimentMarkdown(output) {
@@ -45,6 +103,7 @@ function buildExperimentMarkdown(output) {
     ? metadata.studentProfileTraits
     : [];
   const turns = Array.isArray(output.turnSummaries) ? output.turnSummaries : [];
+  const totalTurns = metadata.turnsCompleted ?? turns.length;
 
   return [
     "# Experimenter Session Report",
@@ -78,55 +137,51 @@ function buildExperimentMarkdown(output) {
     "",
     `- Total correct responses: ${markdownValue(metrics.totalCorrectResponses ?? 0)}`,
     `- Total incorrect responses: ${markdownValue(metrics.totalIncorrectResponses ?? 0)}`,
-    `- Attention decline rate: ${markdownValue(metrics.attentionDeclineRate)}`,
+    `- Attention decline rate (attention / turn): ${markdownValue(metrics.attentionDeclineRate)}`,
+    `- Monotony decline rate (monotony / turn): ${markdownValue(metrics.monotonyDeclineRate)}`,
+    `- Reward decline rate (reward / turn): ${markdownValue(metrics.rewardDeclineRate)}`,
     "",
-    distributionToMarkdown("Tutor Action Distribution", metrics.tutorActionDistribution),
-    distributionToMarkdown("Student Action Distribution", metrics.studentActionDistribution),
-    distributionToMarkdown("Student State Distribution", metrics.studentStateDistribution),
-    distributionToMarkdown("Behaviour State Distribution", metrics.hiddenBehaviourDistribution),
+    distributionToMarkdown("Tutor Actions", metrics.tutorActionDistribution, totalTurns),
+    distributionToMarkdown("Student Actions", metrics.studentActionDistribution, totalTurns),
+    distributionToMarkdown("Behavioural States", metrics.hiddenBehaviourDistribution, totalTurns),
     "## Per-Turn Transcript And Experiment Log",
     "",
-    ...turns.flatMap((turn) => [
+    ...turns.flatMap((turn) => {
+      const armComputation = turn.student?.armComputation || {};
+      return [
       `### Turn ${turn.turn}`,
       "",
       `- Lesson step: ${markdownText(turn.lessonStep?.stepTitle || turn.lessonStep?.stepId)}`,
       `- Step ID: ${markdownText(turn.lessonStep?.stepId)}`,
-      `- Tutor action: ${markdownText(turn.tutor?.action)}`,
-      `- Tutor rationale: ${markdownText(turn.tutor?.rationale)}`,
-      `- Tutor estimated ARM: ${
-        turn.tutor?.estimatedArm ? markdownText(formatArm(turn.tutor.estimatedArm)) : "not available"
-      }`,
-      `- Estimate minus actual ARM: ${
-        turn.tutor?.estimateVsActualArm
-          ? markdownText(formatArm(turn.tutor.estimateVsActualArm))
-          : "not available"
-      }`,
-      `- Tutor text: ${markdownText(turn.tutor?.text)}`,
-      `- Student action: ${markdownText(turn.student?.action)}`,
-      `- Student behaviour state: ${markdownText(turn.student?.behaviourState)}`,
+      "",
+      "Teacher:",
+      "",
+      `- Validation: ${turn.validation?.isCorrect ? "correct" : "incorrect"}; incorrect count: ${markdownValue(turn.validation?.incorrectAttemptCount ?? 0)}`,
+      `- Action: ${markdownText(turn.tutor?.action)}`,
+      ...(turn.tutor?.rationale ? [`- Action explanation: ${markdownText(turn.tutor.rationale)}`] : []),
+      ...tutorCueStateLines(turn),
+      `- Transcript: ${markdownText(turn.tutor?.text)}`,
+      "",
+      "Student:",
+      "",
       `- Student ARM: ${markdownText(formatArm(turn.student?.arm))}`,
       `- Student ARM change: ${markdownText(formatArm(turn.student?.armChangeFromPreviousTurn))}`,
-      `- Student text: ${markdownText(turn.student?.text)}`,
+      `- Behavioural state: ${markdownText(turn.student?.behaviourState)}`,
+      `- Action: ${markdownText(turn.student?.action)}`,
+      `- Transcript: ${markdownText(turn.student?.text)}`,
       `- Structured answer: ${markdownText(turn.student?.structuredAnswer || "none")}`,
-      `- Validation result: ${turn.validation?.isCorrect ? "correct" : markdownText(turn.validation?.category)}`,
       `- Validation method/confidence: ${markdownText(turn.validation?.method)} / ${markdownText(turn.validation?.confidence)}`,
-      `- Incorrect attempt count: ${markdownValue(turn.validation?.incorrectAttemptCount ?? 0)}`,
       "",
-      "| Active tutor cue | Value |",
-      "| --- | --- |",
-      ...Object.entries(turn.tutor?.cues || {})
-        .filter(([_key, value]) => {
-          if (typeof value === "boolean") {
-            return value;
-          }
-          if (typeof value === "number") {
-            return Math.abs(value) > 0;
-          }
-          return Boolean(value);
-        })
-        .map(([key, value]) => `| ${markdownValue(key)} | ${markdownValue(value)} |`),
+      "ARM component scoring:",
+      "",
+      ...componentScoresToMarkdown(armComputation.componentScores),
+      "",
+      `- Aggregate M_t: ${markdownValue(armComputation.aggregates?.M_t)}`,
+      `- Aggregate R_t: ${markdownValue(armComputation.aggregates?.R_t)}`,
+      `- Attention update: reward trace ${markdownValue(armComputation.intermediateValues?.reward_trace_t)}, monotony sensitivity ${markdownValue(armComputation.intermediateValues?.kM_t)}, effective decline ${markdownValue(armComputation.intermediateValues?.beta_effective_t)}, resulting A_t ${markdownValue(armComputation.intermediateValues?.A_t)}`,
       ""
-    ])
+    ];
+    })
   ].join("\n");
 }
 
@@ -146,164 +201,17 @@ function downloadMarkdown(output) {
   URL.revokeObjectURL(url);
 }
 
-function formatCueValue(value) {
-  if (typeof value === "boolean") {
-    return value ? "yes" : "no";
-  }
-  if (typeof value === "number") {
-    return formatValue(value);
-  }
-  return formatValue(value);
-}
-
-function DistributionList({ distribution }) {
-  const entries = Object.entries(distribution || {});
-
-  if (entries.length === 0) {
-    return <p className="helpText">No data recorded.</p>;
-  }
-
-  return (
-    <dl className="distributionList">
-      {entries.map(([label, count]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{count}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function CueList({ cues }) {
-  const cueEntries = Object.entries(cues || {}).filter(([_key, value]) => {
-    if (typeof value === "boolean") {
-      return value;
-    }
-    if (typeof value === "number") {
-      return Math.abs(value) > 0;
-    }
-    return Boolean(value);
-  });
-
-  if (cueEntries.length === 0) {
-    return <span className="mutedInline">No active cues</span>;
-  }
-
-  return (
-    <div className="chipRow">
-      {cueEntries.map(([key, value]) => (
-        <span className="cueChip" key={key}>
-          {key}: {formatCueValue(value)}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function TurnSummary({ turn }) {
-  const correctnessClass = turn.validation.isCorrect ? "correct" : "incorrect";
-
-  return (
-    <article className="turnSummaryCard">
-      <div className="turnSummaryHeader">
-        <div>
-          <p className="fieldLabel">Turn {turn.turn}</p>
-          <h3>{turn.lessonStep.stepTitle || turn.lessonStep.stepId}</h3>
-          <p className="mutedText">{turn.lessonStep.stepId}</p>
-        </div>
-        <span className={`resultChip ${correctnessClass}`}>
-          {turn.validation.isCorrect ? "correct" : turn.validation.category}
-        </span>
-      </div>
-
-      <div className="turnFlowGrid">
-        <section>
-          <p className="fieldLabel">Tutor cue/state estimate</p>
-          <CueList cues={turn.tutor.cues} />
-          <dl className="compactMetricList">
-            <div>
-              <dt>Estimated ARM</dt>
-              <dd>{turn.tutor.estimatedArm ? formatArm(turn.tutor.estimatedArm) : "not available"}</dd>
-            </div>
-            <div>
-              <dt>Estimate - actual</dt>
-              <dd>
-                {turn.tutor.estimateVsActualArm
-                  ? formatArm(turn.tutor.estimateVsActualArm)
-                  : "not available"}
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <section>
-          <p className="fieldLabel">Tutor action</p>
-          <p className="actionText">{turn.tutor.action || "n/a"}</p>
-          <p className="bodyText">{turn.tutor.text}</p>
-          {turn.tutor.rationale ? <p className="rationaleText">{turn.tutor.rationale}</p> : null}
-        </section>
-
-        <section>
-          <p className="fieldLabel">Student response and validation</p>
-          <p className="bodyText">{turn.student.text}</p>
-          <dl className="compactMetricList">
-            <div>
-              <dt>Student action</dt>
-              <dd>{turn.student.action || "n/a"}</dd>
-            </div>
-            <div>
-              <dt>Structured answer</dt>
-              <dd>{turn.student.structuredAnswer || "none"}</dd>
-            </div>
-            <div>
-              <dt>Incorrect attempts</dt>
-              <dd>{turn.validation.incorrectAttemptCount}</dd>
-            </div>
-            <div>
-              <dt>Validation</dt>
-              <dd>
-                {turn.validation.method || "n/a"} / {turn.validation.confidence || "n/a"}
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <section>
-          <p className="fieldLabel">Student ARM/state change</p>
-          <dl className="compactMetricList">
-            <div>
-              <dt>Actual ARM</dt>
-              <dd>{formatArm(turn.student.arm)}</dd>
-            </div>
-            <div>
-              <dt>Change from previous</dt>
-              <dd>{formatArm(turn.student.armChangeFromPreviousTurn)}</dd>
-            </div>
-            <div>
-              <dt>Behaviour state</dt>
-              <dd>{turn.student.behaviourState || "n/a"}</dd>
-            </div>
-          </dl>
-        </section>
-      </div>
-    </article>
-  );
-}
-
 export default function ExperimenterOutputPanel({ output, status }) {
   if (status !== "complete" || !output) {
     return null;
   }
-
-  const metrics = output.summaryMetrics || {};
 
   return (
     <section className="panel experimenterOutputPanel" aria-labelledby="experimenter-output-title">
       <div className="panelHeader outputHeader">
         <div>
           <p className="fieldLabel">Post-session output</p>
-          <h2 id="experimenter-output-title">Experimenter log</h2>
+          <h2 id="experimenter-output-title">Download final report</h2>
         </div>
         <div className="outputActions">
           <button
@@ -316,52 +224,9 @@ export default function ExperimenterOutputPanel({ output, status }) {
           <span className="statusPill complete">complete</span>
         </div>
       </div>
-
-      <div className="outputSection">
-        <h3>Final session results</h3>
-        <div className="metricCards">
-          <div>
-            <span>Total correct</span>
-            <strong>{metrics.totalCorrectResponses ?? 0}</strong>
-          </div>
-          <div>
-            <span>Total incorrect</span>
-            <strong>{metrics.totalIncorrectResponses ?? 0}</strong>
-          </div>
-          <div>
-            <span>Attention decline rate</span>
-            <strong>{formatValue(metrics.attentionDeclineRate)}</strong>
-          </div>
-        </div>
-
-        <div className="distributionGrid">
-          <section>
-            <h4>Tutor actions</h4>
-            <DistributionList distribution={metrics.tutorActionDistribution} />
-          </section>
-          <section>
-            <h4>Student actions</h4>
-            <DistributionList distribution={metrics.studentActionDistribution} />
-          </section>
-          <section>
-            <h4>Student states</h4>
-            <DistributionList distribution={metrics.studentStateDistribution} />
-          </section>
-          <section>
-            <h4>Behaviour states</h4>
-            <DistributionList distribution={metrics.hiddenBehaviourDistribution} />
-          </section>
-        </div>
-      </div>
-
-      <div className="outputSection">
-        <h3>Per-turn transcript and log</h3>
-        <div className="turnSummaryStack">
-          {(output.turnSummaries || []).map((turn) => (
-            <TurnSummary key={turn.turn} turn={turn} />
-          ))}
-        </div>
-      </div>
+      <p className="helpText">
+        The complete final results, transcript, validation outcomes, ARM values, and condition-appropriate cue/state estimates are exported as a Markdown document.
+      </p>
     </section>
   );
 }

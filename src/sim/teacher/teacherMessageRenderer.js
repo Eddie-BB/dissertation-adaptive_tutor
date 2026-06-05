@@ -120,15 +120,46 @@ function normalizeLessonOpening(message, lessonProgress = null) {
   const lessonLabel = String(lessonProgress?.lessonLabel || '').trim();
 
   if (!lessonProgress?.isInitialTeacherTurn || !lessonLabel) {
-    return text;
+    return stripMathDelimiters(text);
   }
 
   const opening = `Today we are working on ${lessonLabel}.`;
-  if (text.toLowerCase().startsWith(opening.toLowerCase())) {
-    return text;
+  const normalizedText = normalizeOpeningText(text);
+  const normalizedLessonLabel = normalizeOpeningText(lessonLabel);
+  const alreadyIntroducesLesson =
+    normalizedText.startsWith(normalizeOpeningText(opening)) ||
+    (
+      normalizedText.startsWith('welcome to the lesson on ') &&
+      normalizedText.includes(normalizedLessonLabel)
+    ) ||
+    (
+      normalizedText.startsWith('welcome to ') &&
+      normalizedText.includes(normalizedLessonLabel)
+    );
+
+  if (alreadyIntroducesLesson) {
+    return stripMathDelimiters(text);
   }
 
-  return `${opening} ${text}`;
+  return stripMathDelimiters(`${opening} ${text}`);
+}
+
+function normalizeOpeningText(value) {
+  return stripMathDelimiters(value)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function stripMathDelimiters(value) {
+  return String(value || '')
+    .replace(/\$\$([^$]+)\$\$/g, '$1')
+    .replace(/\$([^$]+)\$/g, '$1')
+    .replace(/\\\((.*?)\\\)/g, '$1')
+    .replace(/\\\[(.*?)\\\]/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 async function renderTeacherMessageWithAdapter({
