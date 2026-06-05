@@ -170,6 +170,6 @@ test('unavailable model adapter normalizes to environment guidance', () => {
   assert.equal(response.body.errorCode, 'MODEL_ADAPTER_UNAVAILABLE');
   assert.equal(
     response.body.message,
-    'The model adapter is unavailable. Check your environment settings or use the mock runner.'
+    'The model adapter is unavailable. Check your environment settings or configure a valid adapter.'
   );
 });

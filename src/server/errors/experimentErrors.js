@@ -46,7 +46,7 @@ const ERROR_DEFINITIONS = {
   },
   MODEL_ADAPTER_UNAVAILABLE: {
     status: 503,
-    message: "The model adapter is unavailable. Check your environment settings or use the mock runner.",
+    message: "The model adapter is unavailable. Check your environment settings or configure a valid adapter.",
     recoverable: true
   },
   STUDENT_RESPONSE_INVALID: {

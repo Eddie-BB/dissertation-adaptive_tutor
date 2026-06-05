@@ -24,7 +24,6 @@ export default function ExperimentConfigPanel({
           <p className="fieldLabel">Experiment setup</p>
           <h2 id="experiment-config-title">Run configuration</h2>
         </div>
-        <span className="runnerBadge">Local mock runner</span>
       </div>
 
       <div className="controlStack">
