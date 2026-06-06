@@ -4,6 +4,7 @@ import { applyAppraisalTurn, resetStudentRuntimeState } from "../../sim/lib/lear
 import { createTeacher } from "../../sim/teacher/teacherFactory.js";
 import { extractCues } from "../../sim/teacher/cueExtractor.js";
 import { renderTeacherMessageWithAdapter } from "../../sim/teacher/teacherMessageRenderer.js";
+import { planTutorTurn } from "../../sim/teacher/tutorTurnPlanner.js";
 import { getActiveLesson } from "../content/lessonStore.js";
 import { createExperimentError } from "../errors/experimentErrors.js";
 
@@ -231,6 +232,38 @@ function summarizeEstimatedArm(stateEstimate = null) {
   };
 }
 
+function summarizePolicySignals(signals = {}) {
+  return Object.fromEntries(
+    Object.entries(signals || {}).map(([key, value]) => [
+      key,
+      typeof value === "number" ? roundMetric(value) : value
+    ])
+  );
+}
+
+function summarizeActionChoice(debug = null) {
+  if (!debug) {
+    return null;
+  }
+
+  return {
+    selectedScore: roundMetric(debug.selectedScore),
+    consideredActions: Array.isArray(debug.consideredActions)
+      ? debug.consideredActions.map((item) => ({
+          action: normalizeReportLabel(item.action),
+          score: roundMetric(item.score),
+          rationale: item.rationale || ""
+        }))
+      : [],
+    disabledActions: Array.isArray(debug.disabledActions)
+      ? debug.disabledActions.map((item) => ({
+          action: normalizeReportLabel(item.action),
+          reasons: item.reasons || []
+        }))
+      : []
+  };
+}
+
 function summarizeComponentScores(componentScores = {}) {
   return Object.fromEntries(
     Object.entries(componentScores || {}).map(([key, payload]) => [
@@ -262,6 +295,22 @@ function summarizeArmComputation(appraisalLog = null) {
       A_t: roundMetric(appraisalLog.intermediate_values?.A_t)
     },
     scorerType: appraisalLog.scorer_type || null
+  };
+}
+
+function summarizeGeneratedCorrectness(behaviouralLog = null) {
+  const calibration = behaviouralLog?.answer_outcome_calibration;
+  if (!calibration) {
+    return null;
+  }
+
+  return {
+    intendedAnswerOutcome: calibration.intendedAnswerOutcome || calibration.intended_answer_outcome || null,
+    pCorrect: roundMetric(calibration.pCorrect),
+    baseCorrectness: roundMetric(calibration.baseCorrectness),
+    sample: roundMetric(calibration.sample),
+    formula: calibration.formula || "",
+    rationale: calibration.rationale || ""
   };
 }
 
@@ -358,9 +407,21 @@ function buildTurnSummaries(turnLogs) {
       tutor: {
         text: turnLog.public_teacher_message,
         action: normalizeReportLabel(turnLog.teacher_action),
+        instructionalAction: normalizeReportLabel(turnLog.tutor_turn_plan?.instructional_action),
+        modifierAction: normalizeReportLabel(turnLog.tutor_turn_plan?.modifier_action),
+        feedbackType: normalizeReportLabel(turnLog.tutor_turn_plan?.feedback?.type),
+        stepAdvanced: Boolean(turnLog.tutor_turn_plan?.step_advanced),
+        includedProblemMaterial: Boolean(turnLog.tutor_turn_plan?.must_include_current_problem),
+        askedForResponse: Boolean(turnLog.tutor_turn_plan?.must_ask_for_response),
         rationale: turnLog.teacher_condition === "baseline" ? null : turnLog.teacher_rationale,
         cues: usesTutorCues(turnLog.teacher_condition)
           ? summarizeTutorCues(turnLog.tutor_cues)
+          : null,
+        policySignals: usesTutorCues(turnLog.teacher_condition)
+          ? summarizePolicySignals(turnLog.teacher_decision_debug?.signals)
+          : null,
+        actionChoice: usesTutorCues(turnLog.teacher_condition)
+          ? summarizeActionChoice(turnLog.teacher_decision_debug)
           : null,
         showCueStateEstimates: usesTutorCues(turnLog.teacher_condition) || showStateEstimate,
         estimatedArm,
@@ -374,7 +435,12 @@ function buildTurnSummaries(turnLogs) {
         incorrectAttemptCount: turnLog.incorrect_attempt_count || 0,
         validationInputSource: turnLog.validation_result?.validationInputSource || null,
         normalizedStudentAnswer: turnLog.validation_result?.normalisedStudentAnswer || null,
-        normalizedExpectedAnswer: turnLog.validation_result?.normalisedExpectedAnswer || null
+        normalizedExpectedAnswer: turnLog.validation_result?.normalisedExpectedAnswer || null,
+        submittedAnswer: turnLog.structured_student_answer || "",
+        expectedAnswers: turnLog.expected_answers || [],
+        acceptedAnswers: turnLog.accepted_answers || [],
+        answerType: turnLog.answer_type || null,
+        validationMode: turnLog.validation_mode || null
       },
       student: {
         text: turnLog.public_student_message,
@@ -384,7 +450,8 @@ function buildTurnSummaries(turnLogs) {
         behaviourState: normalizeReportLabel(turnLog.hidden_student_behaviour),
         arm: actualArm,
         armChangeFromPreviousTurn: diffArm(actualArm, previousArm),
-        armComputation: summarizeArmComputation(turnLog.hidden_appraisal_log)
+        armComputation: summarizeArmComputation(turnLog.hidden_appraisal_log),
+        generatedCorrectness: summarizeGeneratedCorrectness(turnLog.hidden_behavioural_log)
       }
     };
   });
@@ -394,10 +461,24 @@ function buildSummaryMetrics(turnLogs) {
   const validationResults = turnLogs.map((turnLog) => turnLog.validation_result || {});
   const totalCorrect = validationResults.filter((result) => result.isCorrect).length;
   const totalIncorrect = validationResults.length - totalCorrect;
+  const completedStepIds = new Set(
+    turnLogs
+      .filter((turnLog) => turnLog.validation_result?.isCorrect)
+      .map((turnLog) => turnLog.step_id)
+      .filter(Boolean)
+  );
+  const completedProblemIds = new Set(
+    turnLogs
+      .filter((turnLog) => turnLog.validation_result?.isCorrect)
+      .map((turnLog) => turnLog.problem_id)
+      .filter(Boolean)
+  );
 
   return {
     totalCorrectResponses: totalCorrect,
     totalIncorrectResponses: totalIncorrect,
+    completedSteps: completedStepIds.size,
+    completedProblems: completedProblemIds.size,
     tutorActionDistribution: buildDistribution(turnLogs.map((turnLog) => turnLog.teacher_action)),
     studentActionDistribution: buildDistribution(turnLogs.map((turnLog) => turnLog.student_action)),
     hiddenBehaviourDistribution: buildDistribution(
@@ -466,6 +547,8 @@ export async function runTutorExperimentSession(config = {}) {
   let currentStepIndex = 0;
   let repeatedIncorrectOnCurrentStep = 0;
   let lastTurnOutcome = null;
+  let previousTurnForPlanning = null;
+  let lastStepAdvanced = false;
 
   for (let turn = 1; turn <= maxTurns; turn += 1) {
     const step = steps[currentStepIndex] || steps[steps.length - 1];
@@ -507,9 +590,26 @@ export async function runTutorExperimentSession(config = {}) {
     });
     teacherState = teacherDecision.stateUpdate || teacherState;
 
+    const tutorTurnPlan = planTutorTurn({
+      teacherDecision,
+      currentStep: step,
+      taskContext,
+      previousTurn: previousTurnForPlanning,
+      stepAdvanced: lastStepAdvanced,
+      lessonProgress: {
+        isInitialTeacherTurn: turn === 1,
+        lessonLabel: lesson.lesson?.lessonLabel || "",
+        currentStepIndex,
+        totalSteps: steps.length,
+        repeatedIncorrectOnCurrentStep,
+        previousOutcomeCategory: lastTurnOutcome?.category || null
+      }
+    });
+
     const teacherMessage = await renderTeacherMessageWithAdapter({
       teacherDecision,
       taskContext,
+      tutorTurnPlan,
       visibleTurnHistory,
       conditionId,
       lessonProgress: {
@@ -539,8 +639,10 @@ export async function runTutorExperimentSession(config = {}) {
         ...config.learnerRuntimeConfig,
         condition_id: conditionId,
         rngSeed: config.seed,
-        stepContext: taskContext,
-        taskState: taskContext
+        ...(config.exposeHiddenTaskToStudent ? {
+          stepContext: taskContext,
+          taskState: taskContext
+        } : {})
       }
     });
     const studentResponse = appraisalTurn.behavioural_emission || {};
@@ -577,9 +679,17 @@ export async function runTutorExperimentSession(config = {}) {
       problem_id: step.problemId,
       step_id: step.stepId || step.id,
       step_title: step.stepTitle || "",
+      answer_type: step.answerType || "",
+      validation_mode: step.validation?.mode || "",
+      expected_answers: step.expectedAnswers || [],
+      accepted_answers: step.acceptedAnswers || [],
       teacher_condition: conditionId,
       teacher_action: teacherDecision.action,
       teacher_rationale: teacherDecision.rationale,
+      tutor_turn_plan: tutorTurnPlan,
+      step_advanced_from_previous_turn: lastStepAdvanced,
+      previous_step_id: previousTurnForPlanning?.step?.stepId || previousTurnForPlanning?.step?.id || null,
+      current_step_id: step.stepId || step.id,
       tutor_cues: cues,
       teacher_decision_debug: teacherDecision.debug,
       teacher_message_metadata: teacherMessage.metadata,
@@ -621,12 +731,20 @@ export async function runTutorExperimentSession(config = {}) {
       category: validationResult.category,
       confidence: validationResult.confidence
     };
+    previousTurnForPlanning = {
+      step,
+      studentText,
+      studentResponse,
+      validationResult
+    };
 
     if (validationResult.isCorrect) {
       currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
       repeatedIncorrectOnCurrentStep = 0;
+      lastStepAdvanced = true;
     } else {
       repeatedIncorrectOnCurrentStep += 1;
+      lastStepAdvanced = false;
     }
   }
 
@@ -654,7 +772,7 @@ export async function runTutorExperimentSession(config = {}) {
     experimenterOutput,
     experimenter_debug_log: {
       visibility_boundary:
-        "teacher receives visible lesson/progress/transcript only; hidden ARM and behaviour are logged for researcher analysis only",
+        "teacher receives lesson/progress/transcript for planning; simulated student text generation receives visible tutor text/history only unless exposeHiddenTaskToStudent is explicitly enabled; hidden ARM and behaviour are logged for researcher analysis only",
       turn_logs: turnLogs,
       summary: buildRunSummary(turnLogs)
     }

@@ -158,6 +158,10 @@ export async function applyAppraisalTurn({
       config
     );
 
+    const studentVisibleTaskState = config.exposeHiddenTaskToStudent
+      ? config.task_state || config.taskState || config.step_context || config.stepContext || null
+      : null;
+
     behaviouralEmission = await emitBehaviouralResponse({
       behaviouralHandoff: {
         student_id: record.student_id,
@@ -167,7 +171,7 @@ export async function applyAppraisalTurn({
         A_t: appraisal.A_t
       },
       teacherText,
-      taskState: config.task_state || config.taskState || config.step_context || config.stepContext || null,
+      taskState: studentVisibleTaskState,
       visibleHistory: teacherHistory,
       turnNumber,
       rngSeed: config.rng_seed || config.rngSeed || record.seed,

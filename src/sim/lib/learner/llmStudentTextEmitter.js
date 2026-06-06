@@ -52,6 +52,22 @@ const ACTION_BY_BEHAVIOUR = {
   DISENGAGED_NON_RESPONSE: 'no_response'
 };
 
+const OUTCOME_RULES = {
+  correct: [
+    'submit a plausible correct answer if the visible tutor message provides an answerable task',
+    'keep the reasoning brief and grounded only in visible text'
+  ],
+  incorrect: [
+    'make a genuine attempt, but the submitted answer should be plausibly incorrect',
+    'use a realistic slip, incomplete reasoning, or misconception rather than random nonsense',
+    'do not state that the response is intentionally incorrect'
+  ],
+  no_answer: [
+    'do not submit an answer',
+    'respond naturally with uncertainty, disengagement, or a request for clarification as appropriate'
+  ]
+};
+
 function normalizeSentenceLimit(value) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) {
@@ -169,10 +185,14 @@ function createLlmStudentTextAdapter(config = {}) {
 
 function buildStudentTextContract(input = {}) {
   const selectedBehaviour = input.selected_behaviour || input.selectedBehaviour || null;
+  const intendedAnswerOutcome = input.intended_answer_outcome || input.intendedAnswerOutcome || null;
   return {
     task: 'student_visible_text_emission',
     selected_behaviour: selectedBehaviour,
     behaviour_generation_rules: BEHAVIOUR_RULES[selectedBehaviour] || [],
+    intended_answer_outcome: intendedAnswerOutcome,
+    answer_outcome_rules: OUTCOME_RULES[intendedAnswerOutcome] || [],
+    correctness_calibration: input.correctness_calibration || input.correctnessCalibration || null,
     hidden_appraisal_values_for_student_generation_only: {
       M_t: input.M_t ?? null,
       R_t: input.R_t ?? null,
@@ -197,11 +217,13 @@ function buildStudentTextContract(input = {}) {
     turn_number: input.turn_number || 1,
     max_response_sentences: normalizeSentenceLimit(input.max_response_sentences),
     grounding_rules: [
-      'Use the actual task and teacher input.',
-      'If the task is arithmetic, interact with the numbers directly.',
+      'Use only the visible teacher input and visible history as the source of task material.',
+      'If no question or task is visible in the teacher message, do not answer hidden lesson material; ask what to try next or respond naturally to the visible message.',
+      'If the visible task is arithmetic, interact with the numbers directly.',
       'For arithmetic answers, put only the numeric value, fraction, decimal, or LaTeX fraction in student_answer.',
       'For multiple-choice answers, put only the chosen option text in student_answer.',
       'Avoid generic filler such as "I will work through it step by step" unless it includes a concrete task attempt.',
+      'Follow intended_answer_outcome for answer correctness while preserving the selected behaviour style.',
       'Do not name the selected behaviour label in the response.'
     ]
   };
@@ -223,7 +245,8 @@ async function emitLlmStudentText(input = {}, options = {}) {
     fallback_mode: 'fail_closed',
     metadata: {
       turn_id: input.turn_id || null,
-      selected_behaviour: contract.selected_behaviour
+      selected_behaviour: contract.selected_behaviour,
+      intended_answer_outcome: contract.intended_answer_outcome
     }
   });
 
@@ -246,6 +269,7 @@ async function emitLlmStudentText(input = {}, options = {}) {
 
 export {
   BEHAVIOUR_RULES,
+  OUTCOME_RULES,
   buildStudentTextContract,
   createLlmStudentTextAdapter,
   createFallbackStudentPayload,

@@ -49,15 +49,17 @@ function createTeacherMessageAdapter(config = {}) {
       config.teacherMessageModel ||
       undefined,
     modelEnvKey: 'OPENAI_TEACHER_MESSAGE_MODEL',
-    maxOutputTokens: 320,
+    maxOutputTokens: 220,
     promptBuilder(contract) {
       return {
         system: [
           'You generate the visible teacher message in a tutoring simulation.',
-          'Use the selected symbolic teacher decision exactly; do not choose a different action.',
-          'Use only teacher-visible lesson context, student-visible history, and the provided decision metadata.',
+          'Use the tutor_turn_plan exactly; do not choose extra actions or lesson content.',
+          'Use only the required content, visible history, and provided decision metadata.',
           'Do not mention hidden ARM values, behaviour labels, appraisals, logs, probabilities, or simulator internals.',
-          'Keep the message instructionally useful, concise, and appropriate for the selected action.',
+          'Keep the message brief: no more than the plan max_sentences.',
+          'Avoid exaggerated praise and do not repeat praise statements.',
+          'If the plan expects a student response, include the current problem material and a clear response instruction.',
           'Return strict JSON only: {"teacher_message":"..."}'
         ].join('\n'),
         user: JSON.stringify(contract, null, 2)
@@ -80,37 +82,41 @@ function createTeacherMessageAdapter(config = {}) {
 function buildTeacherMessageContract({
   teacherDecision,
   taskContext,
+  tutorTurnPlan = null,
   visibleTurnHistory = [],
   conditionId = null,
   lessonProgress = null
 }) {
+  const currentStep = tutorTurnPlan?.current_step || {
+    problem_id: taskContext.problem_id || taskContext.problemId || null,
+    step_id: taskContext.step_id || taskContext.stepId || null,
+    step_title: taskContext.step_title || taskContext.stepTitle || '',
+    step_body: taskContext.step_body || taskContext.stepBody || '',
+    choices: taskContext.choices || [],
+    answer_type: taskContext.answer_type || taskContext.answerType || null
+  };
+
   return {
     task: 'teacher_visible_message_generation',
     condition_id: conditionId || teacherDecision?.debug?.conditionSpecId || null,
     selected_teacher_action: teacherDecision?.action || null,
+    tutor_turn_plan: tutorTurnPlan,
     decision_rationale: teacherDecision?.rationale || null,
     support_level_signals: teacherDecision?.debug?.signals || null,
     state_aware_estimate: teacherDecision?.debug?.stateEstimate || null,
     considered_teacher_actions: teacherDecision?.debug?.consideredActions || [],
-    current_step: {
-      problem_id: taskContext.problem_id || taskContext.problemId || null,
-      step_id: taskContext.step_id || taskContext.stepId || null,
-      step_title: taskContext.step_title || taskContext.stepTitle || '',
-      step_body: taskContext.step_body || taskContext.stepBody || '',
-      hints: taskContext.hints || [],
-      selected_hint: taskContext.selected_hint || taskContext.selectedHint || null,
-      answer_type: taskContext.answer_type || taskContext.answerType || null
-    },
+    current_step: currentStep,
     lesson_progress: lessonProgress,
     visible_turn_history: (Array.isArray(visibleTurnHistory) ? visibleTurnHistory : []).slice(-4),
     rules: [
       lessonProgress?.isInitialTeacherTurn && lessonProgress?.lessonLabel
         ? `Begin the message by introducing the lesson: "${lessonProgress.lessonLabel}".`
         : 'Do not re-introduce the lesson unless this is the first teacher turn.',
-      'The message must instantiate the selected_teacher_action.',
-      'The message should help the student with the current step.',
+      'Instantiate the tutor_turn_plan; selected_teacher_action may be a modifier rather than the whole message.',
+      'The message should help the student with the current step only when the plan requires current problem material.',
       'Do not reveal expected answers unless the selected action explicitly calls for bottom-out support.',
-      'Do not expose hidden student state, hidden appraisal values, or behaviour labels.'
+      'Do not expose hidden student state, hidden appraisal values, or behaviour labels.',
+      'Do not include hints, examples, choices, break suggestions, or praise unless the plan includes that component.'
     ]
   };
 }
@@ -165,6 +171,7 @@ function stripMathDelimiters(value) {
 async function renderTeacherMessageWithAdapter({
   teacherDecision,
   taskContext,
+  tutorTurnPlan = null,
   visibleTurnHistory = [],
   conditionId = null,
   lessonProgress = null,
@@ -180,6 +187,7 @@ async function renderTeacherMessageWithAdapter({
   const contract = buildTeacherMessageContract({
     teacherDecision,
     taskContext,
+    tutorTurnPlan,
     visibleTurnHistory,
     conditionId,
     lessonProgress
@@ -190,7 +198,8 @@ async function renderTeacherMessageWithAdapter({
     metadata: {
       generation_task: 'teacher_message_generation',
       condition_id: conditionId || null,
-      teacher_action: teacherDecision?.action || null
+      teacher_action: teacherDecision?.action || null,
+      tutor_turn_plan: tutorTurnPlan
     }
   });
 
@@ -212,7 +221,7 @@ async function renderTeacherMessageWithAdapter({
       adapter_metadata: result.adapter_metadata
     }
   );
-  const validation = validateTeacherMessage(rendered);
+  const validation = validateTeacherMessage(rendered, tutorTurnPlan);
   if (!validation.valid) {
     throw new Error(`Teacher message validation failed: ${validation.reason}`);
   }
@@ -223,17 +232,43 @@ async function renderTeacherMessageWithAdapter({
   };
 }
 
-function validateTeacherMessage(teacherMessage) {
+function validateTeacherMessage(teacherMessage, tutorTurnPlan = null) {
   if (!teacherMessage?.isValid) {
     return { valid: false, reason: 'Message marked invalid by renderer' };
   }
   if (!teacherMessage.teacher_message || teacherMessage.teacher_message.trim().length === 0) {
     return { valid: false, reason: 'Message is empty' };
   }
-  if (teacherMessage.teacher_message.length > 10000) {
+  if (teacherMessage.teacher_message.length > 2000) {
     return { valid: false, reason: 'Message exceeds reasonable length' };
   }
+  if (tutorTurnPlan?.must_include_current_problem) {
+    const requiredProblem = stripMathDelimiters(
+      tutorTurnPlan.required_content?.current_problem_material || ''
+    );
+    if (requiredProblem && !containsCoreProblemText(teacherMessage.teacher_message, requiredProblem)) {
+      return { valid: false, reason: 'Message omitted active problem material' };
+    }
+  }
   return { valid: true, reason: 'ok' };
+}
+
+function containsCoreProblemText(message, requiredProblem) {
+  const normalizedMessage = normalizeOpeningText(message);
+  const normalizedProblem = normalizeOpeningText(requiredProblem);
+  if (!normalizedProblem) {
+    return true;
+  }
+  if (normalizedMessage.includes(normalizedProblem)) {
+    return true;
+  }
+
+  const tokens = normalizedProblem.split(' ').filter((token) => token.length > 2);
+  if (tokens.length === 0) {
+    return true;
+  }
+  const matched = tokens.filter((token) => normalizedMessage.includes(token)).length;
+  return matched / tokens.length >= 0.65;
 }
 
 export {

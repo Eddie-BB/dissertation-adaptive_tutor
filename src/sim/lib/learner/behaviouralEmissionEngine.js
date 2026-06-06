@@ -22,7 +22,20 @@ const BEHAVIOUR_WEIGHTS = {
 const DEFAULT_BEHAVIOURAL_CONSTANTS = {
   tau: 0.5,
   max_reasoning_steps: 4,
-  max_response_sentences: 4
+  max_response_sentences: 4,
+  correctness_prior_by_behaviour: {
+    ENGAGED_ATTEMPT: 0.65,
+    MINIMAL_COMPLIANCE: 0.40,
+    HELP_SEEKING_CONFUSION: 0.10,
+    CARELESS_GUESS: 0.20,
+    OFF_TASK: 0.00,
+    DISENGAGED_NON_RESPONSE: 0.00
+  },
+  correctness_arm_weights: {
+    A_t: 0.15,
+    R_t: 0.07,
+    M_t: -0.10
+  }
 };
 
 function behaviouralError(message, metadata = {}) {
@@ -142,6 +155,68 @@ function sampleBehaviour(probabilities, { rngSeed, studentId, turnId, turnNumber
   return { selectedBehaviour: BEHAVIOUR_LABELS[BEHAVIOUR_LABELS.length - 1], sample };
 }
 
+function clamp01(value) {
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
+}
+
+function roundProbability(value) {
+  return Number(value.toFixed(6));
+}
+
+function computeCorrectnessProbability({ selectedBehaviour, handoff, constants }) {
+  const priors = constants.correctness_prior_by_behaviour || {};
+  const weights = constants.correctness_arm_weights || {};
+  const baseCorrectness = Number(priors[selectedBehaviour] ?? 0);
+  const pCorrect = clamp01(
+    baseCorrectness
+    + Number(weights.A_t ?? 0) * handoff.A_t
+    + Number(weights.R_t ?? 0) * handoff.R_t
+    + Number(weights.M_t ?? 0) * handoff.M_t
+  );
+
+  return {
+    baseCorrectness: roundProbability(clamp01(baseCorrectness)),
+    pCorrect: roundProbability(pCorrect),
+    formula: 'behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t',
+    weights: {
+      A_t: Number(weights.A_t ?? 0),
+      R_t: Number(weights.R_t ?? 0),
+      M_t: Number(weights.M_t ?? 0)
+    }
+  };
+}
+
+function sampleAnswerOutcome({ selectedBehaviour, handoff, constants, rngSeed, turnNumber }) {
+  const correctness = computeCorrectnessProbability({ selectedBehaviour, handoff, constants });
+  const sample = seededUnit([
+    rngSeed,
+    handoff.student_id,
+    handoff.turn_id,
+    turnNumber,
+    selectedBehaviour,
+    'answer_correctness'
+  ]);
+  const nonAnswerBehaviours = new Set(['OFF_TASK', 'DISENGAGED_NON_RESPONSE']);
+  const intendedAnswerOutcome = nonAnswerBehaviours.has(selectedBehaviour)
+    ? 'no_answer'
+    : sample <= correctness.pCorrect
+      ? 'correct'
+      : 'incorrect';
+
+  return {
+    ...correctness,
+    sample: roundProbability(sample),
+    intendedAnswerOutcome,
+    rationale: [
+      `Selected behaviour prior=${correctness.baseCorrectness}.`,
+      `ARM-adjusted pCorrect=${correctness.pCorrect}.`,
+      `Seeded sample=${roundProbability(sample)}.`
+    ].join(' ')
+  };
+}
+
 async function emitBehaviouralResponse({
   behaviouralHandoff,
   teacherText,
@@ -165,9 +240,18 @@ async function emitBehaviouralResponse({
     turnId: handoff.turn_id,
     turnNumber
   });
+  const answerOutcome = sampleAnswerOutcome({
+    selectedBehaviour,
+    handoff,
+    constants,
+    rngSeed,
+    turnNumber
+  });
 
   const textEmission = await emitLlmStudentText({
     selected_behaviour: selectedBehaviour,
+    intended_answer_outcome: answerOutcome.intendedAnswerOutcome,
+    correctness_calibration: answerOutcome,
     M_t: handoff.M_t,
     R_t: handoff.R_t,
     A_t: handoff.A_t,
@@ -198,6 +282,7 @@ async function emitBehaviouralResponse({
       sample: Number(sample.toFixed(6))
     },
     selected_behaviour: selectedBehaviour,
+    answer_outcome_calibration: answerOutcome,
     generated_text: textEmission.student_text,
     generated_answer: textEmission.student_answer,
     generated_action: textEmission.student_action,
@@ -216,6 +301,8 @@ async function emitBehaviouralResponse({
     student_action: textEmission.student_action,
     student_explanation: textEmission.student_explanation,
     selected_behaviour: selectedBehaviour,
+    intended_answer_outcome: answerOutcome.intendedAnswerOutcome,
+    answer_outcome_calibration: answerOutcome,
     behavioural_log: behaviouralLog,
     behaviouralLog,
     probabilities
@@ -227,8 +314,10 @@ export {
   BEHAVIOUR_WEIGHTS,
   DEFAULT_BEHAVIOURAL_CONSTANTS,
   applyGates,
+  computeCorrectnessProbability,
   computeBaseLogits,
   emitBehaviouralResponse,
+  sampleAnswerOutcome,
   sampleBehaviour,
   softmax,
   validateHandoff
