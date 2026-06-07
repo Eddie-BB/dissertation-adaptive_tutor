@@ -22,10 +22,16 @@ const LOCAL_ENV_OVERRIDE_KEYS = new Set([
   'OPENAI_TEACHER_MESSAGE_MODEL',
   'OPENAI_STATE_AWARE_APPRAISAL_MODEL',
   'OPENAI_ANSWER_EVALUATOR_MODEL',
+  'OPENAI_TIMEOUT_MS',
+  'OPENAI_MAX_RETRIES',
+  'OPENAI_RETRY_DELAY_MS',
   'OATUTOR_ANSWER_EVALUATOR_MODE'
 ]);
 
 let localEnvLoaded = false;
+const DEFAULT_OPENAI_TIMEOUT_MS = 60000;
+const DEFAULT_OPENAI_MAX_RETRIES = 2;
+const DEFAULT_OPENAI_RETRY_DELAY_MS = 750;
 
 function normalizeAdapterMessage(output, messageKeys = []) {
   if (typeof output === 'string' && output.trim().length > 0) {
@@ -133,6 +139,45 @@ function extractOpenAiResponseText(payload = {}) {
   return segments.join('\n').trim();
 }
 
+function safePositiveInteger(value, fallback) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
+
+  return Math.floor(parsed);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function createOpenAiHttpError(status, responseText) {
+  const error = new Error(`OpenAI Responses API error ${status}: ${responseText}`);
+  error.status = status;
+  return error;
+}
+
+function isRetryableOpenAiError(error) {
+  const status = Number(error?.status);
+  if (Number.isFinite(status)) {
+    return status === 408 || status === 409 || status === 429 || status >= 500;
+  }
+
+  const message = String(error?.message || '').toLowerCase();
+  return (
+    error?.name === 'AbortError'
+    || message.includes('timeout')
+    || message.includes('timed out')
+    || message.includes('econnreset')
+    || message.includes('socket')
+    || message.includes('upstream connect error')
+    || message.includes('disconnect/reset')
+  );
+}
+
 async function callOpenAiResponsesApi({
   apiKey,
   project = null,
@@ -141,19 +186,22 @@ async function callOpenAiResponsesApi({
   model,
   prompt = {},
   jsonSchema = null,
-  timeoutMs = 30000,
-  maxOutputTokens = 800
+  timeoutMs = DEFAULT_OPENAI_TIMEOUT_MS,
+  maxOutputTokens = 800,
+  maxRetries = DEFAULT_OPENAI_MAX_RETRIES,
+  retryDelayMs = DEFAULT_OPENAI_RETRY_DELAY_MS
 } = {}) {
   const trimmedApiKey = typeof apiKey === 'string' ? apiKey.trim() : '';
   const trimmedProject = typeof project === 'string' ? project.trim() : '';
   const trimmedOrganization = typeof organization === 'string' ? organization.trim() : '';
+  const safeTimeoutMs = safePositiveInteger(timeoutMs, DEFAULT_OPENAI_TIMEOUT_MS);
+  const safeMaxRetries = safePositiveInteger(maxRetries, DEFAULT_OPENAI_MAX_RETRIES);
+  const safeRetryDelayMs = safePositiveInteger(retryDelayMs, DEFAULT_OPENAI_RETRY_DELAY_MS);
 
   if (!trimmedApiKey) {
     throw new Error('OPENAI_API_KEY is not configured');
   }
 
-  const controller = new AbortController();
-  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
   const endpoint = `${String(baseUrl).replace(/\/$/, '')}/responses`;
 
   const requestBody = {
@@ -196,29 +244,49 @@ async function callOpenAiResponsesApi({
     headers['OpenAI-Organization'] = trimmedOrganization;
   }
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
-    });
+  let lastError = null;
+  const attemptCount = safeMaxRetries + 1;
+  for (let attempt = 1; attempt <= attemptCount; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutHandle = setTimeout(() => controller.abort(), safeTimeoutMs);
 
-    const responseText = await response.text();
-    if (!response.ok) {
-      throw new Error(`OpenAI Responses API error ${response.status}: ${responseText}`);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        throw createOpenAiHttpError(response.status, responseText);
+      }
+
+      const payload = JSON.parse(responseText);
+      const outputText = extractOpenAiResponseText(payload);
+      if (!outputText) {
+        throw new Error('OpenAI Responses API returned no structured output text');
+      }
+
+      return outputText;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attemptCount || !isRetryableOpenAiError(error)) {
+        break;
+      }
+
+      await sleep(safeRetryDelayMs * attempt);
+    } finally {
+      clearTimeout(timeoutHandle);
     }
-
-    const payload = JSON.parse(responseText);
-    const outputText = extractOpenAiResponseText(payload);
-    if (!outputText) {
-      throw new Error('OpenAI Responses API returned no structured output text');
-    }
-
-    return outputText;
-  } finally {
-    clearTimeout(timeoutHandle);
   }
+
+  if (safeMaxRetries > 0 && isRetryableOpenAiError(lastError)) {
+    throw new Error(`${lastError.message} after ${attemptCount} attempts`);
+  }
+
+  throw lastError;
 }
 
 function normalizeStructuredOutput(rawOutput) {
@@ -291,7 +359,10 @@ export function createOpenAiStructuredJsonAdapter(options = {}) {
     || 'gpt-4.1-mini'
   );
   const baseUrl = options.baseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-  const timeoutMs = options.timeoutMs || 30000;
+  const timeoutMs = options.timeoutMs || process.env.OPENAI_TIMEOUT_MS || DEFAULT_OPENAI_TIMEOUT_MS;
+  const maxRetries = options.maxRetries ?? process.env.OPENAI_MAX_RETRIES ?? DEFAULT_OPENAI_MAX_RETRIES;
+  const retryDelayMs =
+    options.retryDelayMs ?? process.env.OPENAI_RETRY_DELAY_MS ?? DEFAULT_OPENAI_RETRY_DELAY_MS;
   const maxOutputTokens = options.maxOutputTokens || 800;
   const promptBuilder = options.promptBuilder;
   const jsonSchema = options.jsonSchema || null;
@@ -316,6 +387,8 @@ export function createOpenAiStructuredJsonAdapter(options = {}) {
         prompt,
         jsonSchema,
         timeoutMs,
+        maxRetries,
+        retryDelayMs,
         maxOutputTokens
       });
     }

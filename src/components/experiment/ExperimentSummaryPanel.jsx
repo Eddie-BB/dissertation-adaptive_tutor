@@ -1,17 +1,15 @@
 "use client";
 
 export default function ExperimentSummaryPanel({ condition, lessonPlan, result, student }) {
-  const status = result?.status || "idle";
   const totalTurns = new Set(result?.transcript?.map((message) => message.turn) || []).size;
 
   return (
     <section className="panel summaryPanel" aria-labelledby="experiment-summary-title">
       <div className="panelHeader">
         <div>
-          <p className="fieldLabel">Run status</p>
+          <p className="fieldLabel">Run details</p>
           <h2 id="experiment-summary-title">Experiment summary</h2>
         </div>
-        <span className={`statusPill ${status}`}>{status}</span>
       </div>
 
       <dl className="summaryList">

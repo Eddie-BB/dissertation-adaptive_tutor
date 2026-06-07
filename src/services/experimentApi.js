@@ -52,6 +52,18 @@ export async function runExperiment(config) {
   return readJsonResponse(response, "Unable to run experiment");
 }
 
+export async function runBatchExperiments(config) {
+  const response = await fetch("/api/experiments/batch", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(config)
+  });
+
+  return readJsonResponse(response, "Unable to run batch experiments");
+}
+
 export async function generateStudentProfile(config) {
   const response = await fetch("/api/students/generate", {
     method: "POST",

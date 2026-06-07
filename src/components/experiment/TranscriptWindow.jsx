@@ -4,9 +4,12 @@ import { useEffect, useRef } from "react";
 import TranscriptMessage from "./TranscriptMessage";
 
 export default function TranscriptWindow({
+  batchRunOptions = [],
   error,
   condition,
   lessonPlan,
+  onBatchRunChange,
+  selectedBatchRunId,
   status,
   transcript
 }) {
@@ -26,6 +29,22 @@ export default function TranscriptWindow({
           <h2 id="transcript-title">Teacher-student transcript</h2>
         </div>
         <div className="transcriptSelection">
+          {batchRunOptions.length > 0 ? (
+            <label className="transcriptRunSelect">
+              <span>Batch run</span>
+              <select
+                aria-label="Batch transcript run"
+                onChange={(event) => onBatchRunChange?.(event.target.value)}
+                value={selectedBatchRunId || ""}
+              >
+                {batchRunOptions.map((run) => (
+                  <option key={run.runId} value={run.runId}>
+                    {run.runIndex}. {run.conditionId} seed {run.seed}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <span>{condition?.label || "No condition selected"}</span>
           <span>{lessonPlan?.label || "No lesson plan selected"}</span>
         </div>

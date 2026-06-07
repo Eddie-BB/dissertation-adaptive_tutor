@@ -1,15 +1,39 @@
 "use client";
 
+function downloadMarkdown(markdown, fileName) {
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName || "experiment-report.md";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function ExperimentConfigPanel({
+  batchError,
+  batchResult,
+  batchStatus,
   config,
   disabled,
+  experimentRunning,
+  experimentStatus,
   lessonPlans,
   onChange,
   onReset,
   onStart,
+  onStartBatch,
   student,
   conditions
 }) {
+  const batchRuns = Math.min(Math.max(Number(config.batchRuns) || 1, 1), 30);
+  const batchRunning = batchStatus === "running";
+  const activeStatus = batchStatus !== "idle" ? batchStatus : experimentStatus || "idle";
+  const batchArtifacts = batchResult?.artifacts || null;
+
   function updateField(field, value) {
     onChange({
       ...config,
@@ -21,7 +45,10 @@ export default function ExperimentConfigPanel({
     <section className="panel configPanel" aria-labelledby="experiment-config-title">
       <div className="panelHeader">
         <div>
-          <p className="fieldLabel">Experiment setup</p>
+          <div className="titleStatusRow">
+            <p className="fieldLabel">Experiment setup</p>
+            <span className={`statusPill ${activeStatus}`}>{activeStatus}</span>
+          </div>
           <h2 id="experiment-config-title">Run configuration</h2>
         </div>
       </div>
@@ -91,6 +118,20 @@ export default function ExperimentConfigPanel({
             />
           </label>
         </div>
+
+        <div className="batchOptions">
+          <label className="fieldControl">
+            <span>Number of runs</span>
+            <input
+              disabled={disabled}
+              max="30"
+              min="1"
+              onChange={(event) => updateField("batchRuns", Number(event.target.value))}
+              type="number"
+              value={config.batchRuns}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="runControls">
@@ -100,12 +141,82 @@ export default function ExperimentConfigPanel({
           onClick={onStart}
           type="button"
         >
-          {disabled ? "Running experiment" : "Start experiment"}
+          {experimentRunning ? "Running experiment" : "Start experiment"}
+        </button>
+        <button
+          className="primaryButton"
+          disabled={disabled || !config.conditionId || !config.lessonPlanId || batchRuns < 1}
+          onClick={onStartBatch}
+          type="button"
+        >
+          {batchRunning ? `Running ${batchRuns} runs` : "Start batch"}
         </button>
         <button className="secondaryButton" disabled={disabled} onClick={onReset} type="button">
           Reset experiment
         </button>
       </div>
+      {batchRunning ? (
+        <div className="batchRunningNotice" role="status" aria-live="polite">
+          <strong>Batch running</strong>
+          <span>{batchRuns} runs queued. Results will appear here when the batch finishes.</span>
+        </div>
+      ) : null}
+      {batchError ? (
+        <p className="errorText" role="alert">
+          {batchError}
+        </p>
+      ) : null}
+      {batchResult ? (
+        <dl className="summaryList batchSummaryList">
+          <div>
+            <dt>Batch completed</dt>
+            <dd>
+              {batchResult.completedRuns ?? 0} of {batchResult.totalRuns ?? batchRuns}
+            </dd>
+          </div>
+          <div>
+            <dt>Failed</dt>
+            <dd>{batchResult.failedRuns ?? 0}</dd>
+          </div>
+          <div>
+            <dt>Output folder</dt>
+            <dd>{batchResult.outputDir || "Pending"}</dd>
+          </div>
+          <div>
+            <dt>Manifest</dt>
+            <dd>{batchResult.manifestPath || "Pending"}</dd>
+          </div>
+        </dl>
+      ) : null}
+      {batchArtifacts ? (
+        <div className="batchReports">
+          <h3>Batch Markdown reports</h3>
+          <button
+            className="secondaryButton exportButton"
+            onClick={() =>
+              downloadMarkdown(
+                batchArtifacts.summary?.markdown,
+                batchArtifacts.summary?.markdownFileName
+              )
+            }
+            type="button"
+          >
+            Download batch summary
+          </button>
+          <div className="reportList">
+            {(batchArtifacts.runs || []).map((run) => (
+              <button
+                className="secondaryButton reportButton"
+                key={run.runId}
+                onClick={() => downloadMarkdown(run.markdown, run.markdownFileName)}
+                type="button"
+              >
+                {run.runIndex}. {run.conditionId} seed {run.seed}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {!student?.student_id ? (
         <p className="helpText">Generate a student profile before starting the experiment.</p>
       ) : (

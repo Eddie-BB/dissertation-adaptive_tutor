@@ -1,0 +1,26 @@
+{
+  "batchId": "batch-baseline-seed-17",
+  "startedAt": "2026-06-07T16:55:50.942Z",
+  "outputDir": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-17",
+  "totalRuns": 1,
+  "runs": [
+    {
+      "runIndex": 1,
+      "status": "complete",
+      "runId": "run-baseline-batch-baseline-seed-17-baseline-seed-0-r1-0",
+      "conditionId": "baseline",
+      "seed": 0,
+      "studentId": "batch-baseline-seed-17-baseline-seed-0-r1",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 7,
+      "totalIncorrectResponses": 13,
+      "completedSteps": 7,
+      "completedProblems": 7,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-17\\run-baseline-batch-baseline-seed-17-baseline-seed-0-r1-0.md"
+    }
+  ],
+  "completedAt": "2026-06-07T16:58:44.745Z",
+  "completedRuns": 1,
+  "failedRuns": 0,
+  "manifestPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-17\\manifest.json"
+}

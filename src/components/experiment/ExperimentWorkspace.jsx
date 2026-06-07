@@ -6,6 +6,7 @@ import {
   getAvailableConditions,
   getAvailableLessonPlans,
   runExperiment,
+  runBatchExperiments,
   validateStudentAppraisalLoop
 } from "../../services/experimentApi";
 import ExperimentConfigPanel from "./ExperimentConfigPanel";
@@ -18,7 +19,8 @@ const DEFAULT_CONFIG = {
   conditionId: "",
   lessonPlanId: "",
   seed: 17,
-  maxTurns: 4
+  maxTurns: 4,
+  batchRuns: 3
 };
 
 function createIdleResult(config) {
@@ -38,7 +40,13 @@ export default function ExperimentWorkspace() {
   const [studentError, setStudentError] = useState("");
   const [studentValidation, setStudentValidation] = useState(null);
   const [conditions, setConditions] = useState([]);
+  const [batchResult, setBatchResult] = useState(null);
+  const [batchError, setBatchError] = useState("");
+  const [batchStatus, setBatchStatus] = useState("idle");
+  const [selectedBatchRunId, setSelectedBatchRunId] = useState("");
   const resultConfig = result.status === "idle" ? config : result.config;
+  const batchRunArtifacts = batchResult?.artifacts?.runs || [];
+  const selectedBatchRun = batchRunArtifacts.find((run) => run.runId === selectedBatchRunId) || null;
 
   const selectedCondition = useMemo(
     () => conditions.find((condition) => condition.id === resultConfig.conditionId),
@@ -91,9 +99,10 @@ export default function ExperimentWorkspace() {
       return;
     }
 
+    const seed = Number(config.seed);
     const runConfig = {
       ...config,
-      seed: Number.isFinite(config.seed) ? config.seed : undefined,
+      seed: Number.isFinite(seed) ? seed : undefined,
       maxTurns: Math.min(Math.max(Number(config.maxTurns) || 1, 1), 30),
       studentId: student.student_id
     };
@@ -113,6 +122,36 @@ export default function ExperimentWorkspace() {
         transcript: [],
         error: error.message
       });
+    }
+  }
+
+  async function handleRunBatch() {
+    const runCount = Math.min(Math.max(Number(config.batchRuns) || 1, 1), 30);
+    const seed = Number(config.seed);
+    const safeSeed = Number.isFinite(seed) ? seed : 17;
+    const safeCondition = String(config.conditionId || "condition").replace(/[^a-zA-Z0-9_-]+/g, "-");
+    const batchRequestConfig = {
+      batchId: `batch-${safeCondition}-seed-${safeSeed}`,
+      outputDir: `batch_results/batch-${safeCondition}-seed-${safeSeed}`,
+      conditions: [config.conditionId],
+      seedStart: safeSeed,
+      repetitions: runCount,
+      maxTurns: Math.min(Math.max(Number(config.maxTurns) || 1, 1), 30),
+      lessonPlanId: config.lessonPlanId
+    };
+
+    setBatchError("");
+    setBatchResult(null);
+    setBatchStatus("running");
+
+    try {
+      const data = await runBatchExperiments(batchRequestConfig);
+      setBatchResult(data.manifest);
+      setSelectedBatchRunId(data.manifest?.artifacts?.runs?.[0]?.runId || "");
+      setBatchStatus("complete");
+    } catch (error) {
+      setBatchError(error.message);
+      setBatchStatus("error");
     }
   }
 
@@ -155,6 +194,12 @@ export default function ExperimentWorkspace() {
     if (result.status !== "running") {
       setResult(createIdleResult(nextConfig));
     }
+    if (batchStatus !== "running") {
+      setBatchError("");
+      setBatchResult(null);
+      setSelectedBatchRunId("");
+      setBatchStatus("idle");
+    }
   }
 
   return (
@@ -179,12 +224,18 @@ export default function ExperimentWorkspace() {
       <div className="workspaceGrid">
         <div className="workspaceRail">
           <ExperimentConfigPanel
+            batchError={batchError}
+            batchResult={batchResult}
+            batchStatus={batchStatus}
             config={config}
-            disabled={running}
+            disabled={running || batchStatus === "running"}
+            experimentStatus={result.status}
+            experimentRunning={running}
             lessonPlans={lessonPlans}
             onChange={handleConfigChange}
             onReset={handleReset}
             onStart={handleStart}
+            onStartBatch={handleRunBatch}
             student={student}
             conditions={conditions}
           />
@@ -207,9 +258,12 @@ export default function ExperimentWorkspace() {
         <div className="workspaceMain">
           <TranscriptWindow
             error={result.error}
+            batchRunOptions={batchRunArtifacts}
             lessonPlan={selectedLessonPlan}
-            status={result.status}
-            transcript={result.transcript}
+            onBatchRunChange={setSelectedBatchRunId}
+            selectedBatchRunId={selectedBatchRunId}
+            status={selectedBatchRun ? "complete" : result.status}
+            transcript={selectedBatchRun ? selectedBatchRun.transcript : result.transcript}
             condition={selectedCondition}
           />
           <ExperimenterOutputPanel

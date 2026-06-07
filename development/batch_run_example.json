@@ -1,0 +1,8 @@
+{
+  "batchId": "pilot-conditions",
+  "outputDir": "batch_results/pilot-conditions",
+  "conditions": ["baseline", "enhanced_sensitivity", "state_aware"],
+  "seeds": [17, 18, 19],
+  "replicates": 1,
+  "maxTurns": 30
+}

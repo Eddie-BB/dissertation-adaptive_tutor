@@ -318,6 +318,76 @@ select {
   gap: 16px;
 }
 
+.titleStatusRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.titleStatusRow .fieldLabel {
+  margin-bottom: 0;
+}
+
+.batchOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.batchSummaryList {
+  border-top: 1px solid #e4eaf2;
+  padding-top: 12px;
+}
+
+.batchRunningNotice {
+  background: #fff8df;
+  border: 1px solid #e2c26c;
+  border-radius: 8px;
+  color: #594000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.4;
+  padding: 12px;
+}
+
+.batchRunningNotice strong {
+  font-size: 0.9rem;
+}
+
+.batchRunningNotice span {
+  font-size: 0.88rem;
+}
+
+.batchReports {
+  border-top: 1px solid #e4eaf2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.batchReports h3 {
+  color: #172033;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.reportList {
+  display: grid;
+  gap: 8px;
+}
+
+.reportButton {
+  justify-content: flex-start;
+  min-height: 36px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
 .runnerBadge,
 .statusPill {
   border-radius: 999px;
@@ -579,10 +649,34 @@ select {
   justify-content: flex-end;
 }
 
+.transcriptRunSelect {
+  align-items: center;
+  background: #edf1f6;
+  border-radius: 999px;
+  display: flex;
+  gap: 8px;
+  padding: 5px 7px 5px 10px;
+}
+
+.transcriptRunSelect select {
+  background: #ffffff;
+  border: 1px solid #b8c2d1;
+  border-radius: 999px;
+  color: #172033;
+  min-height: 30px;
+  padding: 3px 8px;
+}
+
 .transcriptSelection span {
   background: #edf1f6;
   border-radius: 999px;
   padding: 7px 9px;
+}
+
+.transcriptSelection .transcriptRunSelect span {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 
 .transcriptWindow {
