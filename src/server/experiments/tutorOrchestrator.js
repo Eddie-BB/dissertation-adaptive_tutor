@@ -1,6 +1,10 @@
 import { updateObservedLearnerState } from "../../lib/learner/observedLearnerState.js";
 import { validateAnswer } from "../../lib/validation/answerValidator.js";
-import { applyAppraisalTurn, resetStudentRuntimeState } from "../../sim/lib/learner/studentProfileStore.js";
+import {
+  applyAppraisalTurn,
+  recordStudentDebugLog,
+  resetStudentRuntimeState
+} from "../../sim/lib/learner/studentProfileStore.js";
 import { createTeacher } from "../../sim/teacher/teacherFactory.js";
 import { extractCues } from "../../sim/teacher/cueExtractor.js";
 import { renderTeacherMessageWithAdapter } from "../../sim/teacher/teacherMessageRenderer.js";
@@ -514,6 +518,41 @@ function buildExperimenterOutput({ config, lesson, resetStudent, turnLogs, runId
   };
 }
 
+function buildTutorFailureLog({
+  error,
+  runId,
+  turn,
+  conditionId,
+  step,
+  taskContext,
+  teacherDecision,
+  tutorTurnPlan,
+  visibleTurnHistory
+}) {
+  const rendererDetails = error?.experimenter_debug_log || error?.safeDetails || null;
+
+  return {
+    phase: rendererDetails?.phase || "teacher_message_generation",
+    status: "terminated",
+    run_id: runId,
+    turn_number: turn,
+    condition_id: conditionId,
+    lesson_step: {
+      problem_id: step?.problemId || taskContext?.problem_id || null,
+      step_id: step?.stepId || step?.id || taskContext?.step_id || null,
+      step_title: step?.stepTitle || taskContext?.step_title || ""
+    },
+    selected_tutor_action: teacherDecision?.action || null,
+    teacher_rationale: teacherDecision?.rationale || null,
+    tutor_turn_plan: tutorTurnPlan,
+    teacher_decision_debug: teacherDecision?.debug || null,
+    visible_history_turns: Array.isArray(visibleTurnHistory) ? visibleTurnHistory.length : 0,
+    explanation: error?.message || "Teacher message generation terminated.",
+    renderer_diagnostics: rendererDetails,
+    timestamp: new Date().toISOString()
+  };
+}
+
 export async function runTutorExperimentSession(config = {}) {
   const conditionId = config.conditionId;
 
@@ -536,6 +575,7 @@ export async function runTutorExperimentSession(config = {}) {
   }
 
   const resetStudent = await resetStudentRuntimeState(config.studentId);
+  const runId = `run-${conditionId}-${config.studentId}-${config.seed ?? "seed"}`;
 
   const maxTurns = clampTurns(config.maxTurns);
   const teacher = createTeacher(conditionId, config.teacherRuntimeConfig || {});
@@ -606,23 +646,53 @@ export async function runTutorExperimentSession(config = {}) {
       }
     });
 
-    const teacherMessage = await renderTeacherMessageWithAdapter({
-      teacherDecision,
-      taskContext,
-      tutorTurnPlan,
-      visibleTurnHistory,
-      conditionId,
-      lessonProgress: {
-        isInitialTeacherTurn: turn === 1,
-        lessonLabel: lesson.lesson?.lessonLabel || "",
-        currentStepIndex,
-        totalSteps: steps.length,
-        repeatedIncorrectOnCurrentStep,
-        previousOutcomeCategory: lastTurnOutcome?.category || null
-      },
-      adapter: config.teacherMessageAdapter || config.teacher_message_adapter || null,
-      config: config.teacherMessageConfig || {}
-    });
+    let teacherMessage;
+    try {
+      teacherMessage = await renderTeacherMessageWithAdapter({
+        teacherDecision,
+        taskContext,
+        tutorTurnPlan,
+        visibleTurnHistory,
+        conditionId,
+        lessonProgress: {
+          isInitialTeacherTurn: turn === 1,
+          lessonLabel: lesson.lesson?.lessonLabel || "",
+          currentStepIndex,
+          totalSteps: steps.length,
+          repeatedIncorrectOnCurrentStep,
+          previousOutcomeCategory: lastTurnOutcome?.category || null,
+          turnNumber: turn
+        },
+        adapter: config.teacherMessageAdapter || config.teacher_message_adapter || null,
+        config: config.teacherMessageConfig || {},
+        metadata: {
+          run_id: runId,
+          turn_number: turn
+        }
+      });
+    } catch (error) {
+      const debugLog = buildTutorFailureLog({
+        error,
+        runId,
+        turn,
+        conditionId,
+        step,
+        taskContext,
+        teacherDecision,
+        tutorTurnPlan,
+        visibleTurnHistory
+      });
+
+      try {
+        await recordStudentDebugLog(config.studentId, debugLog);
+      } catch (persistError) {
+        debugLog.persistence_error = persistError?.message || "Unable to persist tutor failure log.";
+      }
+
+      error.experimenter_debug_log = debugLog;
+      error.safeDetails = debugLog;
+      throw error;
+    }
     const publicTeacherMessage = buildPublicTeacherMessage({
       turn,
       lesson,
@@ -752,7 +822,6 @@ export async function runTutorExperimentSession(config = {}) {
     throw createExperimentError("EMPTY_EXPERIMENT_RUN");
   }
 
-  const runId = `run-${conditionId}-${config.studentId}-${config.seed ?? "seed"}`;
   const experimenterOutput = buildExperimenterOutput({
     config,
     lesson,

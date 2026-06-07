@@ -13,6 +13,7 @@ import { createTeacher } from '../src/sim/teacher/teacherFactory.js';
 import { extractCues } from '../src/sim/teacher/cueExtractor.js';
 import { TEACHER_ACTIONS } from '../src/sim/teacher/actions.js';
 import { planTutorTurn } from '../src/sim/teacher/tutorTurnPlanner.js';
+import { renderTeacherMessageWithAdapter } from '../src/sim/teacher/teacherMessageRenderer.js';
 
 const APPRAISAL_PAYLOAD = Object.freeze({
   M1: 0.2,
@@ -53,6 +54,16 @@ function createTeacherMessageAdapter() {
   return createStructuredAdapter((contract) => ({
     teacher_message: `Teacher action ${contract.selected_teacher_action}: ${contract.current_step.step_title}`
   }), 'mock_teacher_message');
+}
+
+function createConciseQuestionTeacherMessageAdapter() {
+  return createStructuredAdapter((contract) => {
+    const stepTitle = String(contract.current_step.step_title || '');
+    const questionClause = stepTitle.split('.').map((item) => item.trim()).filter(Boolean).at(-1) || stepTitle;
+    return {
+      teacher_message: `${questionClause} ${contract.tutor_turn_plan.required_content.response_instruction}`
+    };
+  }, 'mock_concise_teacher_message');
 }
 
 function createAppraisalAdapter() {
@@ -233,6 +244,34 @@ test('tutor turn planner treats praise as feedback while preserving current step
   assert.equal(plan.current_step_id, currentStep.stepId);
 });
 
+test('teacher renderer accepts common structured output field variants', async () => {
+  const teacherDecision = { action: TEACHER_ACTIONS.CONTINUE_STANDARD };
+  const taskContext = {
+    problem_id: 'problem_02',
+    step_id: 'step_01',
+    step_title: 'Which system has no solution?',
+    choices: ['independent system', 'inconsistent system', 'dependent system']
+  };
+  const tutorTurnPlan = planTutorTurn({
+    teacherDecision,
+    currentStep: taskContext,
+    taskContext
+  });
+  const result = await renderTeacherMessageWithAdapter({
+    teacherDecision,
+    taskContext,
+    tutorTurnPlan,
+    adapter: createStructuredAdapter(() => ({
+      teacherMessage: 'Which system has no solution? Choose one: independent system or inconsistent system or dependent system.'
+    }), 'mock_teacher_message_variant')
+  });
+
+  assert.equal(
+    result.teacher_message,
+    'Which system has no solution? Choose one: independent system or inconsistent system or dependent system.'
+  );
+});
+
 test('state-aware teacher estimates visible state with the prior teacher turn index', async () => {
   const teacher = createTeacher('state_aware', {
     appraisal_scorer_adapter: createAppraisalAdapter()
@@ -298,6 +337,30 @@ test('mocked tutor experiment runner completes teacher/student turn flow', async
     'shared_student_appraisal_scorer_and_arm_aggregation'
   );
   assert.equal(result.experimenter_debug_log.turn_logs[1].tutor_turn_plan.must_include_current_problem, true);
+});
+
+test('mocked tutor experiment runner accepts concise active problem material on later turns', async () => {
+  const student = await generateAndStoreStudentProfile({
+    seed: 'teacher-runtime-concise',
+    studentId: 'teacher-runtime-concise-student',
+    conditionId: 'baseline'
+  });
+
+  const result = await runTutorExperimentSession({
+    studentId: student.student_id,
+    conditionId: 'baseline',
+    seed: 'teacher-runtime-concise',
+    maxTurns: 3,
+    teacherMessageAdapter: createConciseQuestionTeacherMessageAdapter(),
+    learnerRuntimeConfig: {
+      appraisal_scorer_adapter: createAppraisalAdapter(),
+      student_text_adapter: createStudentTextAdapter('independent system')
+    }
+  });
+
+  assert.equal(result.status, 'complete');
+  assert.equal(result.experimenter_debug_log.turn_logs.length, 3);
+  assert.ok(result.transcript[2].text.includes('Which system has no solution?'));
 });
 
 test('student text generation does not receive hidden lesson task context by default', async () => {

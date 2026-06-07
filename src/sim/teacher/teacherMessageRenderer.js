@@ -41,6 +41,85 @@ function renderTeacherMessage(teacherDecision, llmOutput, taskContext, metadata 
   };
 }
 
+function getObjectKeys(value) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.keys(value).sort()
+    : [];
+}
+
+function extractTeacherMessageText(data) {
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return '';
+  }
+
+  for (const key of ['teacher_message', 'teacherMessage', 'message', 'text']) {
+    const value = data[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return '';
+}
+
+function buildTeacherGenerationDiagnostics({
+  phase,
+  teacherDecision,
+  taskContext,
+  tutorTurnPlan,
+  conditionId,
+  lessonProgress,
+  adapterMetadata = null,
+  parsedData = null,
+  validation = null,
+  metadata = {}
+}) {
+  const currentProblemMaterial = stripMathDelimiters(
+    tutorTurnPlan?.required_content?.current_problem_material || ''
+  );
+
+  return {
+    phase,
+    status: 'terminated',
+    run_id: metadata.run_id || null,
+    turn_number: metadata.turn_number || lessonProgress?.turnNumber || null,
+    condition_id: conditionId || null,
+    selected_tutor_action: teacherDecision?.action || null,
+    lesson_step: {
+      problem_id: taskContext?.problem_id || taskContext?.problemId || null,
+      step_id: taskContext?.step_id || taskContext?.stepId || null,
+      step_title: taskContext?.step_title || taskContext?.stepTitle || ''
+    },
+    tutor_turn_plan_summary: {
+      instructional_action: tutorTurnPlan?.instructional_action || null,
+      modifier_action: tutorTurnPlan?.modifier_action || null,
+      feedback_type: tutorTurnPlan?.feedback?.type || null,
+      expects_student_response: Boolean(tutorTurnPlan?.expects_student_response),
+      must_include_current_problem: Boolean(tutorTurnPlan?.must_include_current_problem),
+      active_problem_material_available: currentProblemMaterial.length > 0
+    },
+    prompt_input_summary: {
+      visible_history_turns: metadata.visible_history_turns ?? null,
+      current_step_keys: getObjectKeys(tutorTurnPlan?.current_step),
+      required_content_keys: getObjectKeys(tutorTurnPlan?.required_content)
+    },
+    parsed_llm_output_keys: getObjectKeys(parsedData),
+    adapter_metadata: adapterMetadata,
+    validation,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function teacherGenerationError(message, diagnostics) {
+  const error = new Error(message);
+  error.safeDetails = diagnostics;
+  error.experimenter_debug_log = diagnostics;
+  return error;
+}
+
 function createTeacherMessageAdapter(config = {}) {
   return createOpenAiStructuredJsonAdapter({
     adapter_id: 'teacher_message_llm',
@@ -158,6 +237,18 @@ function normalizeOpeningText(value) {
     .trim();
 }
 
+function getMeaningfulProblemClauses(requiredProblem) {
+  const clauses = String(requiredProblem || '')
+    .split(/[.!?]+/)
+    .map((clause) => normalizeOpeningText(clause))
+    .filter(Boolean);
+
+  return clauses.filter((clause) => {
+    const tokens = clause.split(' ').filter((token) => token.length > 2);
+    return tokens.length >= 3;
+  });
+}
+
 function stripMathDelimiters(value) {
   return String(value || '')
     .replace(/\$\$([^$]+)\$\$/g, '$1')
@@ -203,17 +294,32 @@ async function renderTeacherMessageWithAdapter({
     }
   });
 
-  if (result.adapter_metadata?.used_fallback || !result.data?.teacher_message) {
-    throw new Error(
+  const teacherMessageText = extractTeacherMessageText(result.data);
+  if (result.adapter_metadata?.used_fallback || !teacherMessageText) {
+    throw teacherGenerationError(
       `Teacher message LLM did not return valid text: ${
         result.adapter_metadata?.error || 'unknown adapter failure'
-      }`
+      }`,
+      buildTeacherGenerationDiagnostics({
+        phase: 'teacher_message_generation',
+        teacherDecision,
+        taskContext,
+        tutorTurnPlan,
+        conditionId,
+        lessonProgress,
+        adapterMetadata: result.adapter_metadata,
+        parsedData: result.data,
+        metadata: {
+          ...metadata,
+          visible_history_turns: Array.isArray(visibleTurnHistory) ? visibleTurnHistory.length : 0
+        }
+      })
     );
   }
 
   const rendered = renderTeacherMessage(
     teacherDecision,
-    normalizeLessonOpening(result.data.teacher_message, lessonProgress),
+    normalizeLessonOpening(teacherMessageText, lessonProgress),
     taskContext,
     {
       ...metadata,
@@ -223,7 +329,24 @@ async function renderTeacherMessageWithAdapter({
   );
   const validation = validateTeacherMessage(rendered, tutorTurnPlan);
   if (!validation.valid) {
-    throw new Error(`Teacher message validation failed: ${validation.reason}`);
+    throw teacherGenerationError(
+      `Teacher message validation failed: ${validation.reason}`,
+      buildTeacherGenerationDiagnostics({
+        phase: 'teacher_message_validation',
+        teacherDecision,
+        taskContext,
+        tutorTurnPlan,
+        conditionId,
+        lessonProgress,
+        adapterMetadata: result.adapter_metadata,
+        parsedData: result.data,
+        validation,
+        metadata: {
+          ...metadata,
+          visible_history_turns: Array.isArray(visibleTurnHistory) ? visibleTurnHistory.length : 0
+        }
+      })
+    );
   }
 
   return {
@@ -247,7 +370,12 @@ function validateTeacherMessage(teacherMessage, tutorTurnPlan = null) {
       tutorTurnPlan.required_content?.current_problem_material || ''
     );
     if (requiredProblem && !containsCoreProblemText(teacherMessage.teacher_message, requiredProblem)) {
-      return { valid: false, reason: 'Message omitted active problem material' };
+      return {
+        valid: false,
+        reason: 'Message omitted active problem material',
+        expected_active_problem_material: requiredProblem,
+        message_excerpt: teacherMessage.teacher_message.slice(0, 240)
+      };
     }
   }
   return { valid: true, reason: 'ok' };
@@ -260,6 +388,11 @@ function containsCoreProblemText(message, requiredProblem) {
     return true;
   }
   if (normalizedMessage.includes(normalizedProblem)) {
+    return true;
+  }
+
+  const meaningfulClauses = getMeaningfulProblemClauses(requiredProblem);
+  if (meaningfulClauses.some((clause) => normalizedMessage.includes(clause))) {
     return true;
   }
 

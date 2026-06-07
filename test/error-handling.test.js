@@ -7,7 +7,10 @@ import {
   toErrorResponse
 } from '../src/server/errors/experimentErrors.js';
 import { runTutorExperimentSession } from '../src/server/experiments/tutorOrchestrator.js';
-import { generateAndStoreStudentProfile } from '../src/sim/lib/learner/studentProfileStore.js';
+import {
+  generateAndStoreStudentProfile,
+  loadStudentProfile
+} from '../src/sim/lib/learner/studentProfileStore.js';
 
 const APPRAISAL_PAYLOAD = Object.freeze({
   M1: 0.2,
@@ -149,6 +152,58 @@ test('malformed condition response becomes tutor response error', async () => {
       const response = toErrorResponse(error);
       assert.equal(response.body.errorCode, 'TUTOR_RESPONSE_INVALID');
       assert.equal(response.body.message, 'The tutor response could not be processed.');
+      assert.equal(response.body.details.phase, 'teacher_message_generation');
+      assert.equal(response.body.details.turn_number, 1);
+      assert.equal(response.body.details.renderer_diagnostics.adapter_metadata.error, 'invalid_structured_output');
+      return true;
+    }
+  );
+
+  const saved = await loadStudentProfile(student.student_id);
+  assert.equal(saved.last_debug_log.phase, 'teacher_message_generation');
+  assert.equal(saved.last_debug_log.status, 'terminated');
+  assert.equal(saved.last_debug_log.turn_number, 1);
+});
+
+test('teacher message missing active problem material exposes validation diagnostic', async () => {
+  const student = await generateAndStoreStudentProfile({
+    seed: 'error-handling-tutor-validation',
+    studentId: 'error-handling-tutor-validation-student',
+    conditionId: 'baseline'
+  });
+
+  await assert.rejects(
+    () => runTutorExperimentSession({
+      studentId: student.student_id,
+      conditionId: 'baseline',
+      seed: 'error-handling-tutor-validation',
+      maxTurns: 1,
+      teacherMessageAdapter: createStructuredAdapter(() => ({
+        teacher_message: 'Let us continue. What do you think?'
+      }), 'mock_teacher_missing_problem'),
+      learnerRuntimeConfig: {
+        appraisal_scorer_adapter: createAppraisalAdapter(),
+        student_text_adapter: createStructuredAdapter(() => ({
+          student_text: 'independent system',
+          student_answer: 'independent system',
+          student_action: 'submit_answer',
+          student_explanation: ''
+        }), 'mock_student_text')
+      }
+    }),
+    (error) => {
+      const response = toErrorResponse(error);
+      assert.equal(response.body.errorCode, 'TUTOR_RESPONSE_INVALID');
+      assert.equal(response.body.details.phase, 'teacher_message_validation');
+      assert.equal(
+        response.body.details.renderer_diagnostics.validation.reason,
+        'Message omitted active problem material'
+      );
+      assert.ok(
+        response.body.details.renderer_diagnostics.validation.expected_active_problem_material.includes(
+          'Which system has exactly one solution pair'
+        )
+      );
       return true;
     }
   );

@@ -102,6 +102,29 @@ function buildTerminationLog({ record, turnNumber, teacherText, error }) {
   };
 }
 
+export async function recordStudentDebugLog(studentId, debugLog = {}) {
+  const record = await loadStudentProfile(studentId);
+  const turnNumber = Number(debugLog.turn_number);
+  const historyEntry = {
+    turn_number: Number.isInteger(turnNumber) && turnNumber > 0
+      ? turnNumber
+      : getCurrentTurn(record) + 1,
+    teacher_text: debugLog.teacher_text || debugLog.teacher_message || "",
+    status: debugLog.status || "terminated",
+    experimenter_debug_log: debugLog
+  };
+
+  return saveStudentProfile({
+    ...record,
+    last_debug_log: debugLog,
+    appraisal_history: [
+      ...(Array.isArray(record.appraisal_history) ? record.appraisal_history : []),
+      historyEntry
+    ],
+    updated_at: new Date().toISOString()
+  });
+}
+
 export function buildAppraisalPersistentState(record, turnNumber) {
   const turn_id = `${record.student_id}:${turnNumber}`;
   return {
@@ -183,19 +206,7 @@ export async function applyAppraisalTurn({
     }
 
     const debugLog = buildTerminationLog({ record, turnNumber, teacherText, error });
-    const saved = await saveStudentProfile({
-      ...record,
-      last_debug_log: debugLog,
-      appraisal_history: [
-        ...(Array.isArray(record.appraisal_history) ? record.appraisal_history : []),
-        {
-          turn_number: turnNumber,
-          teacher_text: teacherText,
-          status: "terminated",
-          experimenter_debug_log: debugLog
-        }
-      ]
-    });
+    const saved = await recordStudentDebugLog(record.student_id, debugLog);
     const wrapped = new Error(debugLog.explanation);
     wrapped.experimenter_debug_log = debugLog;
     wrapped.student = saved;
@@ -285,6 +296,7 @@ export default {
   applyAppraisalTurn,
   generateAndStoreStudentProfile,
   loadStudentProfile,
+  recordStudentDebugLog,
   resetStudentRuntimeState,
   saveStudentProfile
 };

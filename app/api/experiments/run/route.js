@@ -17,6 +17,9 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const response = toErrorResponse(error, "EXPERIMENT_RUN_FAILED");
+    if (process.env.NODE_ENV === "development" && response.body.details) {
+      console.error("[experiment-run]", JSON.stringify(response.body.details, null, 2));
+    }
 
     return NextResponse.json(response.body, { status: response.status });
   }

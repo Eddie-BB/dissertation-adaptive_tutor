@@ -131,7 +131,10 @@ export function normalizeExperimentError(error, fallbackCode = "EXPERIMENT_RUN_F
 
   const inferredCode = inferErrorCode(error);
   const errorCode = inferredCode === "EXPERIMENT_RUN_FAILED" ? fallbackCode : inferredCode;
-  return createExperimentError(errorCode, { cause: error });
+  return createExperimentError(errorCode, {
+    cause: error,
+    safeDetails: error?.safeDetails || error?.experimenter_debug_log || null
+  });
 }
 
 export function toErrorResponse(error, fallbackCode = "EXPERIMENT_RUN_FAILED") {
