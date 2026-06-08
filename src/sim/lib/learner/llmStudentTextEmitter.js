@@ -52,6 +52,8 @@ const ACTION_BY_BEHAVIOUR = {
   DISENGAGED_NON_RESPONSE: 'no_response'
 };
 
+const STUDENT_ACTIONS = new Set(['submit_answer', 'ask_for_help', 'off_task', 'no_response']);
+
 const OUTCOME_RULES = {
   correct: [
     'submit a plausible correct answer if the visible tutor message provides an answerable task',
@@ -83,8 +85,12 @@ function normalizeStudentText(value) {
 }
 
 function normalizeStudentAction(value, selectedBehaviour) {
+  if (ACTION_BY_BEHAVIOUR[selectedBehaviour]) {
+    return ACTION_BY_BEHAVIOUR[selectedBehaviour];
+  }
+
   const candidate = String(value || '').trim();
-  return candidate || ACTION_BY_BEHAVIOUR[selectedBehaviour] || 'submit_answer';
+  return STUDENT_ACTIONS.has(candidate) ? candidate : 'submit_answer';
 }
 
 function createFallbackStudentPayload(contract = {}) {
@@ -156,7 +162,7 @@ function createLlmStudentTextAdapter(config = {}) {
           'student_text is the natural transcript text.',
           'student_answer is only the final answer being submitted, with no explanation.',
           'student_explanation is a short reason if one is visible in the student_text.',
-          'student_action must be one of submit_answer, ask_for_help, express_confusion, off_task, no_response.',
+          'student_action must be one of submit_answer, ask_for_help, off_task, no_response.',
           'If the student is only asking for help, confused, off-task, or not responding, leave student_answer empty.',
           'Return strict JSON only.'
         ].join('\n'),
@@ -173,7 +179,7 @@ function createLlmStudentTextAdapter(config = {}) {
           student_answer: { type: 'string' },
           student_action: {
             type: 'string',
-            enum: ['submit_answer', 'ask_for_help', 'express_confusion', 'off_task', 'no_response']
+            enum: ['submit_answer', 'ask_for_help', 'off_task', 'no_response']
           },
           student_explanation: { type: 'string' }
         },

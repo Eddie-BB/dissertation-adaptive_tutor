@@ -169,6 +169,49 @@ function studentGeneratedCorrectnessLines(turn) {
   ];
 }
 
+function probabilitySummary(probabilities = {}) {
+  const entries = Object.entries(probabilities || {});
+  if (entries.length === 0) {
+    return "n/a";
+  }
+
+  return entries
+    .map(([label, value]) => `${label}: ${formatValue(value)}`)
+    .join("; ");
+}
+
+function cumulativeRangeSummary(ranges = []) {
+  if (!Array.isArray(ranges) || ranges.length === 0) {
+    return "n/a";
+  }
+
+  return ranges
+    .map((range) => `${range.behaviour}: ${formatValue(range.lower)} <= u < ${formatValue(range.upper)}`)
+    .join("; ");
+}
+
+function behaviouralSamplingLines(turn) {
+  const sampling = turn.student?.behaviouralSampling;
+  if (!sampling) {
+    return [];
+  }
+
+  return [
+    "",
+    "Student behavioural sampling:",
+    "",
+    "| Field | Value |",
+    "| --- | --- |",
+    `| Random source | ${markdownValue(sampling.randomSource)} |`,
+    `| Random draw u | ${markdownValue(sampling.randomDraw)} |`,
+    `| Raw behavioural probabilities | ${markdownValue(probabilitySummary(sampling.rawProbabilities))} |`,
+    `| Normalised behavioural probabilities | ${markdownValue(probabilitySummary(sampling.normalisedProbabilities))} |`,
+    `| Cumulative probability ranges | ${markdownValue(cumulativeRangeSummary(sampling.cumulativeRanges))} |`,
+    `| Selected hidden behaviour | ${markdownValue(turn.student?.behaviourState)} |`,
+    `| Visible learner action | ${markdownValue(turn.student?.action)} |`
+  ];
+}
+
 function tutorCueStateLines(turn) {
   if (!turn.tutor?.showCueStateEstimates) {
     return [];
@@ -227,7 +270,7 @@ export function buildExperimentMarkdown(output) {
     `- Turns completed: ${markdownValue(metadata.turnsCompleted ?? 0)}`,
     `- Student ID: ${markdownText(metadata.studentId)}`,
     `- Profile generation seed: ${markdownText(metadata.profileGenerationSeed)}`,
-    `- Behaviour sampling seed: ${markdownText(metadata.behaviourSamplingSeed)}`,
+    `- Behaviour sampling: ${markdownText(metadata.behaviourSamplingMode || "runtime Math.random()")}`,
     "",
     "### Seed Use",
     "",
@@ -284,6 +327,7 @@ export function buildExperimentMarkdown(output) {
         `- Action: ${markdownText(turn.student?.action)}`,
         `- Transcript: ${markdownText(turn.student?.text)}`,
         `- Structured answer: ${markdownText(turn.student?.structuredAnswer || "none")}`,
+        ...behaviouralSamplingLines(turn),
         ...studentGeneratedCorrectnessLines(turn),
         "",
         "ARM component scoring:",

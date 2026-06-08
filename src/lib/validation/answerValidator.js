@@ -501,9 +501,7 @@ function hasStructuredAnswer(value) {
 
 const NON_ANSWER_ACTIONS = new Set([
   "ask_for_help",
-  "express_confusion",
   "off_task",
-  "disengaged",
   "no_response"
 ]);
 

@@ -135,9 +135,15 @@ export function normalizeSeedList(value) {
     return value.map(Number).filter(Number.isFinite);
   }
 
+  if (value == null || value === "") {
+    return [];
+  }
+
   return String(value || "")
     .split(",")
-    .map((item) => Number(item.trim()))
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map(Number)
     .filter(Number.isFinite);
 }
 
@@ -171,11 +177,11 @@ function resolveSeeds(batchConfig) {
   }
 
   const repetitions = Math.max(Number(batchConfig.repetitions) || 1, 1);
-  const seedStart = Number.isFinite(Number(batchConfig.seedStart))
+  const seed = Number.isFinite(Number(batchConfig.seedStart))
     ? Number(batchConfig.seedStart)
     : Number(batchConfig.seed ?? 17);
 
-  return Array.from({ length: repetitions }, (_item, index) => seedStart + index);
+  return Array.from({ length: repetitions }, () => seed);
 }
 
 export async function buildBatchRunQueue(batchConfig = {}) {
@@ -212,7 +218,8 @@ function createStudentId({ batchId, run }) {
   }
 
   const replicate = run.replicate ? `-r${run.replicate}` : "";
-  return safeToken(`${batchId}-${run.conditionId}-seed-${run.seed}${replicate}`, "student");
+  const runIndex = run.runIndex ? `-run-${run.runIndex}` : "";
+  return safeToken(`${batchId}-${run.conditionId}-seed-${run.seed}${replicate}${runIndex}`, "student");
 }
 
 function createRunConfig({ batchConfig, run, studentId }) {
@@ -238,7 +245,7 @@ function summarizeRunResult({ run, result, markdownPath }) {
     status: "complete",
     runId: result.runId,
     conditionId: metadata.condition,
-    seed: metadata.behaviourSamplingSeed,
+    seed: metadata.profileGenerationSeed ?? result.config?.seed ?? run.seed,
     studentId: metadata.studentId,
     turnsCompleted: metadata.turnsCompleted,
     totalCorrectResponses: metrics.totalCorrectResponses,
@@ -249,17 +256,25 @@ function summarizeRunResult({ run, result, markdownPath }) {
   };
 }
 
-async function runOneBatchExperiment({ batchConfig, batchId, outputDir, run, includeArtifacts = false }) {
+async function runOneBatchExperiment({
+  batchConfig,
+  batchId,
+  outputDir,
+  run,
+  includeArtifacts = false,
+  generateStudentProfile = generateAndStoreStudentProfile,
+  runExperimentSession = runTutorExperimentSession
+}) {
   const studentId = createStudentId({ batchId, run });
   const runConfig = createRunConfig({ batchConfig, run, studentId });
 
-  await generateAndStoreStudentProfile({
+  await generateStudentProfile({
     seed: runConfig.seed,
     studentId,
     conditionId: runConfig.conditionId
   });
 
-  const result = await runTutorExperimentSession(runConfig);
+  const result = await runExperimentSession(runConfig);
   const markdown = buildExperimentMarkdown(result.experimenterOutput);
   const markdownFileName = markdownFileNameForRun(result.runId);
   const markdownPath = path.join(outputDir, markdownFileName);
@@ -316,7 +331,9 @@ export async function executeBatchExperimentRuns(batchConfig = {}, options = {})
         batchId,
         outputDir,
         run,
-        includeArtifacts: Boolean(options.includeArtifacts)
+        includeArtifacts: Boolean(options.includeArtifacts),
+        generateStudentProfile: options.generateStudentProfile,
+        runExperimentSession: options.runExperimentSession
       });
       manifest.runs.push(summary);
       completedOutputs.push({ summary, output });
@@ -324,7 +341,13 @@ export async function executeBatchExperimentRuns(batchConfig = {}, options = {})
         artifacts.runs.push(artifact);
       }
       if (options.onProgress) {
-        options.onProgress({ type: "complete", run, totalRuns: queue.length, summary });
+        options.onProgress({
+          type: "complete",
+          run,
+          totalRuns: queue.length,
+          summary,
+          artifact
+        });
       }
     } catch (error) {
       const failure = {

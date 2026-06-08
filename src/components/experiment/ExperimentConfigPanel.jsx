@@ -1,6 +1,10 @@
 "use client";
 
 function downloadMarkdown(markdown, fileName) {
+  if (!markdown) {
+    return;
+  }
+
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -33,6 +37,12 @@ export default function ExperimentConfigPanel({
   const batchRunning = batchStatus === "running";
   const activeStatus = batchStatus !== "idle" ? batchStatus : experimentStatus || "idle";
   const batchArtifacts = batchResult?.artifacts || null;
+  const completedBatchRuns = batchResult?.completedRuns ?? 0;
+  const failedBatchRuns = batchResult?.failedRuns ?? 0;
+  const totalBatchRuns = batchResult?.totalRuns ?? batchRuns;
+  const currentBatchRun = batchResult?.currentRun || null;
+  const runReports = [...(batchArtifacts?.runs || [])].sort((left, right) => left.runIndex - right.runIndex);
+  const summaryReport = batchArtifacts?.summary || null;
 
   function updateField(field, value) {
     onChange({
@@ -158,7 +168,15 @@ export default function ExperimentConfigPanel({
       {batchRunning ? (
         <div className="batchRunningNotice" role="status" aria-live="polite">
           <strong>Batch running</strong>
-          <span>{batchRuns} runs queued. Results will appear here when the batch finishes.</span>
+          <span>
+            {completedBatchRuns} complete, {failedBatchRuns} failed, {totalBatchRuns} queued.
+          </span>
+          {currentBatchRun ? (
+            <span>
+              Running {currentBatchRun.runIndex} of {totalBatchRuns}: {currentBatchRun.conditionId} seed{" "}
+              {currentBatchRun.seed}
+            </span>
+          ) : null}
         </div>
       ) : null}
       {batchError ? (
@@ -171,12 +189,12 @@ export default function ExperimentConfigPanel({
           <div>
             <dt>Batch completed</dt>
             <dd>
-              {batchResult.completedRuns ?? 0} of {batchResult.totalRuns ?? batchRuns}
+              {completedBatchRuns} of {totalBatchRuns}
             </dd>
           </div>
           <div>
             <dt>Failed</dt>
-            <dd>{batchResult.failedRuns ?? 0}</dd>
+            <dd>{failedBatchRuns}</dd>
           </div>
           <div>
             <dt>Output folder</dt>
@@ -195,20 +213,22 @@ export default function ExperimentConfigPanel({
             className="secondaryButton exportButton"
             onClick={() =>
               downloadMarkdown(
-                batchArtifacts.summary?.markdown,
-                batchArtifacts.summary?.markdownFileName
+                summaryReport?.markdown,
+                summaryReport?.markdownFileName
               )
             }
+            disabled={!summaryReport?.markdown}
             type="button"
           >
-            Download batch summary
+            {summaryReport?.markdown ? "Download batch summary" : "Batch summary pending"}
           </button>
           <div className="reportList">
-            {(batchArtifacts.runs || []).map((run) => (
+            {runReports.map((run) => (
               <button
                 className="secondaryButton reportButton"
                 key={run.runId}
                 onClick={() => downloadMarkdown(run.markdown, run.markdownFileName)}
+                disabled={!run.markdown}
                 type="button"
               >
                 {run.runIndex}. {run.conditionId} seed {run.seed}

@@ -49,7 +49,6 @@ The behavioural layer must NOT:
 - `t: int`
 - `teacher_text: string`
 - `task_state: object (optional)`
-- `rng_seed: int`
 
 ### 2.2 Required Behaviour Handoff
     {
@@ -168,12 +167,22 @@ IF `0.35 <= A_t <= 0.60 AND R_t < 0.38 AND M_t < 0.60`
 
 ## 9) Sampling
 
-### Deterministic Seed
-`turn_seed = hash(rng_seed, student_id, turn_id, t)`
+### Runtime Random Draw
+Generate one fresh runtime random value per behavioural selection event:
+
+`u = Math.random()`
+
+The draw must satisfy `0 <= u < 1`.
+
+Do not derive `u` from `rng_seed`, profile seed, `student_id`, `turn_id`, turn number, lesson step,
+timestamps, UUIDs, generated runtime IDs, hashes, or seeded pseudo-random streams.
 
 ### Selection Rule
 - sample exactly ONE behaviour
-- must be reproducible
+- normalise the behavioural probabilities if needed
+- convert probabilities into cumulative ranges in the behaviour order set out in section 5
+- select the behaviour whose cumulative range contains `u`
+- if floating-point rounding leaves a tiny gap near 1, select the final behaviour safely
 
 ---
 
@@ -281,7 +290,11 @@ It MUST append:
 - `base_logits`
 - `gates_fired`
 - `adjusted_logits` or final logits
-- `probabilities`
+- `raw_behavioural_probabilities`
+- `normalised_behavioural_probabilities`
+- `cumulative_probability_ranges`
+- `sampling.random_source`
+- `sampling.random_draw`
 - `selected_behaviour`
 - `generated_text`
 
@@ -290,7 +303,10 @@ It MUST append:
 ## 13) Critical Guarantees
 
 - exactly ONE behaviour per turn
-- deterministic reproducibility
+- exactly ONE runtime random draw per behavioural selection event
+- probabilities determine cumulative selection ranges
+- the runtime random draw selects from those ranges
+- IDs, seeds, hashes, turn constants, timestamps, and UUIDs do not determine behavioural selection
 - no leakage of latent variables
 - strict separation from appraisal system
 - full compatibility with simulation logging pipeline

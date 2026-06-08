@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { emitLlmStudentText } from './llmStudentTextEmitter.js';
 
 const BEHAVIOUR_LABELS = [
@@ -133,26 +132,89 @@ function softmax(logits, tau = DEFAULT_BEHAVIOURAL_CONSTANTS.tau) {
   ]));
 }
 
-function seededUnit(seedParts = []) {
-  const hash = crypto
-    .createHash('sha256')
-    .update(seedParts.map((part) => String(part ?? '')).join(':'))
-    .digest('hex');
-  return parseInt(hash.slice(0, 12), 16) / 0xffffffffffff;
+function roundSamplingValue(value) {
+  return Number(value.toFixed(6));
 }
 
-function sampleBehaviour(probabilities, { rngSeed, studentId, turnId, turnNumber }) {
-  const sample = seededUnit([rngSeed, studentId, turnId, turnNumber]);
+function normaliseProbabilities(probabilities = {}, orderedBehaviours = BEHAVIOUR_LABELS) {
+  const cleaned = Object.fromEntries(orderedBehaviours.map((label) => {
+    const probability = Number(probabilities[label]);
+    if (!Number.isFinite(probability) || probability < 0) {
+      throw behaviouralError(`invalid probability for ${label}`);
+    }
+    return [label, probability];
+  }));
+  const total = orderedBehaviours.reduce((sum, label) => sum + cleaned[label], 0);
+
+  if (!Number.isFinite(total) || total <= 0) {
+    throw behaviouralError('behaviour probabilities must include at least one positive finite value');
+  }
+
+  return Object.fromEntries(orderedBehaviours.map((label) => [
+    label,
+    cleaned[label] / total
+  ]));
+}
+
+function buildCumulativeRanges(normalisedProbabilities, orderedBehaviours = BEHAVIOUR_LABELS) {
   let cumulative = 0;
 
-  for (const label of BEHAVIOUR_LABELS) {
-    cumulative += probabilities[label];
-    if (sample <= cumulative) {
-      return { selectedBehaviour: label, sample };
+  return orderedBehaviours.map((label, index) => {
+    const lower = cumulative;
+    cumulative += normalisedProbabilities[label];
+    const upper = index === orderedBehaviours.length - 1 ? 1 : cumulative;
+
+    return {
+      behaviour: label,
+      lower: roundSamplingValue(lower),
+      upper: roundSamplingValue(upper)
+    };
+  });
+}
+
+function sampleBehaviourFromProbabilities(probabilities, {
+  orderedBehaviours = BEHAVIOUR_LABELS,
+  randomUnit = Math.random
+} = {}) {
+  if (typeof randomUnit !== 'function') {
+    throw behaviouralError('randomUnit must be a function');
+  }
+
+  const randomDraw = Number(randomUnit());
+  if (!Number.isFinite(randomDraw) || randomDraw < 0 || randomDraw >= 1) {
+    throw behaviouralError('random behavioural draw must satisfy 0 <= u < 1');
+  }
+
+  const normalisedProbabilities = normaliseProbabilities(probabilities, orderedBehaviours);
+  const cumulativeRanges = buildCumulativeRanges(normalisedProbabilities, orderedBehaviours);
+  let cumulative = 0;
+
+  for (const label of orderedBehaviours) {
+    cumulative += normalisedProbabilities[label];
+    if (randomDraw < cumulative) {
+      return {
+        selectedBehaviour: label,
+        randomDraw: roundSamplingValue(randomDraw),
+        probabilities: { ...probabilities },
+        normalisedProbabilities: Object.fromEntries(orderedBehaviours.map((behaviour) => [
+          behaviour,
+          roundSamplingValue(normalisedProbabilities[behaviour])
+        ])),
+        cumulativeRanges
+      };
     }
   }
 
-  return { selectedBehaviour: BEHAVIOUR_LABELS[BEHAVIOUR_LABELS.length - 1], sample };
+  return {
+    selectedBehaviour: orderedBehaviours[orderedBehaviours.length - 1],
+    randomDraw: roundSamplingValue(randomDraw),
+    probabilities: { ...probabilities },
+    normalisedProbabilities: Object.fromEntries(orderedBehaviours.map((behaviour) => [
+      behaviour,
+      roundSamplingValue(normalisedProbabilities[behaviour])
+    ])),
+    cumulativeRanges
+  };
 }
 
 function clamp01(value) {
@@ -161,9 +223,7 @@ function clamp01(value) {
   return value;
 }
 
-function roundProbability(value) {
-  return Number(value.toFixed(6));
-}
+const roundProbability = roundSamplingValue;
 
 function computeCorrectnessProbability({ selectedBehaviour, handoff, constants }) {
   const priors = constants.correctness_prior_by_behaviour || {};
@@ -188,20 +248,13 @@ function computeCorrectnessProbability({ selectedBehaviour, handoff, constants }
   };
 }
 
-function sampleAnswerOutcome({ selectedBehaviour, handoff, constants, rngSeed, turnNumber }) {
+function sampleAnswerOutcome({ selectedBehaviour, handoff, constants, randomDraw = null }) {
   const correctness = computeCorrectnessProbability({ selectedBehaviour, handoff, constants });
-  const sample = seededUnit([
-    rngSeed,
-    handoff.student_id,
-    handoff.turn_id,
-    turnNumber,
-    selectedBehaviour,
-    'answer_correctness'
-  ]);
+  const sample = Number.isFinite(Number(randomDraw)) ? Number(randomDraw) : Math.random();
   const nonAnswerBehaviours = new Set(['OFF_TASK', 'DISENGAGED_NON_RESPONSE']);
   const intendedAnswerOutcome = nonAnswerBehaviours.has(selectedBehaviour)
     ? 'no_answer'
-    : sample <= correctness.pCorrect
+    : sample < correctness.pCorrect
       ? 'correct'
       : 'incorrect';
 
@@ -212,7 +265,7 @@ function sampleAnswerOutcome({ selectedBehaviour, handoff, constants, rngSeed, t
     rationale: [
       `Selected behaviour prior=${correctness.baseCorrectness}.`,
       `ARM-adjusted pCorrect=${correctness.pCorrect}.`,
-      `Seeded sample=${roundProbability(sample)}.`
+      `Runtime sample=${roundProbability(sample)}.`
     ].join(' ')
   };
 }
@@ -223,7 +276,6 @@ async function emitBehaviouralResponse({
   taskState = null,
   visibleHistory = [],
   turnNumber,
-  rngSeed,
   config = {}
 } = {}) {
   const handoff = validateHandoff(behaviouralHandoff);
@@ -234,18 +286,13 @@ async function emitBehaviouralResponse({
   const baseLogits = computeBaseLogits(handoff);
   const { adjustedLogits, gatesFired } = applyGates(baseLogits, handoff);
   const probabilities = softmax(adjustedLogits, constants.tau);
-  const { selectedBehaviour, sample } = sampleBehaviour(probabilities, {
-    rngSeed,
-    studentId: handoff.student_id,
-    turnId: handoff.turn_id,
-    turnNumber
-  });
+  const behaviouralSampling = sampleBehaviourFromProbabilities(probabilities);
+  const { selectedBehaviour } = behaviouralSampling;
   const answerOutcome = sampleAnswerOutcome({
     selectedBehaviour,
     handoff,
     constants,
-    rngSeed,
-    turnNumber
+    randomDraw: behaviouralSampling.randomDraw
   });
 
   const textEmission = await emitLlmStudentText({
@@ -277,9 +324,13 @@ async function emitBehaviouralResponse({
     gates_fired: gatesFired,
     adjusted_logits: adjustedLogits,
     probabilities,
+    raw_behavioural_probabilities: probabilities,
+    normalised_behavioural_probabilities: behaviouralSampling.normalisedProbabilities,
+    cumulative_probability_ranges: behaviouralSampling.cumulativeRanges,
     sampling: {
-      rng_seed: rngSeed,
-      sample: Number(sample.toFixed(6))
+      random_source: 'Math.random()',
+      random_draw: behaviouralSampling.randomDraw,
+      selection_rule: 'single runtime uniform draw over cumulative probability ranges'
     },
     selected_behaviour: selectedBehaviour,
     answer_outcome_calibration: answerOutcome,
@@ -305,7 +356,11 @@ async function emitBehaviouralResponse({
     answer_outcome_calibration: answerOutcome,
     behavioural_log: behaviouralLog,
     behaviouralLog,
-    probabilities
+    probabilities: behaviouralSampling.normalisedProbabilities,
+    raw_probabilities: probabilities,
+    normalised_probabilities: behaviouralSampling.normalisedProbabilities,
+    cumulative_probability_ranges: behaviouralSampling.cumulativeRanges,
+    random_draw: behaviouralSampling.randomDraw
   };
 }
 
@@ -318,7 +373,7 @@ export {
   computeBaseLogits,
   emitBehaviouralResponse,
   sampleAnswerOutcome,
-  sampleBehaviour,
+  sampleBehaviourFromProbabilities,
   softmax,
   validateHandoff
 };

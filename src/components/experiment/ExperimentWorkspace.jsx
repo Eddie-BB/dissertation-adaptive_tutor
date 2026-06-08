@@ -6,7 +6,7 @@ import {
   getAvailableConditions,
   getAvailableLessonPlans,
   runExperiment,
-  runBatchExperiments,
+  streamBatchExperiments,
   validateStudentAppraisalLoop
 } from "../../services/experimentApi";
 import ExperimentConfigPanel from "./ExperimentConfigPanel";
@@ -125,6 +125,80 @@ export default function ExperimentWorkspace() {
     }
   }
 
+  function applyBatchEvent(event) {
+    if (event.type === "queued") {
+      setBatchResult({
+        totalRuns: event.totalRuns,
+        completedRuns: 0,
+        failedRuns: 0,
+        runs: [],
+        artifacts: {
+          runs: []
+        }
+      });
+      return;
+    }
+
+    if (event.type === "start") {
+      setBatchResult((currentResult) => ({
+        ...(currentResult || {}),
+        totalRuns: event.totalRuns,
+        currentRun: event.run
+      }));
+      return;
+    }
+
+    if (event.type === "complete") {
+      setBatchResult((currentResult) => {
+        const currentRuns = currentResult?.runs || [];
+        const currentArtifacts = currentResult?.artifacts?.runs || [];
+        const nextArtifacts = event.artifact
+          ? [...currentArtifacts.filter((run) => run.runId !== event.artifact.runId), event.artifact]
+          : currentArtifacts;
+
+        return {
+          ...(currentResult || {}),
+          totalRuns: event.totalRuns,
+          completedRuns: (currentResult?.completedRuns || 0) + 1,
+          failedRuns: currentResult?.failedRuns || 0,
+          runs: [...currentRuns.filter((run) => run.runIndex !== event.summary.runIndex), event.summary],
+          artifacts: {
+            ...(currentResult?.artifacts || {}),
+            runs: nextArtifacts
+          },
+          currentRun: null
+        };
+      });
+
+      if (event.artifact?.runId) {
+        setSelectedBatchRunId((currentRunId) => currentRunId || event.artifact.runId);
+      }
+      return;
+    }
+
+    if (event.type === "failed") {
+      setBatchResult((currentResult) => {
+        const currentRuns = currentResult?.runs || [];
+
+        return {
+          ...(currentResult || {}),
+          totalRuns: event.totalRuns,
+          completedRuns: currentResult?.completedRuns || 0,
+          failedRuns: (currentResult?.failedRuns || 0) + 1,
+          runs: [...currentRuns.filter((run) => run.runIndex !== event.failure.runIndex), event.failure],
+          currentRun: null
+        };
+      });
+      return;
+    }
+
+    if (event.type === "summary") {
+      setBatchResult(event.manifest);
+      setSelectedBatchRunId((currentRunId) => currentRunId || event.manifest?.artifacts?.runs?.[0]?.runId || "");
+      setBatchStatus("complete");
+    }
+  }
+
   async function handleRunBatch() {
     const runCount = Math.min(Math.max(Number(config.batchRuns) || 1, 1), 30);
     const seed = Number(config.seed);
@@ -142,12 +216,15 @@ export default function ExperimentWorkspace() {
 
     setBatchError("");
     setBatchResult(null);
+    setSelectedBatchRunId("");
     setBatchStatus("running");
 
     try {
-      const data = await runBatchExperiments(batchRequestConfig);
-      setBatchResult(data.manifest);
-      setSelectedBatchRunId(data.manifest?.artifacts?.runs?.[0]?.runId || "");
+      const data = await streamBatchExperiments(batchRequestConfig, applyBatchEvent);
+      if (data.manifest) {
+        setBatchResult(data.manifest);
+        setSelectedBatchRunId((currentRunId) => currentRunId || data.manifest?.artifacts?.runs?.[0]?.runId || "");
+      }
       setBatchStatus("complete");
     } catch (error) {
       setBatchError(error.message);

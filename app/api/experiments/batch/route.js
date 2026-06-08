@@ -7,6 +7,10 @@ import { createExperimentError, toErrorResponse } from "../../../../src/server/e
 
 const MAX_FRONTEND_BATCH_RUNS = 30;
 
+function encodeBatchEvent(event) {
+  return new TextEncoder().encode(`${JSON.stringify(event)}\n`);
+}
+
 async function readRequestJson(request) {
   try {
     return await request.json();
@@ -40,6 +44,37 @@ export async function POST(request) {
         },
         { status: 400 }
       );
+    }
+
+    if (config.streamProgress) {
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encodeBatchEvent({ type: "queued", totalRuns }));
+
+          executeBatchExperimentRuns(config, {
+            includeArtifacts: true,
+            onProgress(event) {
+              controller.enqueue(encodeBatchEvent(event));
+            }
+          })
+            .then((manifest) => {
+              controller.enqueue(encodeBatchEvent({ type: "summary", manifest }));
+              controller.close();
+            })
+            .catch((error) => {
+              const response = toErrorResponse(error, "EXPERIMENT_RUN_FAILED");
+              controller.enqueue(encodeBatchEvent({ type: "error", ...response.body }));
+              controller.close();
+            });
+        }
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Cache-Control": "no-cache, no-transform",
+          "Content-Type": "application/x-ndjson; charset=utf-8"
+        }
+      });
     }
 
     const manifest = await executeBatchExperimentRuns(config, { includeArtifacts: true });

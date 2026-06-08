@@ -64,6 +64,73 @@ export async function runBatchExperiments(config) {
   return readJsonResponse(response, "Unable to run batch experiments");
 }
 
+export async function streamBatchExperiments(config, onEvent) {
+  const response = await fetch("/api/experiments/batch", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      ...config,
+      streamProgress: true
+    })
+  });
+
+  if (!response.ok) {
+    await readJsonResponse(response, "Unable to run batch experiments");
+  }
+
+  if (!response.body) {
+    throw new Error("Batch progress stream is unavailable");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalManifest = null;
+
+  function handleLine(line) {
+    if (!line.trim()) {
+      return;
+    }
+
+    const event = JSON.parse(line);
+
+    if (event.type === "error" || event.ok === false) {
+      const error = new Error(event.message || "Unable to run batch experiments");
+      error.errorCode = event.errorCode || null;
+      error.recoverable = Boolean(event.recoverable);
+      throw error;
+    }
+
+    if (event.type === "summary") {
+      finalManifest = event.manifest;
+    }
+
+    onEvent?.(event);
+  }
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      handleLine(line);
+    }
+
+    if (done) {
+      break;
+    }
+  }
+
+  handleLine(buffer);
+
+  return { ok: true, manifest: finalManifest };
+}
+
 export async function generateStudentProfile(config) {
   const response = await fetch("/api/students/generate", {
     method: "POST",

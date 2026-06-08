@@ -318,6 +318,22 @@ function summarizeGeneratedCorrectness(behaviouralLog = null) {
   };
 }
 
+function summarizeBehaviouralSampling(behaviouralLog = null) {
+  if (!behaviouralLog?.sampling) {
+    return null;
+  }
+
+  return {
+    randomSource: behaviouralLog.sampling.random_source || null,
+    randomDraw: roundMetric(behaviouralLog.sampling.random_draw),
+    rawProbabilities: behaviouralLog.raw_behavioural_probabilities || behaviouralLog.probabilities || {},
+    normalisedProbabilities: behaviouralLog.normalised_behavioural_probabilities || {},
+    cumulativeRanges: Array.isArray(behaviouralLog.cumulative_probability_ranges)
+      ? behaviouralLog.cumulative_probability_ranges
+      : []
+  };
+}
+
 function diffArmEstimate(estimatedArm, actualArm) {
   if (!estimatedArm || !actualArm) {
     return null;
@@ -452,6 +468,7 @@ function buildTurnSummaries(turnLogs) {
         action: normalizeReportLabel(turnLog.student_action),
         explanation: turnLog.student_explanation,
         behaviourState: normalizeReportLabel(turnLog.hidden_student_behaviour),
+        behaviouralSampling: summarizeBehaviouralSampling(turnLog.hidden_behavioural_log),
         arm: actualArm,
         armChangeFromPreviousTurn: diffArm(actualArm, previousArm),
         armComputation: summarizeArmComputation(turnLog.hidden_appraisal_log),
@@ -506,11 +523,12 @@ function buildExperimenterOutput({ config, lesson, resetStudent, turnLogs, runId
       turnsCompleted: turnLogs.length,
       seedUsed: config.seed ?? resetStudent?.seed ?? null,
       profileGenerationSeed: resetStudent?.seed ?? null,
-      behaviourSamplingSeed: config.seed ?? null,
+      behaviourSamplingSeed: null,
+      behaviourSamplingMode: "runtime Math.random() cumulative probability sampling",
       studentId: config.studentId,
       studentProfileTraits: buildStudentTraitSummary(resetStudent),
       seedExplanation:
-        "In this repo the seed used when generating the student profile deterministically samples profile traits. The run seed is also passed into behavioural sampling, so repeated runs with the same generated profile, run seed, tutor condition, adapters, and turn count should sample the same behaviour path. Experiment flow itself remains driven by validation/progression rather than random branching."
+        "In this repo the seed used when generating the student profile deterministically samples profile traits. Hidden learner behaviour is selected at runtime with Math.random() from the logged cumulative probability ranges, so repeated runs may naturally differ. Experiment flow remains driven by validation/progression and the sampled learner behaviour."
     },
     turnSummaries: buildTurnSummaries(turnLogs),
     summaryMetrics: buildSummaryMetrics(turnLogs),
@@ -708,7 +726,6 @@ export async function runTutorExperimentSession(config = {}) {
       config: {
         ...config.learnerRuntimeConfig,
         condition_id: conditionId,
-        rngSeed: config.seed,
         ...(config.exposeHiddenTaskToStudent ? {
           stepContext: taskContext,
           taskState: taskContext

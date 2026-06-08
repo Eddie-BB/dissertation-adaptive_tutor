@@ -1,7 +1,7 @@
 {
-  "runIndex": 1,
+  "runIndex": 4,
   "status": "failed",
-  "conditionId": "enhanced_sensitivity",
+  "conditionId": "baseline",
   "seed": 17,
   "message": "Invalid state: Controller is already closed",
   "details": null

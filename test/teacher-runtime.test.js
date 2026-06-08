@@ -5,6 +5,8 @@ import { runTutorExperimentSession } from '../src/server/experiments/tutorOrches
 import {
   DEFAULT_BEHAVIOURAL_CONSTANTS,
   computeCorrectnessProbability,
+  emitBehaviouralResponse,
+  sampleBehaviourFromProbabilities,
   sampleAnswerOutcome
 } from '../src/sim/lib/learner/behaviouralEmissionEngine.js';
 import { emitLlmStudentText } from '../src/sim/lib/learner/llmStudentTextEmitter.js';
@@ -155,14 +157,112 @@ test('ARM-weighted correctness calibration uses configured behaviour priors and 
     selectedBehaviour: 'ENGAGED_ATTEMPT',
     handoff,
     constants: DEFAULT_BEHAVIOURAL_CONSTANTS,
-    rngSeed: 'calibration-seed',
-    turnNumber: 1
+    randomDraw: 0.3
   });
 
   assert.equal(correctness.baseCorrectness, 0.65);
   assert.equal(correctness.pCorrect, 0.735);
   assert.equal(sampled.pCorrect, 0.735);
   assert.ok(['correct', 'incorrect'].includes(sampled.intendedAnswerOutcome));
+});
+
+test('behaviour sampling uses cumulative probability boundaries', () => {
+  const probabilities = {
+    ENGAGED_ATTEMPT: 0.4,
+    MINIMAL_COMPLIANCE: 0.25,
+    HELP_SEEKING_CONFUSION: 0.15,
+    CARELESS_GUESS: 0.1,
+    OFF_TASK: 0.07,
+    DISENGAGED_NON_RESPONSE: 0.03
+  };
+
+  assert.equal(
+    sampleBehaviourFromProbabilities(probabilities, { randomUnit: () => 0 }).selectedBehaviour,
+    'ENGAGED_ATTEMPT'
+  );
+  assert.equal(
+    sampleBehaviourFromProbabilities(probabilities, { randomUnit: () => 0.399999 }).selectedBehaviour,
+    'ENGAGED_ATTEMPT'
+  );
+  assert.equal(
+    sampleBehaviourFromProbabilities(probabilities, { randomUnit: () => 0.4 }).selectedBehaviour,
+    'MINIMAL_COMPLIANCE'
+  );
+  assert.equal(
+    sampleBehaviourFromProbabilities(probabilities, { randomUnit: () => 0.72 }).selectedBehaviour,
+    'HELP_SEEKING_CONFUSION'
+  );
+  assert.equal(
+    sampleBehaviourFromProbabilities(probabilities, { randomUnit: () => 0.999999 }).selectedBehaviour,
+    'DISENGAGED_NON_RESPONSE'
+  );
+});
+
+test('behaviour sampling normalises ranges and can select below the highest-probability behaviour', () => {
+  const result = sampleBehaviourFromProbabilities(
+    {
+      ENGAGED_ATTEMPT: 40,
+      MINIMAL_COMPLIANCE: 25,
+      HELP_SEEKING_CONFUSION: 15,
+      CARELESS_GUESS: 10,
+      OFF_TASK: 7,
+      DISENGAGED_NON_RESPONSE: 3
+    },
+    { randomUnit: () => 0.72 }
+  );
+
+  assert.equal(result.selectedBehaviour, 'HELP_SEEKING_CONFUSION');
+  assert.equal(result.normalisedProbabilities.ENGAGED_ATTEMPT, 0.4);
+  assert.equal(result.cumulativeRanges[0].lower, 0);
+  assert.equal(result.cumulativeRanges[0].upper, 0.4);
+  assert.equal(result.cumulativeRanges.at(-1).upper, 1);
+});
+
+test('behaviour selection ignores ids and seeds when the same runtime draw is supplied', async () => {
+  const originalRandom = Math.random;
+  let drawCount = 0;
+  Math.random = () => {
+    drawCount += 1;
+    return 0.72;
+  };
+
+  try {
+    const baseConfig = {
+      student_text_adapter: createStudentTextAdapter('I am not sure what to do next.')
+    };
+    const first = await emitBehaviouralResponse({
+      behaviouralHandoff: {
+        student_id: 'student-a',
+        turn_id: 'student-a:1',
+        A_t: 0.5,
+        R_t: 0.3,
+        M_t: 0.2
+      },
+      teacherText: 'Which system has infinitely many solutions?',
+      turnNumber: 1,
+      config: baseConfig
+    });
+    const second = await emitBehaviouralResponse({
+      behaviouralHandoff: {
+        student_id: 'student-b',
+        turn_id: 'student-b:9',
+        A_t: 0.5,
+        R_t: 0.3,
+        M_t: 0.2
+      },
+      teacherText: 'Which system has infinitely many solutions?',
+      turnNumber: 9,
+      config: baseConfig
+    });
+
+    assert.equal(drawCount, 2);
+    assert.equal(first.random_draw, 0.72);
+    assert.equal(second.random_draw, 0.72);
+    assert.equal(first.selected_behaviour, second.selected_behaviour);
+    assert.deepEqual(first.cumulative_probability_ranges, second.cumulative_probability_ranges);
+  } finally {
+    Math.random = originalRandom;
+  }
 });
 
 test('non-answer behaviours calibrate to no submitted answer outcome', () => {
@@ -176,8 +276,7 @@ test('non-answer behaviours calibrate to no submitted answer outcome', () => {
       M_t: 0
     },
     constants: DEFAULT_BEHAVIOURAL_CONSTANTS,
-    rngSeed: 'calibration-seed',
-    turnNumber: 2
+    randomDraw: 0.3
   });
 
   assert.equal(sampled.baseCorrectness, 0);

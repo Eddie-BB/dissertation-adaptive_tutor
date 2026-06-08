@@ -197,7 +197,6 @@ export async function applyAppraisalTurn({
       taskState: studentVisibleTaskState,
       visibleHistory: teacherHistory,
       turnNumber,
-      rngSeed: config.rng_seed || config.rngSeed || record.seed,
       config
     });
   } catch (error) {
@@ -245,7 +244,9 @@ export async function applyAppraisalTurn({
       student_answer: behaviouralEmission.student_answer,
       student_action: behaviouralEmission.student_action,
       student_explanation: behaviouralEmission.student_explanation,
-      probabilities: behaviouralEmission.probabilities
+      probabilities: behaviouralEmission.probabilities,
+      cumulative_probability_ranges: behaviouralEmission.cumulative_probability_ranges,
+      random_draw: behaviouralEmission.random_draw
     },
     appraisal_history: [
       ...(Array.isArray(record.appraisal_history) ? record.appraisal_history : []),
