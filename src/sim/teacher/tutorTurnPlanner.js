@@ -46,6 +46,48 @@ function summarizeHint(hint = null) {
   };
 }
 
+function summarizeWorkedExample(step = {}, taskContext = {}) {
+  const workedExample = taskContext?.workedExample || taskContext?.worked_example || step?.workedExample || step?.worked_example;
+  if (!workedExample) {
+    return null;
+  }
+  if (typeof workedExample === 'string') {
+    return { text: cleanText(workedExample) };
+  }
+  return {
+    title: cleanText(workedExample.title),
+    text: cleanText(workedExample.text || workedExample.explanation || workedExample.body),
+    steps: Array.isArray(workedExample.steps) ? workedExample.steps.map(cleanText).filter(Boolean) : []
+  };
+}
+
+function summarizeBottomOut(step = {}, taskContext = {}) {
+  const bottomOut = taskContext?.bottomOut || taskContext?.bottom_out || step?.bottomOut || step?.bottom_out;
+  if (bottomOut) {
+    if (typeof bottomOut === 'string') {
+      return { text: cleanText(bottomOut), expected_answers: [] };
+    }
+    return {
+      title: cleanText(bottomOut.title),
+      text: cleanText(bottomOut.text || bottomOut.explanation || bottomOut.body),
+      expected_answers: Array.isArray(bottomOut.expectedAnswers) ? bottomOut.expectedAnswers : []
+    };
+  }
+
+  const expectedAnswers = Array.isArray(step?.expectedAnswers)
+    ? step.expectedAnswers
+    : Array.isArray(taskContext?.expectedAnswers)
+      ? taskContext.expectedAnswers
+      : [];
+  if (expectedAnswers.length === 0) {
+    return null;
+  }
+  return {
+    text: `The target answer is ${expectedAnswers.join(' or ')}. Use that to check the step and then answer the problem.`,
+    expected_answers: expectedAnswers
+  };
+}
+
 function getResponseInstruction(step = {}) {
   const answerType = String(step.answerType || step.answer_type || '').toLowerCase();
   if (Array.isArray(step.choices) && step.choices.length > 0) {
@@ -132,10 +174,14 @@ function buildRequiredContent({ currentStep, taskContext, instructionalMove }) {
   const includeHint = [
     TEACHER_ACTIONS.GIVE_HINT,
     TEACHER_ACTIONS.GIVE_SCAFFOLD,
-    TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE,
-    TEACHER_ACTIONS.GIVE_BOTTOM_OUT,
     TEACHER_ACTIONS.CALL_DYNAMIC_HINT
   ].includes(instructionalMove);
+  const workedExample = instructionalMove === TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE
+    ? summarizeWorkedExample(currentStep, taskContext)
+    : null;
+  const bottomOut = instructionalMove === TEACHER_ACTIONS.GIVE_BOTTOM_OUT
+    ? summarizeBottomOut(currentStep, taskContext)
+    : null;
 
   return {
     current_problem_material: cleanText(
@@ -153,6 +199,8 @@ function buildRequiredContent({ currentStep, taskContext, instructionalMove }) {
       ''
     ),
     selected_hint: includeHint ? selectedHint : null,
+    worked_example: workedExample,
+    bottom_out: bottomOut,
     response_instruction: getResponseInstruction(currentStep || taskContext || {})
   };
 }
@@ -175,6 +223,14 @@ function createMessageSkeleton(plan) {
   }
   if (plan.required_content.selected_hint?.text) {
     parts.push(plan.required_content.selected_hint.text);
+  }
+  if (plan.required_content.worked_example?.text) {
+    parts.push(plan.required_content.worked_example.text);
+  } else if (plan.required_content.worked_example?.steps?.length > 0) {
+    parts.push(plan.required_content.worked_example.steps.join(' '));
+  }
+  if (plan.required_content.bottom_out?.text) {
+    parts.push(plan.required_content.bottom_out.text);
   }
   if (plan.required_content.response_instruction) {
     parts.push(plan.required_content.response_instruction);

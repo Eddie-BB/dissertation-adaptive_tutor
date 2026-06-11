@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import lesson from '../content/lessons/systems_linear_equations_two_variables.json' with { type: 'json' };
 import { runTutorExperimentSession } from '../src/server/experiments/tutorOrchestrator.js';
 import {
   DEFAULT_BEHAVIOURAL_CONSTANTS,
@@ -40,6 +41,14 @@ const APPRAISAL_PAYLOAD = Object.freeze({
   }
 });
 
+const lessonSteps = lesson.problems.flatMap((problem) =>
+  problem.steps.map((step) => ({
+    ...step,
+    problemId: problem.id
+  }))
+);
+const problem04Step = lessonSteps.find((step) => step.id === 'problem_04_check_ordered_pair_not_solution_step_01');
+
 function createStructuredAdapter(generate, adapterId) {
   return {
     adapter_id: adapterId,
@@ -76,11 +85,33 @@ function createStudentTextAdapter(text) {
   return createStructuredAdapter(() => ({ student_text: text }), 'mock_student_text');
 }
 
+function createSequencedStudentTextAdapter(items) {
+  let index = 0;
+  return createStructuredAdapter(() => {
+    const item = items[Math.min(index, items.length - 1)];
+    index += 1;
+    if (typeof item === 'string') {
+      return {
+        student_text: item,
+        student_answer: item,
+        student_action: 'submit_answer'
+      };
+    }
+    return item;
+  }, 'mock_student_text_sequence');
+}
+
 function createInspectingStudentTextAdapter(text, contracts) {
   return createStructuredAdapter((contract) => {
     contracts.push(contract);
     return { student_text: text };
   }, 'mock_student_text_inspecting');
+}
+
+function createSkeletonTeacherMessageAdapter() {
+  return createStructuredAdapter((contract) => ({
+    teacher_message: contract.tutor_turn_plan.message_skeleton
+  }), 'mock_teacher_message_skeleton');
 }
 
 test('baseline teacher uses only repeated incorrect count for action sequence', () => {
@@ -138,6 +169,141 @@ test('enhanced sensitivity preserves validation-category evidence for adaptive s
 
   assert.equal(decision.debug.signals.previousAnswerMisconception, true);
   assert.ok(decision.debug.signals.supportNeed > 0.5);
+});
+
+test('enhanced sensitivity starts mild visible confusion with a hint', async () => {
+  const teacher = createTeacher('enhanced_sensitivity');
+  const decision = await teacher.processTurnAsync(
+    extractCues({ studentText: 'I am not sure, can you explain?' }),
+    {
+      stepContext: {
+        canUseScaffold: true,
+        canUseBottomOut: true,
+        selectedHint: { id: 'h1', type: 'hint', text: 'Try the first equation.' },
+        hintState: { hintExhausted: false, reusedFinalHint: false }
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 0 },
+      currentTurn: 2
+    }
+  );
+
+  assert.equal(decision.action, TEACHER_ACTIONS.GIVE_HINT);
+  assert.ok(
+    decision.debug.disabledActions.some(
+      (item) => item.action === TEACHER_ACTIONS.CALL_DYNAMIC_HINT &&
+        item.reasons.includes('capability_dynamic_hint_disabled')
+    )
+  );
+});
+
+test('enhanced sensitivity escalates repeated incorrect attempts to scaffold instead of hint tie order', async () => {
+  const teacher = createTeacher('enhanced_sensitivity');
+  const decision = await teacher.processTurnAsync(
+    extractCues({ studentText: 'I am confused and need help.' }),
+    {
+      stepContext: {
+        canUseScaffold: true,
+        canUseBottomOut: true,
+        selectedHint: {
+          id: 'h2',
+          type: 'scaffold',
+          text: 'What is the left side?',
+          scaffold: { answerType: 'arithmetic', expectedAnswers: ['17'] }
+        },
+        hintState: { hintExhausted: false, reusedFinalHint: false }
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 2 },
+      lastTurnOutcome: {
+        answer_correct: false,
+        category: 'incorrect',
+        confidence: 'medium'
+      },
+      currentTurn: 4
+    }
+  );
+
+  assert.equal(decision.action, TEACHER_ACTIONS.GIVE_SCAFFOLD);
+  assert.ok(
+    decision.debug.consideredActions
+      .filter((candidate) => candidate.score === 1)
+      .some((candidate) => candidate.action === TEACHER_ACTIONS.GIVE_HINT),
+    'hint still saturated, so scaffold selection must come from enhanced tie-breaking'
+  );
+});
+
+test('enhanced sensitivity uses bottom-out for persistent failure only when worked example is unavailable', async () => {
+  const teacher = createTeacher('enhanced_sensitivity');
+  const decision = await teacher.processTurnAsync(
+    extractCues({ studentText: 'I am confused and need help.' }),
+    {
+      stepContext: {
+        canUseScaffold: true,
+        canUseWorkedExample: false,
+        canUseBottomOut: true,
+        selectedHint: { id: 'last', type: 'hint', text: 'Final static hint.' },
+        hintState: { hintExhausted: true, reusedFinalHint: true }
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 4 },
+      lastTurnOutcome: {
+        answer_correct: false,
+        category: 'misconception',
+        confidence: 'high'
+      },
+      currentTurn: 5
+    }
+  );
+
+  assert.equal(decision.action, TEACHER_ACTIONS.GIVE_BOTTOM_OUT);
+  assert.ok(
+    decision.debug.disabledActions.some(
+      (item) => item.action === TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE &&
+        item.reasons.includes('capability_worked_example_disabled')
+    )
+  );
+});
+
+test('enhanced sensitivity routes repeated unknown non-response to check-in over cognitive hint', async () => {
+  const teacher = createTeacher('enhanced_sensitivity');
+  const decision = await teacher.processTurnAsync(
+    extractCues({ studentText: '...' }),
+    {
+      stepContext: {
+        canUseScaffold: true,
+        canUseBottomOut: true,
+        selectedHint: { id: 'h1', type: 'hint', text: 'Try a hint.' },
+        hintState: { hintExhausted: false, reusedFinalHint: false }
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 3 },
+      lastTurnOutcome: {
+        answer_correct: false,
+        category: 'unknown',
+        confidence: 'low'
+      },
+      currentTurn: 4
+    }
+  );
+
+  assert.equal(decision.action, TEACHER_ACTIONS.REQUEST_CHECKIN);
+});
+
+test('enhanced sensitivity routes off-task monotony to reframe over cognitive hint', async () => {
+  const teacher = createTeacher('enhanced_sensitivity');
+  const decision = await teacher.processTurnAsync(
+    extractCues({ studentText: 'This is boring, can we change to something else?' }),
+    {
+      stepContext: {
+        canOfferChoice: true,
+        canUseScaffold: true,
+        canUseBottomOut: true,
+        selectedHint: { id: 'h1', type: 'hint', text: 'Try a hint.' },
+        hintState: { hintExhausted: false, reusedFinalHint: false }
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 0 },
+      currentTurn: 2
+    }
+  );
+
+  assert.equal(decision.action, TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT);
 });
 
 test('ARM-weighted correctness calibration uses configured behaviour priors and weights', () => {
@@ -343,6 +509,43 @@ test('tutor turn planner treats praise as feedback while preserving current step
   assert.equal(plan.current_step_id, currentStep.stepId);
 });
 
+test('tutor turn planner renders worked example and bottom-out as distinct content, not selected hints', () => {
+  const currentStep = {
+    stepId: 'worked-step',
+    stepTitle: 'Solve x + 2 = 7. What is x?',
+    answerType: 'arithmetic',
+    expectedAnswers: ['5'],
+    hints: [{ id: 'h1', type: 'hint', text: 'Subtract 2.' }],
+    workedExample: {
+      text: 'Worked example: if x + 2 = 7, subtract 2 from both sides to get x = 5.'
+    }
+  };
+
+  const workedPlan = planTutorTurn({
+    teacherDecision: { action: TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE },
+    currentStep,
+    taskContext: {
+      ...currentStep,
+      selectedHint: currentStep.hints[0],
+      workedExample: currentStep.workedExample
+    }
+  });
+  assert.equal(workedPlan.required_content.selected_hint, null);
+  assert.ok(workedPlan.required_content.worked_example.text.includes('Worked example'));
+
+  const bottomOutPlan = planTutorTurn({
+    teacherDecision: { action: TEACHER_ACTIONS.GIVE_BOTTOM_OUT },
+    currentStep,
+    taskContext: {
+      ...currentStep,
+      selectedHint: currentStep.hints[0],
+      expectedAnswers: currentStep.expectedAnswers
+    }
+  });
+  assert.equal(bottomOutPlan.required_content.selected_hint, null);
+  assert.ok(bottomOutPlan.required_content.bottom_out.text.includes('5'));
+});
+
 test('teacher renderer accepts common structured output field variants', async () => {
   const teacherDecision = { action: TEACHER_ACTIONS.CONTINUE_STANDARD };
   const taskContext = {
@@ -460,6 +663,58 @@ test('mocked tutor experiment runner accepts concise active problem material on 
   assert.equal(result.status, 'complete');
   assert.equal(result.experimenter_debug_log.turn_logs.length, 3);
   assert.ok(result.transcript[2].text.includes('Which system has no solution?'));
+});
+
+test('enhanced runner exposes hint exhaustion and validates scaffold subtasks against scaffold answers', async () => {
+  const student = await generateAndStoreStudentProfile({
+    seed: 'enhanced-scaffold-validation',
+    studentId: 'enhanced-scaffold-validation-student',
+    conditionId: 'enhanced_sensitivity'
+  });
+
+  const result = await runTutorExperimentSession({
+    studentId: student.student_id,
+    conditionId: 'enhanced_sensitivity',
+    seed: 'enhanced-scaffold-validation',
+    maxTurns: 8,
+    teacherMessageAdapter: createSkeletonTeacherMessageAdapter(),
+    learnerRuntimeConfig: {
+      appraisal_scorer_adapter: createAppraisalAdapter(),
+      student_text_adapter: createSequencedStudentTextAdapter([
+        'independent system',
+        'inconsistent system',
+        'dependent system',
+        'yes',
+        'yes',
+        'yes',
+        '17',
+        'no'
+      ])
+    }
+  });
+
+  const turnLogs = result.experimenter_debug_log.turn_logs;
+  const scaffoldTurn = turnLogs.find(
+    (turnLog) => turnLog.active_validation_target?.type === 'scaffold_subtask'
+  );
+
+  assert.ok(scaffoldTurn, 'expected a scaffold subtask turn');
+  assert.equal(scaffoldTurn.problem_id, problem04Step.problemId);
+  assert.equal(scaffoldTurn.teacher_action, TEACHER_ACTIONS.GIVE_SCAFFOLD);
+  assert.equal(scaffoldTurn.validation_result.isCorrect, true);
+  assert.equal(scaffoldTurn.validation_result.normalisedStudentAnswer, '17');
+  assert.equal(scaffoldTurn.active_validation_target.expected_answers[0], '$$17$$');
+
+  const afterScaffoldTurn = turnLogs[scaffoldTurn.turn];
+  assert.equal(afterScaffoldTurn.problem_id, problem04Step.problemId);
+  assert.equal(afterScaffoldTurn.active_validation_target.type, 'parent_step');
+  assert.equal(afterScaffoldTurn.validation_result.isCorrect, true);
+  assert.equal(afterScaffoldTurn.validation_result.normalisedStudentAnswer, 'no');
+
+  assert.ok(
+    turnLogs.some((turnLog) => turnLog.hint_state?.hintIndex === 2 && turnLog.hint_state?.hintExhausted === false),
+    'selected hint metadata should expose scaffold hint index before exhaustion'
+  );
 });
 
 test('student text generation does not receive hidden lesson task context by default', async () => {

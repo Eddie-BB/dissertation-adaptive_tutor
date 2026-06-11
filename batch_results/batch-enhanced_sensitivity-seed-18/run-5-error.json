@@ -1,0 +1,32 @@
+{
+  "runIndex": 5,
+  "status": "failed",
+  "conditionId": "enhanced_sensitivity",
+  "seed": 18,
+  "message": "AppraisalEngine: LLM appraisal did not return valid structured scores: fetch failed",
+  "details": {
+    "phase": "student_appraisal",
+    "status": "terminated",
+    "student_id": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-5",
+    "turn_number": 13,
+    "teacher_text": "Solve the given system of equations by the addition method. 3x+5y=-11, x-2y=11. Solve for the x value of the solution. What is your answer?",
+    "explanation": "AppraisalEngine: LLM appraisal did not return valid structured scores: fetch failed",
+    "cause": {
+      "phase": "llm_appraisal_component_scoring",
+      "status": "terminated",
+      "explanation": "LLM appraisal did not return valid structured scores: fetch failed",
+      "scorer_adapter": {
+        "adapter_id": "student_appraisal_llm",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "generation_mode": "fail_closed",
+        "used_fallback": true,
+        "raw_output_type": "error",
+        "error": "fetch failed",
+        "scorer_type": "llm_appraisal"
+      },
+      "timestamp": "2026-06-10T15:46:56.882Z"
+    },
+    "timestamp": "2026-06-10T15:46:56.884Z"
+  }
+}

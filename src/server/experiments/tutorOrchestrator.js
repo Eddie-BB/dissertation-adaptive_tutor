@@ -37,19 +37,32 @@ function getLessonStepSequence(lesson) {
 
 function selectHint(step, progressionContext) {
   const hints = step?.hints || [];
+  const rawHintIndex = Math.max((Number(progressionContext.repeatedIncorrectOnCurrentStep) || 0) - 1, 0);
   if (hints.length === 0) {
-    return null;
+    return {
+      selectedHint: null,
+      hintIndex: null,
+      rawHintIndex,
+      hintCount: 0,
+      hintExhausted: false,
+      reusedFinalHint: false
+    };
   }
 
-  const hintIndex = Math.min(
-    Math.max((Number(progressionContext.repeatedIncorrectOnCurrentStep) || 0) - 1, 0),
-    hints.length - 1
-  );
-  return hints[hintIndex] || hints[0];
+  const hintIndex = Math.min(rawHintIndex, hints.length - 1);
+  return {
+    selectedHint: hints[hintIndex] || hints[0],
+    hintIndex,
+    rawHintIndex,
+    hintCount: hints.length,
+    hintExhausted: rawHintIndex >= hints.length,
+    reusedFinalHint: rawHintIndex > hints.length - 1
+  };
 }
 
 function buildTaskContext({ step, stepIndex, progressionContext }) {
-  const selectedHint = selectHint(step, progressionContext);
+  const hintState = selectHint(step, progressionContext);
+  const selectedHint = hintState.selectedHint;
 
   return {
     problemId: step.problemId,
@@ -66,17 +79,71 @@ function buildTaskContext({ step, stepIndex, progressionContext }) {
     answer_type: step.answerType || "",
     validationMode: step.validation?.mode || "",
     validation_mode: step.validation?.mode || "",
+    expectedAnswers: step.expectedAnswers || [],
+    expected_answers: step.expectedAnswers || [],
     choices: step.choices || [],
     hints: step.hints || [],
     selectedHint,
     selected_hint: selectedHint,
+    workedExample: step.workedExample || null,
+    worked_example: step.workedExample || null,
+    bottomOut: step.bottomOut || null,
+    bottom_out: step.bottomOut || null,
+    hintState,
+    hint_state: hintState,
+    hintIndex: hintState.hintIndex,
+    hint_index: hintState.hintIndex,
+    hintExhausted: hintState.hintExhausted,
+    hint_exhausted: hintState.hintExhausted,
+    reusedFinalHint: hintState.reusedFinalHint,
+    reused_final_hint: hintState.reusedFinalHint,
     currentStepIndex: stepIndex,
     totalSteps: step.totalSteps || 1,
     canOfferChoice: true,
-    canUseDynamicHint: true,
-    canUseBottomOut: true,
+    canUseDynamicHint: false,
+    canUseWorkedExample: Boolean(step.workedExample),
+    canUseBottomOut: Boolean(step.bottomOut || step.expectedAnswers?.length > 0),
     canUseScaffold: (step.hints || []).some((hint) => hint.type === "scaffold" || hint.scaffold),
     canSkipOptionalContent: false
+  };
+}
+
+function buildActiveValidationTarget({ tutorTurnPlan, taskContext, step }) {
+  const selectedHint = taskContext?.selectedHint || taskContext?.selected_hint || null;
+  const scaffold = selectedHint?.scaffold;
+  const isScaffoldAction = tutorTurnPlan?.instructional_action === "ACTION_GIVE_SCAFFOLD";
+  if (!isScaffoldAction || !scaffold?.expectedAnswers?.length) {
+    return {
+      type: "parent_step",
+      questionSpec: step,
+      questionId: step.stepId || step.id,
+      returnToParentOnCorrect: false
+    };
+  }
+
+  return {
+    type: "scaffold_subtask",
+    parentStepId: step.stepId || step.id,
+    hintId: selectedHint.id || null,
+    prompt: selectedHint.text || selectedHint.title || "",
+    expectedAnswers: scaffold.expectedAnswers || [],
+    validationMode: scaffold.validationMode || scaffold.validation?.mode || step.validation?.mode || null,
+    returnToParentOnCorrect: true,
+    questionId: `${step.stepId || step.id}:${selectedHint.id || "scaffold"}`,
+    questionSpec: {
+      ...step,
+      id: `${step.stepId || step.id}:${selectedHint.id || "scaffold"}`,
+      stepTitle: selectedHint.text || selectedHint.title || step.stepTitle || "",
+      stepBody: "",
+      answerType: scaffold.answerType || step.answerType || "",
+      expectedAnswers: scaffold.expectedAnswers || [],
+      acceptedAnswers: scaffold.acceptedAnswers || scaffold.expectedAnswers || [],
+      validation: {
+        ...(step.validation || {}),
+        ...(scaffold.validation || {}),
+        mode: scaffold.validationMode || scaffold.validation?.mode || step.validation?.mode || null
+      }
+    }
   };
 }
 
@@ -663,6 +730,11 @@ export async function runTutorExperimentSession(config = {}) {
         previousOutcomeCategory: lastTurnOutcome?.category || null
       }
     });
+    const activeValidationTarget = buildActiveValidationTarget({
+      tutorTurnPlan,
+      taskContext,
+      step
+    });
 
     let teacherMessage;
     try {
@@ -747,11 +819,20 @@ export async function runTutorExperimentSession(config = {}) {
     try {
       validationResult = validateAnswer({
         lessonId: lesson.lesson?.lessonId || "",
-        questionId: step.stepId || step.id,
+        questionId: activeValidationTarget.questionId,
         studentAnswer: studentText,
         studentResponse,
-        questionSpec: step
+        questionSpec: activeValidationTarget.questionSpec
       });
+      validationResult = {
+        ...validationResult,
+        activeValidationTarget: {
+          type: activeValidationTarget.type,
+          parentStepId: activeValidationTarget.parentStepId || null,
+          hintId: activeValidationTarget.hintId || null,
+          returnToParentOnCorrect: activeValidationTarget.returnToParentOnCorrect || false
+        }
+      };
     } catch (error) {
       throw createExperimentError("VALIDATION_FAILED", { cause: error });
     }
@@ -774,6 +855,15 @@ export async function runTutorExperimentSession(config = {}) {
       teacher_action: teacherDecision.action,
       teacher_rationale: teacherDecision.rationale,
       tutor_turn_plan: tutorTurnPlan,
+      hint_state: taskContext.hintState,
+      active_validation_target: {
+        type: activeValidationTarget.type,
+        question_id: activeValidationTarget.questionId,
+        parent_step_id: activeValidationTarget.parentStepId || null,
+        hint_id: activeValidationTarget.hintId || null,
+        expected_answers: activeValidationTarget.expectedAnswers || step.expectedAnswers || [],
+        validation_mode: activeValidationTarget.validationMode || step.validation?.mode || ""
+      },
       step_advanced_from_previous_turn: lastStepAdvanced,
       previous_step_id: previousTurnForPlanning?.step?.stepId || previousTurnForPlanning?.step?.id || null,
       current_step_id: step.stepId || step.id,
@@ -809,6 +899,7 @@ export async function runTutorExperimentSession(config = {}) {
         teacher_message: teacherMessage.teacher_message,
         student_message: studentText,
         teacher_action: teacherDecision.action,
+        selected_hint_id: taskContext.selectedHint?.id || null,
         step_id: step.stepId || step.id
       }
     ];
@@ -825,10 +916,13 @@ export async function runTutorExperimentSession(config = {}) {
       validationResult
     };
 
-    if (validationResult.isCorrect) {
+    if (validationResult.isCorrect && activeValidationTarget.type !== "scaffold_subtask") {
       currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
       repeatedIncorrectOnCurrentStep = 0;
       lastStepAdvanced = true;
+    } else if (validationResult.isCorrect && activeValidationTarget.type === "scaffold_subtask") {
+      repeatedIncorrectOnCurrentStep = 0;
+      lastStepAdvanced = false;
     } else {
       repeatedIncorrectOnCurrentStep += 1;
       lastStepAdvanced = false;

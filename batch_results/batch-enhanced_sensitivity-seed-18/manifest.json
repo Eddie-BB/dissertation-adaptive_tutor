@@ -1,0 +1,113 @@
+{
+  "batchId": "batch-enhanced_sensitivity-seed-18",
+  "startedAt": "2026-06-11T11:51:00.719Z",
+  "outputDir": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18",
+  "totalRuns": 5,
+  "runs": [
+    {
+      "runIndex": 1,
+      "status": "complete",
+      "runId": "run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-1-18",
+      "conditionId": "enhanced_sensitivity",
+      "seed": "18",
+      "studentId": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-1",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 7,
+      "totalIncorrectResponses": 13,
+      "completedSteps": 7,
+      "completedProblems": 7,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-1-18.md",
+      "summaryMetrics": {
+        "totalCorrectResponses": 7,
+        "totalIncorrectResponses": 13,
+        "completedSteps": 7,
+        "completedProblems": 7
+      }
+    },
+    {
+      "runIndex": 2,
+      "status": "complete",
+      "runId": "run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-2-18",
+      "conditionId": "enhanced_sensitivity",
+      "seed": "18",
+      "studentId": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-2",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 9,
+      "totalIncorrectResponses": 11,
+      "completedSteps": 9,
+      "completedProblems": 9,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-2-18.md",
+      "summaryMetrics": {
+        "totalCorrectResponses": 9,
+        "totalIncorrectResponses": 11,
+        "completedSteps": 9,
+        "completedProblems": 9
+      }
+    },
+    {
+      "runIndex": 3,
+      "status": "complete",
+      "runId": "run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-3-18",
+      "conditionId": "enhanced_sensitivity",
+      "seed": "18",
+      "studentId": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-3",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 9,
+      "totalIncorrectResponses": 11,
+      "completedSteps": 9,
+      "completedProblems": 9,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-3-18.md",
+      "summaryMetrics": {
+        "totalCorrectResponses": 9,
+        "totalIncorrectResponses": 11,
+        "completedSteps": 9,
+        "completedProblems": 9
+      }
+    },
+    {
+      "runIndex": 4,
+      "status": "complete",
+      "runId": "run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-4-18",
+      "conditionId": "enhanced_sensitivity",
+      "seed": "18",
+      "studentId": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-4",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 11,
+      "totalIncorrectResponses": 9,
+      "completedSteps": 11,
+      "completedProblems": 11,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-4-18.md",
+      "summaryMetrics": {
+        "totalCorrectResponses": 11,
+        "totalIncorrectResponses": 9,
+        "completedSteps": 11,
+        "completedProblems": 11
+      }
+    },
+    {
+      "runIndex": 5,
+      "status": "complete",
+      "runId": "run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-5-18",
+      "conditionId": "enhanced_sensitivity",
+      "seed": "18",
+      "studentId": "batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-5",
+      "turnsCompleted": 20,
+      "totalCorrectResponses": 10,
+      "totalIncorrectResponses": 10,
+      "completedSteps": 10,
+      "completedProblems": 10,
+      "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\run-enhanced_sensitivity-batch-enhanced_sensitivity-seed-18-enhanced_sensitivity-seed-18-r1-run-5-18.md",
+      "summaryMetrics": {
+        "totalCorrectResponses": 10,
+        "totalIncorrectResponses": 10,
+        "completedSteps": 10,
+        "completedProblems": 10
+      }
+    }
+  ],
+  "completedAt": "2026-06-11T12:15:06.464Z",
+  "completedRuns": 5,
+  "failedRuns": 0,
+  "summaryMarkdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\batch-enhanced_sensitivity-seed-18-summary.md",
+  "manifestPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-enhanced_sensitivity-seed-18\\manifest.json"
+}

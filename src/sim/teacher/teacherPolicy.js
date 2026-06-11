@@ -38,9 +38,10 @@ const DEFAULT_SENSITIVITIES = Object.freeze({
 function normalizeCapabilities(stepContext = {}) {
   return {
     canOfferChoice: stepContext.canOfferChoice !== false,
-    canUseDynamicHint: stepContext.canUseDynamicHint !== false,
+    canUseDynamicHint: stepContext.canUseDynamicHint === true,
     canUseBottomOut: stepContext.canUseBottomOut !== false,
     canUseScaffold: stepContext.canUseScaffold !== false,
+    canUseWorkedExample: stepContext.canUseWorkedExample === true,
     canSkipOptionalContent: stepContext.canSkipOptionalContent !== false
   };
 }
@@ -115,7 +116,10 @@ export function chooseTeacherAction({
   const selected = selectPolicyAction({
     filtered,
     spec,
-    context
+    context: {
+      ...context,
+      cues
+    }
   });
   const stateUpdate = spec.id === 'state_aware'
     ? updateStateAwareTeacherState({
@@ -123,6 +127,15 @@ export function chooseTeacherAction({
       selectedAction: selected.action,
       stateEstimate: visibleStateEstimate
     })
+    : spec.id === 'enhanced_sensitivity'
+      ? {
+        ...(context.teacherState || {}),
+        lastAction: selected.action,
+        lastSelectedHintId:
+          context.stepContext?.selectedHint?.id ||
+          context.stepContext?.selected_hint?.id ||
+          null
+      }
     : null;
 
   return {
@@ -506,7 +519,8 @@ function applyConditionConstraints({
       if (item.action === TEACHER_ACTIONS.OFFER_CHOICE && !caps.canOfferChoice) reasons.push('capability_choice_disabled');
       if (item.action === TEACHER_ACTIONS.CALL_DYNAMIC_HINT && !caps.canUseDynamicHint) reasons.push('capability_dynamic_hint_disabled');
       if (item.action === TEACHER_ACTIONS.GIVE_BOTTOM_OUT && !caps.canUseBottomOut) reasons.push('capability_bottom_out_disabled');
-      if ((item.action === TEACHER_ACTIONS.GIVE_SCAFFOLD || item.action === TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE) && !caps.canUseScaffold) reasons.push('capability_scaffold_disabled');
+      if (item.action === TEACHER_ACTIONS.GIVE_SCAFFOLD && !caps.canUseScaffold) reasons.push('capability_scaffold_disabled');
+      if (item.action === TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE && !caps.canUseWorkedExample) reasons.push('capability_worked_example_disabled');
       if (item.action === TEACHER_ACTIONS.SKIP_OPTIONAL_CONTENT && !caps.canSkipOptionalContent) reasons.push('capability_skip_disabled');
 
       if (reasons.length > 0) {
@@ -614,6 +628,10 @@ function selectPolicyAction({
   spec = {},
   context = {}
 } = {}) {
+  if (spec.id === 'enhanced_sensitivity') {
+    return selectEnhancedSensitivityAction({ filtered, context });
+  }
+
   if (spec.id === 'baseline' && context.lastTurnOutcome?.answer_correct === false) {
     const repeatedIncorrectCount = safeNum(context.progressionContext?.repeatedIncorrectOnCurrentStep, 0);
     const scaffoldCandidate = filtered.filteredCandidates.find(item => item.action === TEACHER_ACTIONS.GIVE_SCAFFOLD);
@@ -638,6 +656,120 @@ function selectPolicyAction({
   return selectHighestScoringAction(filtered);
 }
 
+function selectEnhancedSensitivityAction({ filtered, context = {} }) {
+  const candidates = filtered.filteredCandidates || [];
+  const repeatedIncorrectCount = safeNum(context.progressionContext?.repeatedIncorrectOnCurrentStep, 0);
+  const lastOutcome = context.lastTurnOutcome || {};
+  const hintState = context.stepContext?.hintState || {};
+  const cues = context.cues || {};
+  const selectedHint = context.stepContext?.selectedHint || context.stepContext?.selected_hint || null;
+  const previousAction = context.previousTeacherAction || context.teacherState?.lastAction || null;
+  const previousHintId = context.previousSelectedHintId || context.teacherState?.lastSelectedHintId || null;
+
+  const action = (name) => candidates.find((item) => item.action === name);
+  const cooldownActions = new Set([
+    TEACHER_ACTIONS.GIVE_HINT,
+    TEACHER_ACTIONS.REQUEST_CHECKIN,
+    TEACHER_ACTIONS.SUGGEST_BREAK,
+    TEACHER_ACTIONS.OFFER_CHOICE
+  ]);
+  const choose = (candidate, rationale) => {
+    if (!candidate) return null;
+    if (candidate.action === previousAction && cooldownActions.has(candidate.action)) {
+      return null;
+    }
+    return { ...candidate, rationale };
+  };
+
+  const nonAnswerOrUnknown =
+    lastOutcome.category === 'unknown' ||
+    cues.isEmptyOrEllipsis ||
+    cues.isDisengaged ||
+    context.lastStudentAction === 'no_response';
+  const offTaskOrMonotony = cues.isOffTask || safeNum(cues.offTaskRateLastK, 0) >= 0.35;
+  const frustrated = cues.isFrustrated || safeNum(cues.disengagedRateLastK, 0) >= 0.35;
+  const repeatedSameHint =
+    previousAction === TEACHER_ACTIONS.GIVE_HINT &&
+    selectedHint?.id &&
+    selectedHint.id === previousHintId;
+  const hintUnavailableOrExhausted = hintState.hintExhausted || hintState.reusedFinalHint || repeatedSameHint;
+
+  if (nonAnswerOrUnknown && repeatedIncorrectCount >= 1) {
+    return choose(action(TEACHER_ACTIONS.REQUEST_CHECKIN),
+      'Enhanced sensitivity prioritizes check-in after unknown or non-response evidence.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_SLOWER_PACE),
+        'Enhanced sensitivity slows pace after repeated unknown or non-response evidence.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_BREAK),
+        'Enhanced sensitivity suggests a break after repeated disengagement.');
+  }
+
+  if (offTaskOrMonotony && repeatedIncorrectCount <= 1) {
+    return choose(action(TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT),
+      'Enhanced sensitivity reframes when visible off-task or monotony cues dominate.')
+      || choose(action(TEACHER_ACTIONS.OFFER_CHOICE),
+        'Enhanced sensitivity offers choice when visible off-task cues dominate.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_BREAK),
+        'Enhanced sensitivity suggests a break for off-task disengagement.');
+  }
+
+  if (frustrated && repeatedIncorrectCount >= 1) {
+    return choose(action(TEACHER_ACTIONS.ADDRESS_FRUSTRATION),
+      'Enhanced sensitivity addresses frustration before adding more cognitive load.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_SLOWER_PACE),
+        'Enhanced sensitivity slows pace when frustration is visible.');
+  }
+
+  if (repeatedIncorrectCount >= 3 && selectedHint?.scaffold) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'Persistent failure reached an available scaffold subtask; enhanced support validates the scaffold before bottom-out help.');
+  }
+
+  if (repeatedIncorrectCount >= 3 || (repeatedIncorrectCount >= 2 && hintUnavailableOrExhausted)) {
+    return choose(action(TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE),
+      'Persistent failure with worked-example content available; enhanced support escalates beyond hints.')
+      || choose(action(TEACHER_ACTIONS.GIVE_BOTTOM_OUT),
+        'Persistent failure and exhausted hint support; enhanced support provides bottom-out help.')
+      || choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+        'Persistent failure; enhanced support uses scaffolded subtask support.');
+  }
+
+  if (repeatedIncorrectCount >= 2) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'Repeated incorrect attempts; enhanced support escalates from hint to scaffold.')
+      || choose(action(TEACHER_ACTIONS.GIVE_BOTTOM_OUT),
+        'Repeated incorrect attempts and no scaffold content; enhanced support escalates to bottom-out help.');
+  }
+
+  if (hintUnavailableOrExhausted) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'Hint support is exhausted; enhanced sensitivity avoids repeating the same hint.')
+      || choose(action(TEACHER_ACTIONS.REQUEST_CHECKIN),
+        'Hint support is exhausted; enhanced sensitivity checks understanding.')
+      || choose(action(TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT),
+        'Hint support is exhausted; enhanced sensitivity reframes the prompt.');
+  }
+
+  if (repeatedIncorrectCount === 0 && (cues.isConfused || cues.isHelpSeeking)) {
+    return choose(action(TEACHER_ACTIONS.GIVE_HINT),
+      'Mild visible confusion or help-seeking; enhanced sensitivity starts with a low-level hint.')
+      || choose(action(TEACHER_ACTIONS.REQUEST_CHECKIN),
+        'Mild visible confusion and no hint content; enhanced sensitivity checks understanding.');
+  }
+
+  return selectHighestScoringActionWithPriority(filtered, [
+    TEACHER_ACTIONS.GIVE_HINT,
+    TEACHER_ACTIONS.GIVE_SCAFFOLD,
+    TEACHER_ACTIONS.REQUEST_CHECKIN,
+    TEACHER_ACTIONS.SUGGEST_SLOWER_PACE,
+    TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT,
+    TEACHER_ACTIONS.OFFER_CHOICE,
+    TEACHER_ACTIONS.GIVE_BOTTOM_OUT,
+    TEACHER_ACTIONS.SUGGEST_BREAK,
+    TEACHER_ACTIONS.ADDRESS_FRUSTRATION,
+    TEACHER_ACTIONS.CONTINUE_STANDARD
+  ]);
+}
+
 function hasScaffoldSupport(context = {}) {
   const hints = Array.isArray(context.currentStep?.hints)
     ? context.currentStep.hints
@@ -649,6 +781,24 @@ function selectHighestScoringAction(filtered) {
   const ranked = filtered.filteredCandidates
     .slice()
     .sort((a, b) => b.score - a.score);
+
+  const selected = ranked[0];
+  if (!selected) {
+    throw new Error('Teacher policy produced no enabled action candidates.');
+  }
+
+  return selected;
+}
+
+function selectHighestScoringActionWithPriority(filtered, priorityOrder = []) {
+  const priority = new Map(priorityOrder.map((action, index) => [action, index]));
+  const ranked = filtered.filteredCandidates
+    .slice()
+    .sort((a, b) => {
+      const scoreDelta = b.score - a.score;
+      if (Math.abs(scoreDelta) > 1e-9) return scoreDelta;
+      return (priority.get(a.action) ?? 999) - (priority.get(b.action) ?? 999);
+    });
 
   const selected = ranked[0];
   if (!selected) {
