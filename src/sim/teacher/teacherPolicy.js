@@ -118,7 +118,9 @@ export function chooseTeacherAction({
     spec,
     context: {
       ...context,
-      cues
+      cues,
+      stateAwareArmEstimate: visibleStateEstimate,
+      visibleStateEstimate
     }
   });
   const stateUpdate = spec.id === 'state_aware'
@@ -632,6 +634,10 @@ function selectPolicyAction({
     return selectEnhancedSensitivityAction({ filtered, context });
   }
 
+  if (spec.id === 'state_aware') {
+    return selectStateAwareAction({ filtered, context });
+  }
+
   if (spec.id === 'baseline' && context.lastTurnOutcome?.answer_correct === false) {
     const repeatedIncorrectCount = safeNum(context.progressionContext?.repeatedIncorrectOnCurrentStep, 0);
     const scaffoldCandidate = filtered.filteredCandidates.find(item => item.action === TEACHER_ACTIONS.GIVE_SCAFFOLD);
@@ -654,6 +660,116 @@ function selectPolicyAction({
   }
 
   return selectHighestScoringAction(filtered);
+}
+
+function selectStateAwareAction({ filtered, context = {} }) {
+  const candidates = filtered.filteredCandidates || [];
+  const repeatedIncorrectCount = safeNum(context.progressionContext?.repeatedIncorrectOnCurrentStep, 0);
+  const lastOutcome = context.lastTurnOutcome || {};
+  const hintState = context.stepContext?.hintState || {};
+  const cues = context.cues || {};
+  const selectedHint = context.stepContext?.selectedHint || context.stepContext?.selected_hint || null;
+  const stateEstimate = context.stateAwareArmEstimate || context.visibleStateEstimate || {};
+  const previousAction = context.previousTeacherAction || context.teacherState?.lastTeacherAction || null;
+
+  const action = (name) => candidates.find((item) => item.action === name);
+  const cooldownActions = new Set([
+    TEACHER_ACTIONS.GIVE_HINT,
+    TEACHER_ACTIONS.REQUEST_CHECKIN,
+    TEACHER_ACTIONS.SUGGEST_BREAK,
+    TEACHER_ACTIONS.OFFER_CHOICE,
+    TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT
+  ]);
+  const choose = (candidate, rationale) => {
+    if (!candidate) return null;
+    if (candidate.action === previousAction && cooldownActions.has(candidate.action)) {
+      return null;
+    }
+    return { ...candidate, rationale };
+  };
+
+  const attentionRisk = clamp01(1 - safeNum(stateEstimate.estimated_A_t, 0.68));
+  const rewardDeficit = clamp01(1 - safeNum(stateEstimate.estimated_R_t, 0.5));
+  const monotonyPressure = clamp01(safeNum(stateEstimate.estimated_M_t, 0));
+  const statePressure = Math.max(attentionRisk, rewardDeficit, monotonyPressure);
+  const nonAnswerOrUnknown =
+    lastOutcome.category === 'unknown' ||
+    cues.isEmptyOrEllipsis ||
+    cues.isDisengaged ||
+    context.lastStudentAction === 'no_response';
+  const hintUnavailableOrExhausted = hintState.hintExhausted || hintState.reusedFinalHint;
+
+  if ((attentionRisk >= 0.68 || nonAnswerOrUnknown) && repeatedIncorrectCount >= 1) {
+    return choose(action(TEACHER_ACTIONS.REQUEST_CHECKIN),
+      'State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_SLOWER_PACE),
+        'State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_BREAK),
+        'State-aware estimate indicates sustained disengagement risk; a short break is appropriate.');
+  }
+
+  if (monotonyPressure >= 0.62 && repeatedIncorrectCount <= 1) {
+    return choose(action(TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT),
+      'State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.')
+      || choose(action(TEACHER_ACTIONS.OFFER_CHOICE),
+        'State-aware estimate indicates monotony pressure; offering choice can restore agency.')
+      || choose(action(TEACHER_ACTIONS.SUGGEST_BREAK),
+        'State-aware estimate indicates monotony pressure and low progress; a short break is appropriate.');
+  }
+
+  if (rewardDeficit >= 0.58 && repeatedIncorrectCount <= 1 && !lastOutcome.answer_correct) {
+    return choose(action(TEACHER_ACTIONS.GIVE_GENERAL_ENCOURAGEMENT),
+      'State-aware estimate indicates low reward; brief encouragement should protect persistence before heavier support.')
+      || choose(action(TEACHER_ACTIONS.REQUEST_CHECKIN),
+        'State-aware estimate indicates low reward; checking understanding is appropriate.');
+  }
+
+  if (repeatedIncorrectCount >= 3 && selectedHint?.scaffold) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'State-aware estimate and persistent failure reached a scaffold subtask; validating the scaffold is preferred.')
+      || choose(action(TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE),
+        'State-aware estimate and persistent failure require worked-example support.');
+  }
+
+  if (repeatedIncorrectCount >= 3 || (repeatedIncorrectCount >= 2 && hintUnavailableOrExhausted)) {
+    return choose(action(TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE),
+      'State-aware estimate and persistent failure indicate support should escalate beyond hints.')
+      || choose(action(TEACHER_ACTIONS.GIVE_BOTTOM_OUT),
+        'State-aware estimate and exhausted support indicate bottom-out help is appropriate.')
+      || choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+        'State-aware estimate and persistent failure indicate scaffolded support is appropriate.');
+  }
+
+  if (repeatedIncorrectCount >= 2) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'State-aware estimate plus repeated incorrect attempts escalates from hint to scaffold.')
+      || choose(action(TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE),
+        'State-aware estimate plus repeated incorrect attempts escalates to worked-example support.')
+      || choose(action(TEACHER_ACTIONS.GIVE_BOTTOM_OUT),
+        'State-aware estimate plus repeated incorrect attempts escalates to bottom-out help.');
+  }
+
+  if (statePressure >= 0.65 && (cues.isConfused || cues.isHelpSeeking || lastOutcome.answer_correct === false)) {
+    return choose(action(TEACHER_ACTIONS.GIVE_SCAFFOLD),
+      'State-aware estimate indicates high learner risk; scaffolded support is preferred over a lightweight hint.')
+      || choose(action(TEACHER_ACTIONS.GIVE_HINT),
+        'State-aware estimate indicates learner risk and scaffold is unavailable; using a lightweight hint.');
+  }
+
+  return selectHighestScoringActionWithPriority(filtered, [
+    TEACHER_ACTIONS.REQUEST_CHECKIN,
+    TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT,
+    TEACHER_ACTIONS.OFFER_CHOICE,
+    TEACHER_ACTIONS.GIVE_SCAFFOLD,
+    TEACHER_ACTIONS.PROVIDE_WORKED_EXAMPLE,
+    TEACHER_ACTIONS.GIVE_HINT,
+    TEACHER_ACTIONS.SUGGEST_SLOWER_PACE,
+    TEACHER_ACTIONS.GIVE_GENERAL_ENCOURAGEMENT,
+    TEACHER_ACTIONS.GIVE_BOTTOM_OUT,
+    TEACHER_ACTIONS.SUGGEST_BREAK,
+    TEACHER_ACTIONS.ADDRESS_FRUSTRATION,
+    TEACHER_ACTIONS.CONTINUE_STANDARD
+  ]);
 }
 
 function selectEnhancedSensitivityAction({ filtered, context = {} }) {

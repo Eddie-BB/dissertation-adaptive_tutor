@@ -1,0 +1,32 @@
+{
+  "runIndex": 3,
+  "status": "failed",
+  "conditionId": "baseline",
+  "seed": 24,
+  "message": "AppraisalEngine: LLM appraisal did not return valid structured scores: fetch failed",
+  "details": {
+    "phase": "student_appraisal",
+    "status": "terminated",
+    "student_id": "batch-baseline-seed-24-baseline-seed-24-r1-run-3",
+    "turn_number": 16,
+    "teacher_text": "Not quite yet. Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y For the second equation, what is the left side equal to? Choose one: yes or no.",
+    "explanation": "AppraisalEngine: LLM appraisal did not return valid structured scores: fetch failed",
+    "cause": {
+      "phase": "llm_appraisal_component_scoring",
+      "status": "terminated",
+      "explanation": "LLM appraisal did not return valid structured scores: fetch failed",
+      "scorer_adapter": {
+        "adapter_id": "student_appraisal_llm",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "generation_mode": "fail_closed",
+        "used_fallback": true,
+        "raw_output_type": "error",
+        "error": "fetch failed",
+        "scorer_type": "llm_appraisal"
+      },
+      "timestamp": "2026-06-15T10:57:19.180Z"
+    },
+    "timestamp": "2026-06-15T10:57:19.189Z"
+  }
+}

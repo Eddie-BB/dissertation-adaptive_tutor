@@ -1,0 +1,213 @@
+{
+  "runIndex": 5,
+  "status": "failed",
+  "conditionId": "baseline",
+  "seed": 24,
+  "message": "Teacher message LLM did not return valid text: fetch failed",
+  "details": {
+    "phase": "teacher_message_generation",
+    "status": "terminated",
+    "run_id": "run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-5-24",
+    "turn_number": 10,
+    "condition_id": "baseline",
+    "lesson_step": {
+      "problem_id": "problem_04_check_ordered_pair_not_solution",
+      "step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+      "step_title": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$"
+    },
+    "selected_tutor_action": "ACTION_GIVE_SCAFFOLD",
+    "teacher_rationale": "Baseline gives scaffold support after two wrong answers on the current problem step.",
+    "tutor_turn_plan": {
+      "protocol": "tutor_turn_plan_v1",
+      "selected_policy_action": "ACTION_GIVE_SCAFFOLD",
+      "instructional_action": "ACTION_GIVE_SCAFFOLD",
+      "modifier_action": null,
+      "feedback": {
+        "type": "brief_correction_or_acknowledgement",
+        "grounding": "previous_validation_only",
+        "required": true,
+        "validation": {
+          "isCorrect": false,
+          "category": "incorrect"
+        }
+      },
+      "previous_step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+      "current_step": {
+        "problem_id": "problem_04_check_ordered_pair_not_solution",
+        "step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+        "step_title": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$",
+        "step_body": "",
+        "choices": [
+          "yes",
+          "no"
+        ],
+        "answer_type": "string"
+      },
+      "current_step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+      "step_advanced": false,
+      "expects_student_response": true,
+      "must_include_current_problem": true,
+      "must_ask_for_response": true,
+      "brevity": {
+        "max_sentences": 3,
+        "avoid_exaggerated_praise": true
+      },
+      "required_content": {
+        "current_problem_material": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$",
+        "current_step_body": "",
+        "selected_hint": {
+          "type": "scaffold",
+          "title": "For the second equation, what is the right side equal to?",
+          "text": "For the second equation, what is the right side equal to?"
+        },
+        "worked_example": null,
+        "bottom_out": null,
+        "response_instruction": "Choose one: yes or no."
+      },
+      "constraints": [
+        "Use only the required content and visible history.",
+        "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+        "Do not praise current-step work before the student attempts the current step.",
+        "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+        "Keep the message brief and avoid repeated or exaggerated praise."
+      ],
+      "message_skeleton": "Not quite yet. Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$ For the second equation, what is the right side equal to? Choose one: yes or no."
+    },
+    "teacher_decision_debug": {
+      "conditionId": "baseline",
+      "conditionSpecId": "baseline",
+      "signals": {
+        "repeatedIncorrectCount": 4,
+        "hasScaffold": true
+      },
+      "selectedScore": 1,
+      "enabledActions": [
+        "ACTION_CONTINUE_STANDARD",
+        "ACTION_GIVE_HINT",
+        "ACTION_GIVE_SCAFFOLD"
+      ],
+      "disabledActions": [],
+      "consideredActions": [
+        {
+          "action": "ACTION_GIVE_SCAFFOLD",
+          "score": 1,
+          "rationale": "Two wrong answers on the current step."
+        }
+      ]
+    },
+    "visible_history_turns": 9,
+    "explanation": "Teacher message LLM did not return valid text: fetch failed",
+    "renderer_diagnostics": {
+      "phase": "teacher_message_generation",
+      "status": "terminated",
+      "run_id": "run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-5-24",
+      "turn_number": 10,
+      "condition_id": "baseline",
+      "selected_tutor_action": "ACTION_GIVE_SCAFFOLD",
+      "lesson_step": {
+        "problem_id": "problem_04_check_ordered_pair_not_solution",
+        "step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+        "step_title": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$"
+      },
+      "tutor_turn_plan_summary": {
+        "instructional_action": "ACTION_GIVE_SCAFFOLD",
+        "modifier_action": null,
+        "feedback_type": "brief_correction_or_acknowledgement",
+        "expects_student_response": true,
+        "must_include_current_problem": true,
+        "active_problem_material_available": true
+      },
+      "prompt_input_summary": {
+        "visible_history_turns": 9,
+        "current_step_keys": [
+          "answer_type",
+          "choices",
+          "problem_id",
+          "step_body",
+          "step_id",
+          "step_title"
+        ],
+        "required_content_keys": [
+          "bottom_out",
+          "current_problem_material",
+          "current_step_body",
+          "response_instruction",
+          "selected_hint",
+          "worked_example"
+        ]
+      },
+      "parsed_llm_output_keys": [],
+      "adapter_metadata": {
+        "adapter_id": "teacher_message_llm",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "generation_mode": "fail_closed",
+        "used_fallback": true,
+        "raw_output_type": "error",
+        "error": "fetch failed",
+        "generation_task": "teacher_message_generation",
+        "condition_id": "baseline",
+        "teacher_action": "ACTION_GIVE_SCAFFOLD",
+        "tutor_turn_plan": {
+          "protocol": "tutor_turn_plan_v1",
+          "selected_policy_action": "ACTION_GIVE_SCAFFOLD",
+          "instructional_action": "ACTION_GIVE_SCAFFOLD",
+          "modifier_action": null,
+          "feedback": {
+            "type": "brief_correction_or_acknowledgement",
+            "grounding": "previous_validation_only",
+            "required": true,
+            "validation": {
+              "isCorrect": false,
+              "category": "incorrect"
+            }
+          },
+          "previous_step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+          "current_step": {
+            "problem_id": "problem_04_check_ordered_pair_not_solution",
+            "step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+            "step_title": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$",
+            "step_body": "",
+            "choices": [
+              "yes",
+              "no"
+            ],
+            "answer_type": "string"
+          },
+          "current_step_id": "problem_04_check_ordered_pair_not_solution_step_01",
+          "step_advanced": false,
+          "expects_student_response": true,
+          "must_include_current_problem": true,
+          "must_ask_for_response": true,
+          "brevity": {
+            "max_sentences": 3,
+            "avoid_exaggerated_praise": true
+          },
+          "required_content": {
+            "current_problem_material": "Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$",
+            "current_step_body": "",
+            "selected_hint": {
+              "type": "scaffold",
+              "title": "For the second equation, what is the right side equal to?",
+              "text": "For the second equation, what is the right side equal to?"
+            },
+            "worked_example": null,
+            "bottom_out": null,
+            "response_instruction": "Choose one: yes or no."
+          },
+          "constraints": [
+            "Use only the required content and visible history.",
+            "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+            "Do not praise current-step work before the student attempts the current step.",
+            "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+            "Keep the message brief and avoid repeated or exaggerated praise."
+          ],
+          "message_skeleton": "Not quite yet. Determine whether the ordered pair $$(8,5)$$ is a solution to the following system. $$5x-4y=20$$, $$2x+1=3y$$ For the second equation, what is the right side equal to? Choose one: yes or no."
+        }
+      },
+      "validation": null,
+      "timestamp": "2026-06-15T11:22:51.625Z"
+    },
+    "timestamp": "2026-06-15T11:22:51.627Z"
+  }
+}

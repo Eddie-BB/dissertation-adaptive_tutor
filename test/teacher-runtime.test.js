@@ -15,6 +15,7 @@ import { generateAndStoreStudentProfile } from '../src/sim/lib/learner/studentPr
 import { createTeacher } from '../src/sim/teacher/teacherFactory.js';
 import { extractCues } from '../src/sim/teacher/cueExtractor.js';
 import { TEACHER_ACTIONS } from '../src/sim/teacher/actions.js';
+import { chooseTeacherAction } from '../src/sim/teacher/teacherPolicy.js';
 import { planTutorTurn } from '../src/sim/teacher/tutorTurnPlanner.js';
 import { renderTeacherMessageWithAdapter } from '../src/sim/teacher/teacherMessageRenderer.js';
 
@@ -607,6 +608,98 @@ test('state-aware teacher estimates visible state with the prior teacher turn in
   );
   assert.equal(decision.debug.stateEstimate.estimated_M_t, 0.25);
   assert.equal(decision.debug.stateEstimate.estimated_R_t, 0.65);
+});
+
+test('state-aware routes low estimated attention and unknown response to check-in', () => {
+  const decision = chooseTeacherAction({
+    conditionId: 'state_aware',
+    cues: extractCues({ studentText: '...' }),
+    stepContext: {
+      canUseScaffold: true,
+      selectedHint: { id: 'h1', type: 'hint', text: 'Try substituting the point.' },
+      hintState: { hintExhausted: false, reusedFinalHint: false }
+    },
+    context: {
+      stateAwareArmEstimate: {
+        estimated_A_t: 0.16,
+        estimated_R_t: 0.52,
+        estimated_M_t: 0.42
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 1 },
+      lastTurnOutcome: {
+        answer_correct: false,
+        category: 'unknown',
+        confidence: 'low'
+      },
+      currentTurn: 3
+    }
+  });
+
+  assert.equal(decision.action, TEACHER_ACTIONS.REQUEST_CHECKIN);
+  assert.match(decision.rationale, /attention risk|non-response/);
+});
+
+test('state-aware routes high estimated monotony to reframe before repeating hints', () => {
+  const decision = chooseTeacherAction({
+    conditionId: 'state_aware',
+    cues: extractCues({ studentText: 'ok' }),
+    stepContext: {
+      canOfferChoice: true,
+      selectedHint: { id: 'h1', type: 'hint', text: 'Try substituting the point.' },
+      hintState: { hintExhausted: false, reusedFinalHint: false }
+    },
+    context: {
+      stateAwareArmEstimate: {
+        estimated_A_t: 0.58,
+        estimated_R_t: 0.62,
+        estimated_M_t: 0.82
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 0 },
+      currentTurn: 4
+    }
+  });
+
+  assert.equal(decision.action, TEACHER_ACTIONS.REFRAME_PROMPT_VARIANT);
+  assert.match(decision.rationale, /monotony/);
+});
+
+test('state-aware escalates repeated incorrect attempts to scaffold over saturated hint scoring', () => {
+  const decision = chooseTeacherAction({
+    conditionId: 'state_aware',
+    cues: extractCues({ studentText: 'I am confused and need help.' }),
+    stepContext: {
+      canUseScaffold: true,
+      selectedHint: {
+        id: 'h2',
+        type: 'scaffold',
+        text: 'What is the left side?',
+        scaffold: { answerType: 'arithmetic', expectedAnswers: ['17'] }
+      },
+      hintState: { hintExhausted: false, reusedFinalHint: false }
+    },
+    context: {
+      stateAwareArmEstimate: {
+        estimated_A_t: 0.38,
+        estimated_R_t: 0.35,
+        estimated_M_t: 0.68
+      },
+      progressionContext: { repeatedIncorrectOnCurrentStep: 2 },
+      lastTurnOutcome: {
+        answer_correct: false,
+        category: 'incorrect',
+        confidence: 'medium'
+      },
+      currentTurn: 5
+    }
+  });
+
+  assert.equal(decision.action, TEACHER_ACTIONS.GIVE_SCAFFOLD);
+  assert.ok(
+    decision.debug.consideredActions.some(
+      (candidate) => candidate.action === TEACHER_ACTIONS.GIVE_HINT && candidate.score > 0.8
+    ),
+    'hint remains a strong candidate, so scaffold must come from state-aware routing'
+  );
 });
 
 test('mocked tutor experiment runner completes teacher/student turn flow', async () => {

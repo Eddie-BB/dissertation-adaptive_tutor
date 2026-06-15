@@ -1,6 +1,6 @@
 {
   "batchId": "batch-baseline-seed-24",
-  "startedAt": "2026-06-08T20:10:35.985Z",
+  "startedAt": "2026-06-15T13:19:02.561Z",
   "outputDir": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24",
   "totalRuns": 5,
   "runs": [
@@ -12,16 +12,16 @@
       "seed": "24",
       "studentId": "batch-baseline-seed-24-baseline-seed-24-r1-run-1",
       "turnsCompleted": 20,
-      "totalCorrectResponses": 8,
-      "totalIncorrectResponses": 12,
-      "completedSteps": 8,
-      "completedProblems": 8,
+      "totalCorrectResponses": 10,
+      "totalIncorrectResponses": 10,
+      "completedSteps": 10,
+      "completedProblems": 10,
       "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24\\run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-1-24.md",
       "summaryMetrics": {
-        "totalCorrectResponses": 8,
-        "totalIncorrectResponses": 12,
-        "completedSteps": 8,
-        "completedProblems": 8
+        "totalCorrectResponses": 10,
+        "totalIncorrectResponses": 10,
+        "completedSteps": 10,
+        "completedProblems": 10
       }
     },
     {
@@ -52,16 +52,16 @@
       "seed": "24",
       "studentId": "batch-baseline-seed-24-baseline-seed-24-r1-run-3",
       "turnsCompleted": 20,
-      "totalCorrectResponses": 9,
-      "totalIncorrectResponses": 11,
-      "completedSteps": 9,
-      "completedProblems": 9,
+      "totalCorrectResponses": 10,
+      "totalIncorrectResponses": 10,
+      "completedSteps": 10,
+      "completedProblems": 10,
       "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24\\run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-3-24.md",
       "summaryMetrics": {
-        "totalCorrectResponses": 9,
-        "totalIncorrectResponses": 11,
-        "completedSteps": 9,
-        "completedProblems": 9
+        "totalCorrectResponses": 10,
+        "totalIncorrectResponses": 10,
+        "completedSteps": 10,
+        "completedProblems": 10
       }
     },
     {
@@ -72,16 +72,16 @@
       "seed": "24",
       "studentId": "batch-baseline-seed-24-baseline-seed-24-r1-run-4",
       "turnsCompleted": 20,
-      "totalCorrectResponses": 9,
-      "totalIncorrectResponses": 11,
-      "completedSteps": 9,
-      "completedProblems": 9,
+      "totalCorrectResponses": 7,
+      "totalIncorrectResponses": 13,
+      "completedSteps": 7,
+      "completedProblems": 7,
       "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24\\run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-4-24.md",
       "summaryMetrics": {
-        "totalCorrectResponses": 9,
-        "totalIncorrectResponses": 11,
-        "completedSteps": 9,
-        "completedProblems": 9
+        "totalCorrectResponses": 7,
+        "totalIncorrectResponses": 13,
+        "completedSteps": 7,
+        "completedProblems": 7
       }
     },
     {
@@ -92,20 +92,20 @@
       "seed": "24",
       "studentId": "batch-baseline-seed-24-baseline-seed-24-r1-run-5",
       "turnsCompleted": 20,
-      "totalCorrectResponses": 5,
-      "totalIncorrectResponses": 15,
-      "completedSteps": 5,
-      "completedProblems": 5,
+      "totalCorrectResponses": 6,
+      "totalIncorrectResponses": 14,
+      "completedSteps": 6,
+      "completedProblems": 6,
       "markdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24\\run-baseline-batch-baseline-seed-24-baseline-seed-24-r1-run-5-24.md",
       "summaryMetrics": {
-        "totalCorrectResponses": 5,
-        "totalIncorrectResponses": 15,
-        "completedSteps": 5,
-        "completedProblems": 5
+        "totalCorrectResponses": 6,
+        "totalIncorrectResponses": 14,
+        "completedSteps": 6,
+        "completedProblems": 6
       }
     }
   ],
-  "completedAt": "2026-06-08T20:32:17.626Z",
+  "completedAt": "2026-06-15T13:41:20.203Z",
   "completedRuns": 5,
   "failedRuns": 0,
   "summaryMarkdownPath": "C:\\Users\\Laptop\\OneDrive\\Documents\\University\\Dissertation\\adaptive_teaching_simulation\\batch_results\\batch-baseline-seed-24\\batch-baseline-seed-24-summary.md",
