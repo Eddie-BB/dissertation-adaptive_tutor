@@ -165,47 +165,42 @@ test('malformed condition response becomes tutor response error', async () => {
   assert.equal(saved.last_debug_log.turn_number, 1);
 });
 
-test('teacher message missing active problem material exposes validation diagnostic', async () => {
+test('teacher message missing active problem material records non-fatal warning', async () => {
   const student = await generateAndStoreStudentProfile({
     seed: 'error-handling-tutor-validation',
     studentId: 'error-handling-tutor-validation-student',
     conditionId: 'baseline'
   });
 
-  await assert.rejects(
-    () => runTutorExperimentSession({
-      studentId: student.student_id,
-      conditionId: 'baseline',
-      seed: 'error-handling-tutor-validation',
-      maxTurns: 1,
-      teacherMessageAdapter: createStructuredAdapter(() => ({
-        teacher_message: 'Let us continue. What do you think?'
-      }), 'mock_teacher_missing_problem'),
-      learnerRuntimeConfig: {
-        appraisal_scorer_adapter: createAppraisalAdapter(),
-        student_text_adapter: createStructuredAdapter(() => ({
-          student_text: 'independent system',
-          student_answer: 'independent system',
-          student_action: 'submit_answer',
-          student_explanation: ''
-        }), 'mock_student_text')
-      }
-    }),
-    (error) => {
-      const response = toErrorResponse(error);
-      assert.equal(response.body.errorCode, 'TUTOR_RESPONSE_INVALID');
-      assert.equal(response.body.details.phase, 'teacher_message_validation');
-      assert.equal(
-        response.body.details.renderer_diagnostics.validation.reason,
-        'Message omitted active problem material'
-      );
-      assert.ok(
-        response.body.details.renderer_diagnostics.validation.expected_active_problem_material.includes(
-          'Which system has exactly one solution pair'
-        )
-      );
-      return true;
+  const result = await runTutorExperimentSession({
+    studentId: student.student_id,
+    conditionId: 'baseline',
+    seed: 'error-handling-tutor-validation',
+    maxTurns: 1,
+    teacherMessageAdapter: createStructuredAdapter(() => ({
+      teacher_message: 'Let us continue. What do you think?'
+    }), 'mock_teacher_missing_problem'),
+    learnerRuntimeConfig: {
+      appraisal_scorer_adapter: createAppraisalAdapter(),
+      student_text_adapter: createStructuredAdapter(() => ({
+        student_text: 'independent system',
+        student_answer: 'independent system',
+        student_action: 'submit_answer',
+        student_explanation: ''
+      }), 'mock_student_text')
     }
+  });
+
+  const validation = result.experimenter_debug_log.turn_logs[0]
+    .teacher_message_metadata.teacher_message_validation;
+
+  assert.equal(result.status, 'complete');
+  assert.equal(validation.valid, true);
+  assert.equal(validation.warnings[0].code, 'active_problem_material_unmatched');
+  assert.ok(
+    validation.warnings[0].expected_active_problem_material.includes(
+      'Which system has exactly one solution pair'
+    )
   );
 });
 
