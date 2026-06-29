@@ -26,12 +26,12 @@ In this repo the seed used when generating the student profile deterministically
 
 ## Final Session Results
 
-- Total correct responses: 4
-- Total incorrect responses: 16
-- Problems completed: 4 of 13
-- Lesson steps completed: 4 of 13
+- Total correct responses: 3
+- Total incorrect responses: 17
+- Problems completed: 3 of 13
+- Lesson steps completed: 3 of 13
 - Attention decline rate (attention / turn): 0.0242
-- Monotony decline rate (monotony / turn): -0.0184
+- Monotony decline rate (monotony / turn): -0.0179
 - Reward decline rate (reward / turn): 0.0079
 
 ## Tutor Actions
@@ -39,26 +39,29 @@ In this repo the seed used when generating the student profile deterministically
 | # | Item | Count | Percentage |
 | ---: | --- | ---: | ---: |
 | 1 | action_offer_choice | 1 | 5.0% |
-| 2 | action_give_specific_praise | 4 | 20.0% |
-| 3 | action_give_hint | 15 | 75.0% |
+| 2 | action_give_hint | 1 | 5.0% |
+| 3 | action_give_bottom_out | 1 | 5.0% |
+| 4 | action_reframe_prompt_variant | 3 | 15.0% |
+| 5 | action_request_checkin | 8 | 40.0% |
+| 6 | action_suggest_slower_pace | 6 | 30.0% |
 
 ## Student Actions
 
 | # | Item | Count | Percentage |
 | ---: | --- | ---: | ---: |
 | 1 | submit_answer | 9 | 45.0% |
-| 2 | no_response | 10 | 50.0% |
-| 3 | off_task | 1 | 5.0% |
+| 2 | off_task | 4 | 20.0% |
+| 3 | no_response | 7 | 35.0% |
 
 ## Behavioural States
 
 | # | Item | Count | Percentage |
 | ---: | --- | ---: | ---: |
-| 1 | engaged_attempt | 2 | 10.0% |
-| 2 | careless_guess | 4 | 20.0% |
-| 3 | minimal_compliance | 3 | 15.0% |
-| 4 | disengaged_non_response | 10 | 50.0% |
-| 5 | off_task | 1 | 5.0% |
+| 1 | minimal_compliance | 2 | 10.0% |
+| 2 | careless_guess | 5 | 25.0% |
+| 3 | engaged_attempt | 2 | 10.0% |
+| 4 | off_task | 4 | 20.0% |
+| 5 | disengaged_non_response | 7 | 35.0% |
 
 ## Per-Turn Transcript And Experiment Log
 
@@ -112,8 +115,232 @@ Teacher action choice:
 Teacher state-aware ARM estimate:
 
 - Estimated ARM: A 0.68 | R 0.5 | M 0.2
-- Estimate minus actual ARM: A 0.21 | R -0.2 | M -0.15
+- Estimate minus actual ARM: A 0.21 | R -0.25 | M -0.15
 - Transcript: Welcome to the lesson on Systems of Linear Equations: Two Variables. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | misconception |
+| Incorrect attempts on current step | 1 |
+| Submitted answer | dependent system |
+| Normalized student answer | dependent system |
+| Expected answer | independent system |
+| Accepted answers | independent system; an independent system; independent |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | confuses_dependent_with_independent / high |
+
+Student:
+
+- Student ARM: A 0.47 | R 0.75 | M 0.35
+- Student ARM change: A n/a | R n/a | M n/a
+- Behavioural state: minimal_compliance
+- Action: submit_answer
+- Transcript: I think the system with exactly one solution pair (x,y) is the dependent system.
+- Structured answer: dependent system
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.9299 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.7602; MINIMAL_COMPLIANCE: 0.1878; HELP_SEEKING_CONFUSION: 0.0189; CARELESS_GUESS: 0.0194; OFF_TASK: 0.0132; DISENGAGED_NON_RESPONSE: 0.0004 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.7602; MINIMAL_COMPLIANCE: 0.1878; HELP_SEEKING_CONFUSION: 0.0189; CARELESS_GUESS: 0.0194; OFF_TASK: 0.0132; DISENGAGED_NON_RESPONSE: 0.0004 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.7602; MINIMAL_COMPLIANCE: 0.7602 <= u < 0.9481; HELP_SEEKING_CONFUSION: 0.9481 <= u < 0.967; CARELESS_GUESS: 0.967 <= u < 0.9864; OFF_TASK: 0.9864 <= u < 0.9996; DISENGAGED_NON_RESPONSE: 0.9996 <= u < 1 |
+| Selected hidden behaviour | minimal_compliance |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | incorrect |
+| Generated probability correct | 0.488 |
+| Behaviour prior correctness | 0.4 |
+| Correctness sampling value | 0.9299 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.4. ARM-adjusted pCorrect=0.488. Runtime sample=0.929856. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.2 | No prior teacher turns to compare, default low repetition score assigned. |
+| M2 | 0.2 | No prior teacher turns to compare, default low structural repetition score assigned. |
+| M3 | 0.3 | Message is mostly specific, referencing the topic and types of systems, but includes a generic choice prompt. |
+| M4 | 0.7 | The message constrains the student to choose one of three given options, limiting choice but allowing some decision. |
+| R1 | 0.9 | The message clearly states the lesson topic and asks a question related to the learning goal, showing explicit purpose. |
+| R2 | 0.9 | The instruction to choose one system type is clear, with a defined expected outcome (selecting the correct system). |
+| R3 | 0.7 | The tone is neutral to mildly supportive, welcoming the student and engaging them with a question. |
+| R4 | 0.5 | The student is invited to choose among options, providing some agency but within a limited set of choices. |
+
+- Aggregate M_t: 0.35
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.4849, monotony sensitivity 0.8188, effective decline 0.237, resulting A_t 0.47
+
+### Turn 2
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)?
+- Step ID: problem_01_identify_independent_system_step_01
+
+Teacher:
+
+- Action: action_give_hint
+- Action explanation: Support need detected; lightweight hint is appropriate.
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.9111 |
+| engagement | 0.8011 |
+| pacingPressure | 0.0311 |
+| autonomyOpportunity | 0.4972 |
+| supportNeed | 0.7378 |
+| remediateNeed | 0.7378 |
+| encouragementNeed | 0.1916 |
+| praiseOpportunity | 0.6836 |
+| reviewNeed | 0.6644 |
+| previousAnswerIncorrect | true |
+| previousAnswerMisconception | true |
+| repeatedIncorrectCount | 1 |
+
+Teacher action choice:
+
+- Selected action score: 1
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_offer_choice | 0.6183 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_give_bottom_out | 0.4789 | Severe difficulty suggests bottom-out support. |
+| action_give_specific_praise | 0.4218 | Progress and engagement justify specific praise. |
+| action_continue_standard | 0.3565 | No stronger adaptive action qualified; continuing standard instruction. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.59 | R 0.65 | M 0.35
+- Estimate minus actual ARM: A 0.24 | R 0.05 | M -0.35
+- Transcript: Not quite yet. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)? When there is only one solution, what do we call it? Independent, inconsistent, or dependent? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | misconception |
+| Incorrect attempts on current step | 2 |
+| Submitted answer | inconsistent system |
+| Normalized student answer | inconsistent system |
+| Expected answer | independent system |
+| Accepted answers | independent system; an independent system; independent |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | confuses_inconsistent_with_independent / high |
+
+Student:
+
+- Student ARM: A 0.35 | R 0.6 | M 0.7
+- Student ARM change: A -0.12 | R -0.15 | M 0.35
+- Behavioural state: careless_guess
+- Action: submit_answer
+- Transcript: I think the system with exactly one solution pair (x,y) is called an inconsistent system.
+- Structured answer: inconsistent system
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.8284 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.3615; MINIMAL_COMPLIANCE: 0.302; HELP_SEEKING_CONFUSION: 0.0622; CARELESS_GUESS: 0.1203; OFF_TASK: 0.1499; DISENGAGED_NON_RESPONSE: 0.0041 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.3615; MINIMAL_COMPLIANCE: 0.302; HELP_SEEKING_CONFUSION: 0.0622; CARELESS_GUESS: 0.1203; OFF_TASK: 0.1499; DISENGAGED_NON_RESPONSE: 0.0041 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.3615; MINIMAL_COMPLIANCE: 0.3615 <= u < 0.6635; HELP_SEEKING_CONFUSION: 0.6635 <= u < 0.7257; CARELESS_GUESS: 0.7257 <= u < 0.846; OFF_TASK: 0.846 <= u < 0.9959; DISENGAGED_NON_RESPONSE: 0.9959 <= u < 1 |
+| Selected hidden behaviour | careless_guess |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | incorrect |
+| Generated probability correct | 0.2245 |
+| Behaviour prior correctness | 0.2 |
+| Correctness sampling value | 0.8284 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.2245. Runtime sample=0.828359. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.9 | The current message explicitly repeats the same task demand as the previous teacher turn, asking about the types of systems and their solutions, with only minor rephrasing. |
+| M2 | 0.9 | The instructional delivery format is nearly identical to the previous turn: both are question-led with multiple-choice style prompts, maintaining the same interaction pattern and presentation style. |
+| M3 | 0.3 | The language is mostly specific to the task, referencing the types of systems and solution pairs, though the second message adds a bit more detail, so it is mostly specific with minor generic scaffolding. |
+| M4 | 0.7 | The student is given a constrained choice among three options, limiting their decision space to selecting one of the provided system types, indicating a mostly constrained path. |
+| R1 | 0.7 | The message connects to a meaningful goal by asking about system types and solutions, continuing the lesson's objective, making the purpose mostly clear though not explicitly stated. |
+| R2 | 0.7 | The instruction is clear in what the student should do: choose one system type and identify the correct term, though the success condition is implied rather than explicitly stated, so clarity is good but not perfect. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, encouraging the student to think and choose, without negative or discouraging language. |
+| R4 | 0.3 | The message offers limited autonomy by providing fixed choices and asking for a selection, with minimal opportunity for open-ended input or reasoning beyond the choice. |
+
+- Aggregate M_t: 0.7
+- Aggregate R_t: 0.6
+- Attention update: reward trace 0.5162, monotony sensitivity 0.8933, effective decline 0.2938, resulting A_t 0.35
+
+### Turn 3
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)?
+- Step ID: problem_01_identify_independent_system_step_01
+
+Teacher:
+
+- Action: action_give_bottom_out
+- Action explanation: State-aware estimate plus repeated incorrect attempts escalates to bottom-out help.
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.9333 |
+| engagement | 0.8133 |
+| pacingPressure | 0.0233 |
+| autonomyOpportunity | 0.506 |
+| supportNeed | 0.8533 |
+| remediateNeed | 0.8533 |
+| encouragementNeed | 0.1883 |
+| praiseOpportunity | 0.7033 |
+| reviewNeed | 0.6533 |
+| previousAnswerIncorrect | true |
+| previousAnswerMisconception | true |
+| repeatedIncorrectCount | 2 |
+
+Teacher action choice:
+
+- Selected action score: 0.5
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_offer_choice | 0.6639 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_reframe_prompt_variant | 0.3672 | Reframing can vary structure and reduce monotony. |
+| action_give_specific_praise | 0.3662 | Progress and engagement justify specific praise. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.5 | R 0.8 | M 0.7
+- Estimate minus actual ARM: A 0.24 | R 0.05 | M 0
+- Transcript: Not quite yet. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has exactly one solution pair (x,y)? The target answer is independent system. Use that to check the step and then answer the problem. Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -121,7 +348,7 @@ Teacher validation correctness:
 | --- | --- |
 | Correct | yes |
 | Validation category | correct |
-| Incorrect attempts on current step | 0 |
+| Incorrect attempts on current step | 2 |
 | Submitted answer | independent system |
 | Normalized student answer | independent system |
 | Expected answer | independent system |
@@ -133,11 +360,11 @@ Teacher validation correctness:
 
 Student:
 
-- Student ARM: A 0.47 | R 0.7 | M 0.35
-- Student ARM change: A n/a | R n/a | M n/a
+- Student ARM: A 0.26 | R 0.75 | M 0.7
+- Student ARM change: A -0.09 | R 0.15 | M 0
 - Behavioural state: engaged_attempt
 - Action: submit_answer
-- Transcript: A system with exactly one solution pair (x, y) is called an independent system because the two lines intersect at exactly one point.
+- Transcript: The system that has exactly one solution pair (x, y) is called an independent system. This means the two lines intersect at exactly one point.
 - Structured answer: independent system
 
 Student behavioural sampling:
@@ -145,10 +372,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.7118 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.7387; MINIMAL_COMPLIANCE: 0.2017; HELP_SEEKING_CONFUSION: 0.0212; CARELESS_GUESS: 0.0219; OFF_TASK: 0.016; DISENGAGED_NON_RESPONSE: 0.0005 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.7387; MINIMAL_COMPLIANCE: 0.2017; HELP_SEEKING_CONFUSION: 0.0212; CARELESS_GUESS: 0.0219; OFF_TASK: 0.016; DISENGAGED_NON_RESPONSE: 0.0005 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.7387; MINIMAL_COMPLIANCE: 0.7387 <= u < 0.9405; HELP_SEEKING_CONFUSION: 0.9405 <= u < 0.9617; CARELESS_GUESS: 0.9617 <= u < 0.9835; OFF_TASK: 0.9835 <= u < 0.9995; DISENGAGED_NON_RESPONSE: 0.9995 <= u < 1 |
+| Random draw u | 0.0441 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.3738; MINIMAL_COMPLIANCE: 0.287; HELP_SEEKING_CONFUSION: 0.0699; CARELESS_GUESS: 0.1361; OFF_TASK: 0.1279; DISENGAGED_NON_RESPONSE: 0.0052 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.3738; MINIMAL_COMPLIANCE: 0.287; HELP_SEEKING_CONFUSION: 0.0699; CARELESS_GUESS: 0.1361; OFF_TASK: 0.1279; DISENGAGED_NON_RESPONSE: 0.0052 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.3738; MINIMAL_COMPLIANCE: 0.3738 <= u < 0.6608; HELP_SEEKING_CONFUSION: 0.6608 <= u < 0.7307; CARELESS_GUESS: 0.7307 <= u < 0.8669; OFF_TASK: 0.8669 <= u < 0.9948; DISENGAGED_NON_RESPONSE: 0.9948 <= u < 1 |
 | Selected hidden behaviour | engaged_attempt |
 | Visible learner action | submit_answer |
 
@@ -159,38 +386,38 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Field | Value |
 | --- | --- |
 | Intended answer outcome | correct |
-| Generated probability correct | 0.7345 |
+| Generated probability correct | 0.6715 |
 | Behaviour prior correctness | 0.65 |
-| Correctness sampling value | 0.7118 |
+| Correctness sampling value | 0.0441 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.65. ARM-adjusted pCorrect=0.7345. Runtime sample=0.711765. |
+| Calibration rationale | Selected behaviour prior=0.65. ARM-adjusted pCorrect=0.6715. Runtime sample=0.044113. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.2 | No prior teacher turns available, so default low repetition score of 0.2 assigned. |
-| M2 | 0.2 | No prior teacher turns available, so default low structural repetition score of 0.2 assigned. |
-| M3 | 0.3 | Message is mostly specific, referencing the exact topic and task (systems of linear equations, types, and solution types), with a clear question, so low genericness (0.3). |
-| M4 | 0.7 | The student is given a forced choice among three options, limiting their decision space, so mostly constrained (0.7). |
-| R1 | 0.9 | The message clearly states the lesson topic and asks a question related to the types of systems and solutions, showing a mostly clear purpose (0.9). |
-| R2 | 0.9 | The instruction to choose one system type is explicit and the expected outcome (identifying the system with exactly one solution) is clear, so high clarity (0.9). |
-| R3 | 0.7 | The tone is neutral to mildly supportive, welcoming the student and inviting participation, so mildly supportive (0.7). |
-| R4 | 0.3 | The student is asked to choose among given options, which offers limited autonomy, so minimal autonomy (0.3). |
+| M1 | 0.9 | The current message explicitly repeats the same cognitive task as the previous two turns, asking the student to identify the system with exactly one solution, so a high repetition score is appropriate. |
+| M2 | 0.9 | The delivery format remains a direct question with multiple-choice options, consistent with the previous turns, indicating high structural repetition. |
+| M3 | 0.3 | The language is mostly specific to the task, referencing the types of systems and solutions, but includes some generic scaffolding phrases like 'Use that to check the step,' so a moderately low genericness score is assigned. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, limiting choice and indicating a mostly constrained path, but not fully rigid since there are three options. |
+| R1 | 1 | The message clearly connects to the meaningful goal of identifying the correct system type, making the purpose explicit and well-integrated. |
+| R2 | 1 | The instructions are precise, telling the student exactly what to do and what the expected answer is, with clear success criteria. |
+| R3 | 0.7 | The tone is mildly supportive, using 'Not quite yet' as gentle feedback without negative or discouraging language. |
+| R4 | 0.3 | The student is given limited autonomy, as they must select from provided options without open-ended input or reasoning invitation. |
 
-- Aggregate M_t: 0.35
-- Aggregate R_t: 0.7
-- Attention update: reward trace 0.4713, monotony sensitivity 0.8188, effective decline 0.239, resulting A_t 0.47
+- Aggregate M_t: 0.7
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.5798, monotony sensitivity 0.9677, effective decline 0.2921, resulting A_t 0.26
 
-### Turn 2
+### Turn 4
 
 - Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?
 - Step ID: problem_02_identify_inconsistent_system_step_01
 
 Teacher:
 
-- Action: action_give_specific_praise
-- Action explanation: Progress and engagement justify specific praise.
+- Action: action_reframe_prompt_variant
+- Action explanation: State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.
 
 Teacher internal policy signals:
 
@@ -198,28 +425,154 @@ Teacher internal policy signals:
 | --- | --- |
 | progress | 1 |
 | engagement | 0.85 |
+| pacingPressure | 0.1 |
 | autonomyOpportunity | 0.5325 |
+| remediateNeed | 0.1 |
 | encouragementNeed | 0.1785 |
 | praiseOpportunity | 1 |
 | previousAnswerCorrect | true |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.3725
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_specific_praise | 1 | Progress and engagement justify specific praise. |
-| action_offer_choice | 0.7927 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_continue_standard | 0.5176 | No stronger adaptive action qualified; continuing standard instruction. |
-| action_give_general_encouragement | 0.2602 | Affective support is appropriate to sustain effort. |
-| action_reframe_prompt_variant | 0.2395 | Reframing can vary structure and reduce monotony. |
+| action_offer_choice | 0.8698 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_reframe_prompt_variant | 0.3725 | Reframing can vary structure and reduce monotony. |
+| action_continue_standard | 0.3551 | No stronger adaptive action qualified; continuing standard instruction. |
+| action_suggest_slower_pace | 0.3384 | Pacing pressure suggests slowing down the interaction. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.59 | R 0.75 | M 0.35
-- Estimate minus actual ARM: A 0.24 | R -0.05 | M -0.35
-- Transcript: Good, that previous answer is correct. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system.
+- Estimated ARM: A 0.42 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.23 | R 0 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | unknown |
+| Incorrect attempts on current step | 1 |
+| Submitted answer | none |
+| Normalized student answer | n/a |
+| Expected answer | inconsistent system |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | non_answer_action |
+| Method / confidence | deterministic_text / low |
+
+Student:
+
+- Student ARM: A 0.19 | R 0.75 | M 0.7
+- Student ARM change: A -0.07 | R 0 | M 0
+- Behavioural state: off_task
+- Action: off_task
+- Transcript: Hmm, I think I got a bit distracted. Can you remind me what the inconsistent system means again?
+- Structured answer: none
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.8771 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.3069; MINIMAL_COMPLIANCE: 0.2788; HELP_SEEKING_CONFUSION: 0.085; CARELESS_GUESS: 0.1701; OFF_TASK: 0.1512; DISENGAGED_NON_RESPONSE: 0.008 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.3069; MINIMAL_COMPLIANCE: 0.2788; HELP_SEEKING_CONFUSION: 0.085; CARELESS_GUESS: 0.1701; OFF_TASK: 0.1512; DISENGAGED_NON_RESPONSE: 0.008 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.3069; MINIMAL_COMPLIANCE: 0.3069 <= u < 0.5857; HELP_SEEKING_CONFUSION: 0.5857 <= u < 0.6707; CARELESS_GUESS: 0.6707 <= u < 0.8408; OFF_TASK: 0.8408 <= u < 0.992; DISENGAGED_NON_RESPONSE: 0.992 <= u < 1 |
+| Selected hidden behaviour | off_task |
+| Visible learner action | off_task |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | no_answer |
+| Generated probability correct | 0.011 |
+| Behaviour prior correctness | 0 |
+| Correctness sampling value | 0.8771 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0.011. Runtime sample=0.877122. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.9 | The current message repeats the same cognitive operation of identifying system types by solution characteristics, with only a minor change in the specific solution condition, so a high similarity score of 0.9 is appropriate. |
+| M2 | 0.9 | The message uses the same multiple-choice question format and interaction style as the previous turns, indicating a repeated instructional structure, thus a high similarity score of 0.9. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact task and options, though it is somewhat formulaic and repetitive, so a score of 0.3 reflects mostly specific language with minor generic elements. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, limiting choice and agency, but still allows selection among options, so a score of 0.7 reflects mostly constrained path. |
+| R1 | 1 | The message clearly connects to the meaningful goal of identifying the system type with no solution, making the purpose explicit and well-integrated, warranting a score of 1.0. |
+| R2 | 1 | The instruction is explicit and clear about what the student should do (choose the system with no solution) and the expected outcome (correct identification), so a score of 1.0 is appropriate. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, without negative or discouraging language, so a score of 0.7 reflects mild encouragement. |
+| R4 | 0.3 | The student is given limited autonomy, only to select among fixed options without open-ended input, so a score of 0.3 reflects minimal autonomy. |
+
+- Aggregate M_t: 0.7
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.6261, monotony sensitivity 1.0422, effective decline 0.2933, resulting A_t 0.19
+
+### Turn 5
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?
+- Step ID: problem_02_identify_inconsistent_system_step_01
+
+Teacher:
+
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| hasAnyQuestion | true |
+| isHelpSeeking | true |
+| isOffTask | true |
+| requestsRepetition | true |
+| offTaskRateLastK | 0.4 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 1 |
+| confusion | 0.35 |
+| offTask | 0.65 |
+| engagement | 0.935 |
+| pacingPressure | 0.1875 |
+| autonomyOpportunity | 0.8108 |
+| supportNeed | 0.7175 |
+| remediateNeed | 0.7175 |
+| encouragementNeed | 0.1964 |
+| praiseOpportunity | 0.7837 |
+| reviewNeed | 0.755 |
+| previousAnswerIncorrect | true |
+| previousAnswerUnknown | true |
+| repeatedIncorrectCount | 1 |
+
+Teacher action choice:
+
+- Selected action score: 0.6983
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_offer_choice | 1 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_reframe_prompt_variant | 0.7531 | Reframing can vary structure and reduce monotony. |
+| action_request_checkin | 0.6983 | A check-in is appropriate to clarify understanding and current state. |
+| action_suggest_slower_pace | 0.5127 | Pacing pressure suggests slowing down the interaction. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.36 | R 0.8 | M 0.7
+- Estimate minus actual ARM: A 0.22 | R 0.05 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -227,34 +580,34 @@ Teacher validation correctness:
 | --- | --- |
 | Correct | no |
 | Validation category | misconception |
-| Incorrect attempts on current step | 1 |
-| Submitted answer | independent system |
-| Normalized student answer | independent system |
+| Incorrect attempts on current step | 2 |
+| Submitted answer | dependent system |
+| Normalized student answer | dependent system |
 | Expected answer | inconsistent system |
 | Accepted answers | n/a |
 | Validation mode | normalized_string_equality |
 | Answer type | string |
 | Validation input source | structured_answer |
-| Method / confidence | choice_distractor_independent_system / high |
+| Method / confidence | choice_distractor_dependent_system / high |
 
 Student:
 
-- Student ARM: A 0.35 | R 0.8 | M 0.7
-- Student ARM change: A -0.12 | R 0.1 | M 0.35
+- Student ARM: A 0.14 | R 0.75 | M 0.7
+- Student ARM change: A -0.05 | R 0 | M 0
 - Behavioural state: careless_guess
 - Action: submit_answer
-- Transcript: I think the system with no solution is the independent system.
-- Structured answer: independent system
+- Transcript: I think the system with no solution is the dependent system.
+- Structured answer: dependent system
 
 Student behavioural sampling:
 
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.9093 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.4956; MINIMAL_COMPLIANCE: 0.2775; HELP_SEEKING_CONFUSION: 0.0487; CARELESS_GUESS: 0.0905; OFF_TASK: 0.0853; DISENGAGED_NON_RESPONSE: 0.0025 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.4956; MINIMAL_COMPLIANCE: 0.2775; HELP_SEEKING_CONFUSION: 0.0487; CARELESS_GUESS: 0.0905; OFF_TASK: 0.0853; DISENGAGED_NON_RESPONSE: 0.0025 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.4956; MINIMAL_COMPLIANCE: 0.4956 <= u < 0.773; HELP_SEEKING_CONFUSION: 0.773 <= u < 0.8217; CARELESS_GUESS: 0.8217 <= u < 0.9122; OFF_TASK: 0.9122 <= u < 0.9975; DISENGAGED_NON_RESPONSE: 0.9975 <= u < 1 |
+| Random draw u | 0.663 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.2619; MINIMAL_COMPLIANCE: 0.2682; HELP_SEEKING_CONFUSION: 0.096; CARELESS_GUESS: 0.196; OFF_TASK: 0.1673; DISENGAGED_NON_RESPONSE: 0.0107 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.2619; MINIMAL_COMPLIANCE: 0.2682; HELP_SEEKING_CONFUSION: 0.096; CARELESS_GUESS: 0.196; OFF_TASK: 0.1673; DISENGAGED_NON_RESPONSE: 0.0107 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.2619; MINIMAL_COMPLIANCE: 0.2619 <= u < 0.5301; HELP_SEEKING_CONFUSION: 0.5301 <= u < 0.6261; CARELESS_GUESS: 0.6261 <= u < 0.822; OFF_TASK: 0.822 <= u < 0.9893; DISENGAGED_NON_RESPONSE: 0.9893 <= u < 1 |
 | Selected hidden behaviour | careless_guess |
 | Visible learner action | submit_answer |
 
@@ -265,73 +618,199 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Field | Value |
 | --- | --- |
 | Intended answer outcome | incorrect |
-| Generated probability correct | 0.2385 |
+| Generated probability correct | 0.2035 |
 | Behaviour prior correctness | 0.2 |
-| Correctness sampling value | 0.9093 |
+| Correctness sampling value | 0.663 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.2385. Runtime sample=0.909278. |
+| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.2035. Runtime sample=0.663008. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same cognitive operation as the prior turn, asking the student to identify a type of system based on solution characteristics, just changing which type is asked about. |
-| M2 | 0.9 | The structure is nearly identical: a multiple-choice question with three options, maintaining the same delivery format and interaction style as the prior turn. |
-| M3 | 0.3 | The message is mostly specific, referencing the exact topic and options, but uses some generic phrasing like 'Choose one' without further task grounding, so it is mostly specific with minor omission. |
-| M4 | 0.7 | The student is given a forced choice among three options, limiting decision space to a single selection, indicating a mostly constrained path. |
-| R1 | 1 | The message clearly connects to the meaningful goal of understanding types of systems and their solutions, explicitly stating the context and question purpose. |
-| R2 | 1 | The instruction is explicit and clear about what to do (choose one option) and what the expected outcome is (identify the system with no solution). |
-| R3 | 0.7 | The message includes positive reinforcement ('Good, that previous answer is correct') and maintains a supportive tone, encouraging the student. |
-| R4 | 0.5 | The student is invited to choose among given options but not to explain reasoning or explore beyond the fixed choices, indicating some limited agency. |
+| M1 | 0.9 | The current message repeats the instructional goal of identifying system types by solution count, closely matching previous turns with minor variations in the specific solution focus. |
+| M2 | 0.9 | The delivery format is a multiple-choice question with three options, consistent across all prior turns, indicating high structural repetition. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact task and options, with minor generic scaffolding in phrasing. |
+| M4 | 0.7 | The student is constrained to choose one of three fixed options, indicating a mostly constrained path with limited choice. |
+| R1 | 1 | The message clearly connects to the goal of understanding system types by solution count, making the purpose explicit and well-integrated. |
+| R2 | 1 | The instruction is precise, asking the student to select the correct system type from given options, with a clear expected outcome. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, without negative or discouraging language, supporting a safe learning climate. |
+| R4 | 0.3 | The message offers limited autonomy, as the student must select from fixed options without open-ended input or exploration. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.8
-- Attention update: reward trace 0.5607, monotony sensitivity 0.8933, effective decline 0.2861, resulting A_t 0.35
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.6598, monotony sensitivity 1.1166, effective decline 0.2965, resulting A_t 0.14
 
-### Turn 3
+### Turn 6
 
 - Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?
 - Step ID: problem_02_identify_inconsistent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| offTaskRateLastK | 0.1667 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
 | progress | 0.8444 |
-| engagement | 0.7644 |
-| pacingPressure | 0.2544 |
-| autonomyOpportunity | 0.4707 |
-| supportNeed | 0.7511 |
-| remediateNeed | 0.7511 |
-| encouragementNeed | 0.2014 |
-| praiseOpportunity | 0.6244 |
-| reviewNeed | 0.6978 |
+| offTask | 0.0417 |
+| engagement | 0.7603 |
+| pacingPressure | 0.203 |
+| autonomyOpportunity | 0.4855 |
+| supportNeed | 0.8711 |
+| remediateNeed | 0.8711 |
+| encouragementNeed | 0.2005 |
+| praiseOpportunity | 0.6234 |
+| reviewNeed | 0.7061 |
 | previousAnswerIncorrect | true |
 | previousAnswerMisconception | true |
-| repeatedIncorrectCount | 1 |
+| repeatedIncorrectCount | 2 |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.4956
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_offer_choice | 0.6455 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.5013 | Pacing pressure suggests slowing down the interaction. |
-| action_give_bottom_out | 0.4721 | Severe difficulty suggests bottom-out support. |
-| action_reframe_prompt_variant | 0.3601 | Reframing can vary structure and reduce monotony. |
+| action_offer_choice | 0.6438 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_suggest_slower_pace | 0.4956 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.3902 | A check-in is appropriate to clarify understanding and current state. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.5 | R 0.8 | M 0.7
-- Estimate minus actual ARM: A 0.24 | R 0 | M 0
-- Transcript: Not quite yet. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? When there is no solution, what do we call it? Independent, inconsistent, or dependent? Choose one: independent system or inconsistent system or dependent system.
+- Estimated ARM: A 0.3 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.2 | R 0.08 | M 0.01
+- Transcript: Let's slow down a bit. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | misconception |
+| Incorrect attempts on current step | 3 |
+| Submitted answer | dependent system |
+| Normalized student answer | dependent system |
+| Expected answer | inconsistent system |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | choice_distractor_dependent_system / high |
+
+Student:
+
+- Student ARM: A 0.1 | R 0.67 | M 0.69
+- Student ARM change: A -0.04 | R -0.08 | M -0.01
+- Behavioural state: careless_guess
+- Action: submit_answer
+- Transcript: I think the system with no solution is the dependent system.
+- Structured answer: dependent system
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.3651 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1074; MINIMAL_COMPLIANCE: 0.1396; HELP_SEEKING_CONFUSION: 0.0601; CARELESS_GUESS: 0.1248; OFF_TASK: 0.1138; DISENGAGED_NON_RESPONSE: 0.4543 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1074; MINIMAL_COMPLIANCE: 0.1396; HELP_SEEKING_CONFUSION: 0.0601; CARELESS_GUESS: 0.1248; OFF_TASK: 0.1138; DISENGAGED_NON_RESPONSE: 0.4543 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1074; MINIMAL_COMPLIANCE: 0.1074 <= u < 0.247; HELP_SEEKING_CONFUSION: 0.247 <= u < 0.3071; CARELESS_GUESS: 0.3071 <= u < 0.4319; OFF_TASK: 0.4319 <= u < 0.5457; DISENGAGED_NON_RESPONSE: 0.5457 <= u < 1 |
+| Selected hidden behaviour | careless_guess |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | incorrect |
+| Generated probability correct | 0.1929 |
+| Behaviour prior correctness | 0.2 |
+| Correctness sampling value | 0.3651 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.1929. Runtime sample=0.365088. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.87 | The current message repeats the same cognitive operation of asking to identify a system type, with two prior turns explicitly repeating the same question, resulting in a high repetition score. |
+| M2 | 0.87 | The delivery format is a question with multiple choice options repeated identically in two prior turns, indicating high structural repetition. |
+| M3 | 0.3 | The language is mostly specific to the task, referencing system types and solution types, but lacks deeper contextual grounding or elaboration, so moderately low genericness. |
+| M4 | 0.7 | The student is given a forced choice among three options, limiting their decision space, indicating mostly constrained path. |
+| R1 | 0.7 | The message connects to a meaningful goal by asking about system types and solutions, making the purpose mostly clear. |
+| R2 | 1 | The instruction is explicit and clear about what to do and what the expected answer is, so payoff clarity is high. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, with no negative or discouraging language, providing mild encouragement. |
+| R4 | 0.3 | The message offers limited autonomy as the student must choose from fixed options without open-ended input. |
+
+- Aggregate M_t: 0.69
+- Aggregate R_t: 0.67
+- Attention update: reward trace 0.6626, monotony sensitivity 1.1166, effective decline 0.2942, resulting A_t 0.1
+
+### Turn 7
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?
+- Step ID: problem_02_identify_inconsistent_system_step_01
+
+Teacher:
+
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| offTaskRateLastK | 0.1429 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.8444 |
+| offTask | 0.0357 |
+| engagement | 0.7609 |
+| pacingPressure | 0.2098 |
+| autonomyOpportunity | 0.4833 |
+| supportNeed | 0.9911 |
+| remediateNeed | 0.9911 |
+| encouragementNeed | 0.2006 |
+| praiseOpportunity | 0.6236 |
+| reviewNeed | 0.7049 |
+| previousAnswerIncorrect | true |
+| previousAnswerMisconception | true |
+| repeatedIncorrectCount | 3 |
+
+Teacher action choice:
+
+- Selected action score: 0.406
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_offer_choice | 0.6175 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 0.5178 | Pacing pressure suggests slowing down the interaction. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_request_checkin | 0.406 | A check-in is appropriate to clarify understanding and current state. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.25 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.18 | R 0 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -339,7 +818,7 @@ Teacher validation correctness:
 | --- | --- |
 | Correct | yes |
 | Validation category | correct |
-| Incorrect attempts on current step | 1 |
+| Incorrect attempts on current step | 3 |
 | Submitted answer | inconsistent system |
 | Normalized student answer | inconsistent system |
 | Expected answer | inconsistent system |
@@ -351,11 +830,11 @@ Teacher validation correctness:
 
 Student:
 
-- Student ARM: A 0.26 | R 0.8 | M 0.7
-- Student ARM change: A -0.09 | R 0 | M 0
+- Student ARM: A 0.07 | R 0.75 | M 0.7
+- Student ARM change: A -0.03 | R 0.08 | M 0.01
 - Behavioural state: engaged_attempt
 - Action: submit_answer
-- Transcript: A system with no solution is called an inconsistent system because the lines never intersect. So the answer is inconsistent system.
+- Transcript: The system that has no solution is called an inconsistent system because the equations represent parallel lines that never intersect.
 - Structured answer: inconsistent system
 
 Student behavioural sampling:
@@ -363,10 +842,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.3553 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.407; MINIMAL_COMPLIANCE: 0.2828; HELP_SEEKING_CONFUSION: 0.0662; CARELESS_GUESS: 0.1276; OFF_TASK: 0.1118; DISENGAGED_NON_RESPONSE: 0.0046 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.407; MINIMAL_COMPLIANCE: 0.2828; HELP_SEEKING_CONFUSION: 0.0662; CARELESS_GUESS: 0.1276; OFF_TASK: 0.1118; DISENGAGED_NON_RESPONSE: 0.0046 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.407; MINIMAL_COMPLIANCE: 0.407 <= u < 0.6898; HELP_SEEKING_CONFUSION: 0.6898 <= u < 0.756; CARELESS_GUESS: 0.756 <= u < 0.8836; OFF_TASK: 0.8836 <= u < 0.9954; DISENGAGED_NON_RESPONSE: 0.9954 <= u < 1 |
+| Random draw u | 0.0126 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1112; MINIMAL_COMPLIANCE: 0.1348; HELP_SEEKING_CONFUSION: 0.0603; CARELESS_GUESS: 0.1267; OFF_TASK: 0.1023; DISENGAGED_NON_RESPONSE: 0.4648 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1112; MINIMAL_COMPLIANCE: 0.1348; HELP_SEEKING_CONFUSION: 0.0603; CARELESS_GUESS: 0.1267; OFF_TASK: 0.1023; DISENGAGED_NON_RESPONSE: 0.4648 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1112; MINIMAL_COMPLIANCE: 0.1112 <= u < 0.246; HELP_SEEKING_CONFUSION: 0.246 <= u < 0.3063; CARELESS_GUESS: 0.3063 <= u < 0.433; OFF_TASK: 0.433 <= u < 0.5352; DISENGAGED_NON_RESPONSE: 0.5352 <= u < 1 |
 | Selected hidden behaviour | engaged_attempt |
 | Visible learner action | submit_answer |
 
@@ -377,511 +856,77 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Field | Value |
 | --- | --- |
 | Intended answer outcome | correct |
-| Generated probability correct | 0.675 |
+| Generated probability correct | 0.643 |
 | Behaviour prior correctness | 0.65 |
-| Correctness sampling value | 0.3553 |
+| Correctness sampling value | 0.0126 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.65. ARM-adjusted pCorrect=0.675. Runtime sample=0.355272. |
+| Calibration rationale | Selected behaviour prior=0.65. ARM-adjusted pCorrect=0.643. Runtime sample=0.012589. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same cognitive task as turn 2 (identifying the system with no solution) with minimal variation, and is similar but not identical to turn 1's question about system types with one solution. |
-| M2 | 0.9 | The delivery format is a multiple-choice question with a directive to choose one option, consistent with the previous two turns, especially turn 2 which is nearly identical in structure. |
-| M3 | 0.3 | The language is mostly specific to the current task, referencing the types of systems and solutions explicitly, though some generic scaffolding is present in the choice prompt. |
-| M4 | 0.7 | The student is constrained to choose one of three fixed options, indicating a mostly constrained path with limited choice. |
-| R1 | 1 | The message clearly connects to the meaningful goal of understanding system types and their solutions, explicitly asking about no solution systems. |
-| R2 | 1 | The instruction is clear and precise, asking the student to select the correct system type from given options, with an explicit expected outcome. |
-| R3 | 0.7 | The tone is mildly supportive, with a gentle correction ('Not quite yet') and a clear question inviting response without negative language. |
-| R4 | 0.5 | The student has some limited agency in choosing among options but no open-ended input or exploration is invited. |
+| M1 | 0.9 | The current message repeats the exact same question and task demand as the previous three turns, indicating explicit repetition. |
+| M2 | 0.9 | The instructional delivery format is the same direct question with multiple choice options, repeated with minimal variation. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact problem and options, with only minor generic phrasing. |
+| M4 | 0.7 | The student is given a single forced choice among three options, indicating a mostly constrained path with limited choice. |
+| R1 | 1 | The message clearly connects to the goal of identifying which system has no solution, making the purpose explicit. |
+| R2 | 1 | The instruction is clear and precise, specifying exactly what the student should do and the expected outcome. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, without negative or discouraging language. |
+| R4 | 0.3 | The message offers minimal autonomy, as the student must choose one of the given options without open-ended input. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.8
-- Attention update: reward trace 0.6258, monotony sensitivity 0.9677, effective decline 0.2845, resulting A_t 0.26
-
-### Turn 4
-
-- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
-- Step ID: problem_03_identify_dependent_system_step_01
-
-Teacher:
-
-- Action: action_give_specific_praise
-- Action explanation: Progress and engagement justify specific praise.
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 1 |
-| engagement | 0.85 |
-| pacingPressure | 0.1 |
-| autonomyOpportunity | 0.5325 |
-| remediateNeed | 0.1 |
-| encouragementNeed | 0.1785 |
-| praiseOpportunity | 1 |
-| previousAnswerCorrect | true |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_specific_praise | 1 | Progress and engagement justify specific praise. |
-| action_offer_choice | 0.8638 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_reframe_prompt_variant | 0.3725 | Reframing can vary structure and reduce monotony. |
-| action_continue_standard | 0.3551 | No stronger adaptive action qualified; continuing standard instruction. |
-| action_suggest_slower_pace | 0.3384 | Pacing pressure suggests slowing down the interaction. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.42 | R 0.8 | M 0.7
-- Estimate minus actual ARM: A 0.22 | R 0 | M 0
-- Transcript: Good, that previous answer is correct. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | misconception |
-| Incorrect attempts on current step | 1 |
-| Submitted answer | independent system |
-| Normalized student answer | independent system |
-| Expected answer | dependent system |
-| Accepted answers | n/a |
-| Validation mode | normalized_string_equality |
-| Answer type | string |
-| Validation input source | structured_answer |
-| Method / confidence | choice_distractor_independent_system / high |
-
-Student:
-
-- Student ARM: A 0.2 | R 0.8 | M 0.7
-- Student ARM change: A -0.06 | R 0 | M 0
-- Behavioural state: minimal_compliance
-- Action: submit_answer
-- Transcript: I think the system with infinitely many solutions is the independent system.
-- Structured answer: independent system
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.5158 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.3479; MINIMAL_COMPLIANCE: 0.2792; HELP_SEEKING_CONFUSION: 0.0792; CARELESS_GUESS: 0.1563; OFF_TASK: 0.1306; DISENGAGED_NON_RESPONSE: 0.0068 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.3479; MINIMAL_COMPLIANCE: 0.2792; HELP_SEEKING_CONFUSION: 0.0792; CARELESS_GUESS: 0.1563; OFF_TASK: 0.1306; DISENGAGED_NON_RESPONSE: 0.0068 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.3479; MINIMAL_COMPLIANCE: 0.3479 <= u < 0.6271; HELP_SEEKING_CONFUSION: 0.6271 <= u < 0.7063; CARELESS_GUESS: 0.7063 <= u < 0.8627; OFF_TASK: 0.8627 <= u < 0.9932; DISENGAGED_NON_RESPONSE: 0.9932 <= u < 1 |
-| Selected hidden behaviour | minimal_compliance |
-| Visible learner action | submit_answer |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | incorrect |
-| Generated probability correct | 0.416 |
-| Behaviour prior correctness | 0.4 |
-| Correctness sampling value | 0.5158 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.4. ARM-adjusted pCorrect=0.416. Runtime sample=0.515762. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message explicitly repeats the instructional goal of identifying system types by solution type, closely matching previous turns with only the specific solution type changing, so high repetition score. |
-| M2 | 0.9 | The delivery format is consistently a question-led multiple choice prompt with minimal variation, indicating high structural repetition. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the types of systems and solutions, but uses some generic phrasing like 'choose one', so moderately low genericness score. |
-| M4 | 0.7 | The student is given a forced choice among three options, indicating a mostly constrained path with limited choice, so a relatively high absence of choice score. |
-| R1 | 1 | The message clearly connects to the meaningful goal of identifying system types by solution, reinforcing the learning objective explicitly, so maximum relevance score. |
-| R2 | 1 | The instruction is precise and clear about what the student should do (choose one system type with infinitely many solutions), with an explicit expected outcome, so maximum payoff clarity. |
-| R3 | 0.7 | The message includes positive reinforcement ('Good, that previous answer is correct') and maintains a supportive tone, indicating mild encouragement. |
-| R4 | 0.5 | The student is invited to choose among options but not to explain or explore beyond the forced choice, indicating some but limited autonomy. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.8
-- Attention update: reward trace 0.6732, monotony sensitivity 1.0422, effective decline 0.2857, resulting A_t 0.2
-
-### Turn 5
-
-- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
-- Step ID: problem_03_identify_dependent_system_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.8667 |
-| engagement | 0.7767 |
-| pacingPressure | 0.2517 |
-| autonomyOpportunity | 0.4795 |
-| supportNeed | 0.7467 |
-| remediateNeed | 0.7467 |
-| encouragementNeed | 0.1981 |
-| praiseOpportunity | 0.6442 |
-| reviewNeed | 0.6867 |
-| previousAnswerIncorrect | true |
-| previousAnswerMisconception | true |
-| repeatedIncorrectCount | 1 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_offer_choice | 0.6621 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.5372 | Pacing pressure suggests slowing down the interaction. |
-| action_give_bottom_out | 0.4812 | Severe difficulty suggests bottom-out support. |
-| action_request_checkin | 0.3671 | A check-in is appropriate to clarify understanding and current state. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.36 | R 0.75 | M 0.7
-- Estimate minus actual ARM: A 0.21 | R -0.05 | M 0
-- Transcript: Not quite yet. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? When there is infinitely many solutions, what do we call it? independent, inconsistent, or dependent? Think about how to change that to words. Choose one: independent system or inconsistent system or dependent system.
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | misconception |
-| Incorrect attempts on current step | 2 |
-| Submitted answer | independent system |
-| Normalized student answer | independent system |
-| Expected answer | dependent system |
-| Accepted answers | n/a |
-| Validation mode | normalized_string_equality |
-| Answer type | string |
-| Validation input source | structured_answer |
-| Method / confidence | choice_distractor_independent_system / high |
-
-Student:
-
-- Student ARM: A 0.15 | R 0.8 | M 0.7
-- Student ARM change: A -0.05 | R 0 | M 0
-- Behavioural state: careless_guess
-- Action: submit_answer
-- Transcript: I think the system with infinitely many solutions is called an independent system.
-- Structured answer: independent system
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.6684 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.3003; MINIMAL_COMPLIANCE: 0.2717; HELP_SEEKING_CONFUSION: 0.0905; CARELESS_GUESS: 0.1822; OFF_TASK: 0.1462; DISENGAGED_NON_RESPONSE: 0.0092 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.3003; MINIMAL_COMPLIANCE: 0.2717; HELP_SEEKING_CONFUSION: 0.0905; CARELESS_GUESS: 0.1822; OFF_TASK: 0.1462; DISENGAGED_NON_RESPONSE: 0.0092 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.3003; MINIMAL_COMPLIANCE: 0.3003 <= u < 0.5721; HELP_SEEKING_CONFUSION: 0.5721 <= u < 0.6625; CARELESS_GUESS: 0.6625 <= u < 0.8447; OFF_TASK: 0.8447 <= u < 0.9908; DISENGAGED_NON_RESPONSE: 0.9908 <= u < 1 |
-| Selected hidden behaviour | careless_guess |
-| Visible learner action | submit_answer |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | incorrect |
-| Generated probability correct | 0.2085 |
-| Behaviour prior correctness | 0.2 |
-| Correctness sampling value | 0.6684 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.2085. Runtime sample=0.668424. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the instructional goal of identifying types of systems and their solutions, closely matching prior turns especially turn 3, with minor wording changes. |
-| M2 | 0.9 | The delivery format is consistently question-led with multiple-choice style prompts across all prior turns, showing high structural repetition. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing system types and solution concepts, though some generic scaffolding is present in phrasing like 'Think about how to change that to words.' |
-| M4 | 0.7 | The student is constrained to choose one of three fixed options, limiting choice though some cognitive engagement is invited. |
-| R1 | 1 | The message clearly connects to the meaningful goal of understanding system types and their solutions, explicitly linking to prior knowledge. |
-| R2 | 1 | Instructions are precise with clear expected action: choose the correct system type from given options. |
-| R3 | 0.7 | The tone is mildly supportive, acknowledging prior incorrectness gently and encouraging thinking. |
-| R4 | 0.5 | Some limited agency is offered by inviting the student to think and choose, but within a fixed set of options. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.8
-- Attention update: reward trace 0.7077, monotony sensitivity 1.1166, effective decline 0.2889, resulting A_t 0.15
-
-### Turn 6
-
-- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
-- Step ID: problem_03_identify_dependent_system_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.8889 |
-| engagement | 0.7889 |
-| pacingPressure | 0.2146 |
-| autonomyOpportunity | 0.4883 |
-| supportNeed | 0.8622 |
-| remediateNeed | 0.8622 |
-| encouragementNeed | 0.1948 |
-| praiseOpportunity | 0.6639 |
-| reviewNeed | 0.6756 |
-| previousAnswerIncorrect | true |
-| previousAnswerMisconception | true |
-| repeatedIncorrectCount | 2 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_offer_choice | 0.6427 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.5095 | Pacing pressure suggests slowing down the interaction. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_request_checkin | 0.3791 | A check-in is appropriate to clarify understanding and current state. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.3 | R 0.8 | M 0.7
-- Estimate minus actual ARM: A 0.19 | R 0.15 | M 0
-- Transcript: Not quite yet. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Look up definitions in the textbook or online to clarify! Choose one: independent system or inconsistent system or dependent system.
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | yes |
-| Validation category | correct |
-| Incorrect attempts on current step | 2 |
-| Submitted answer | dependent system |
-| Normalized student answer | dependent system |
-| Expected answer | dependent system |
-| Accepted answers | n/a |
-| Validation mode | normalized_string_equality |
-| Answer type | string |
-| Validation input source | structured_answer |
-| Method / confidence | dependent system / high |
-
-Student:
-
-- Student ARM: A 0.11 | R 0.65 | M 0.7
-- Student ARM change: A -0.04 | R -0.15 | M 0
-- Behavioural state: minimal_compliance
-- Action: submit_answer
-- Transcript: The system with infinitely many solutions is called a dependent system.
-- Structured answer: dependent system
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.1699 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1038; MINIMAL_COMPLIANCE: 0.1395; HELP_SEEKING_CONFUSION: 0.0595; CARELESS_GUESS: 0.1255; OFF_TASK: 0.1203; DISENGAGED_NON_RESPONSE: 0.4514 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1038; MINIMAL_COMPLIANCE: 0.1395; HELP_SEEKING_CONFUSION: 0.0595; CARELESS_GUESS: 0.1255; OFF_TASK: 0.1203; DISENGAGED_NON_RESPONSE: 0.4514 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1038; MINIMAL_COMPLIANCE: 0.1038 <= u < 0.2433; HELP_SEEKING_CONFUSION: 0.2433 <= u < 0.3028; CARELESS_GUESS: 0.3028 <= u < 0.4283; OFF_TASK: 0.4283 <= u < 0.5486; DISENGAGED_NON_RESPONSE: 0.5486 <= u < 1 |
-| Selected hidden behaviour | minimal_compliance |
-| Visible learner action | submit_answer |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | correct |
-| Generated probability correct | 0.392 |
-| Behaviour prior correctness | 0.4 |
-| Correctness sampling value | 0.1699 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.4. ARM-adjusted pCorrect=0.392. Runtime sample=0.16987. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same cognitive operation and task demand as turns 2 and 3, asking about the system with infinitely many solutions, with minor rephrasing compared to turn 1. |
-| M2 | 0.9 | The instructional delivery format is consistent across all prior turns: question-led, multiple choice format prompting selection among system types, with minor variations in wording. |
-| M3 | 0.3 | The message is mostly specific, referencing the exact task (types of systems and solutions) and asking a focused question, though it includes a generic prompt to look up definitions which slightly reduces specificity. |
-| M4 | 0.7 | The message constrains the student to choose one of three fixed options, limiting choice and exploration, though it invites looking up definitions which adds minor flexibility. |
-| R1 | 0.7 | The message clearly connects to the goal of understanding types of systems and solutions, making the purpose mostly clear though not explicitly stated. |
-| R2 | 0.7 | The instruction is clear about what to do: choose one system type that has infinitely many solutions, though success criteria are implicit rather than explicit. |
-| R3 | 0.7 | The tone is mildly supportive, using 'Not quite yet' gently and encouraging looking up definitions, fostering a safe learning climate. |
-| R4 | 0.5 | The message offers some limited agency by inviting the student to choose among options and look up definitions, but overall the path is constrained. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.65
-- Attention update: reward trace 0.692, monotony sensitivity 1.1166, effective decline 0.2914, resulting A_t 0.11
-
-### Turn 7
-
-- Lesson step: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y
-- Step ID: problem_04_check_ordered_pair_not_solution_step_01
-
-Teacher:
-
-- Action: action_give_specific_praise
-- Action explanation: Progress and engagement justify specific praise.
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.8444 |
-| engagement | 0.7644 |
-| pacingPressure | 0.233 |
-| autonomyOpportunity | 0.4707 |
-| supportNeed | 0.0311 |
-| remediateNeed | 0.233 |
-| encouragementNeed | 0.2014 |
-| praiseOpportunity | 1 |
-| reviewNeed | 0.0778 |
-| previousAnswerCorrect | true |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_specific_praise | 1 | Progress and engagement justify specific praise. |
-| action_offer_choice | 0.8135 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.5456 | Pacing pressure suggests slowing down the interaction. |
-| action_reframe_prompt_variant | 0.3601 | Reframing can vary structure and reduce monotony. |
-| action_give_general_encouragement | 0.3354 | Affective support is appropriate to sustain effort. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.25 | R 0.6 | M 0.7
-- Estimate minus actual ARM: A 0.17 | R 0 | M 0.1
-- Transcript: Good, that previous answer is correct. Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y Choose one: yes or no.
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | yes |
-| Validation category | correct |
-| Incorrect attempts on current step | 0 |
-| Submitted answer | no |
-| Normalized student answer | no |
-| Expected answer | no |
-| Accepted answers | n/a |
-| Validation mode | normalized_string_equality |
-| Answer type | string |
-| Validation input source | structured_answer |
-| Method / confidence | no / high |
-
-Student:
-
-- Student ARM: A 0.08 | R 0.6 | M 0.6
-- Student ARM change: A -0.03 | R -0.05 | M -0.1
-- Behavioural state: minimal_compliance
-- Action: submit_answer
-- Transcript: Let's check if (8,5) satisfies both equations. For 5x - 4y = 20: 5*8 - 4*5 = 40 - 20 = 20, which is true. For 2x + 1 = 3y: 2*8 + 1 = 16 + 1 = 17, and 3*5 = 15, which is not equal. So, no.
-- Structured answer: no
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.1054 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1019; MINIMAL_COMPLIANCE: 0.1358; HELP_SEEKING_CONFUSION: 0.0625; CARELESS_GUESS: 0.1148; OFF_TASK: 0.1002; DISENGAGED_NON_RESPONSE: 0.4847 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1019; MINIMAL_COMPLIANCE: 0.1358; HELP_SEEKING_CONFUSION: 0.0625; CARELESS_GUESS: 0.1148; OFF_TASK: 0.1002; DISENGAGED_NON_RESPONSE: 0.4847 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1019; MINIMAL_COMPLIANCE: 0.1019 <= u < 0.2377; HELP_SEEKING_CONFUSION: 0.2377 <= u < 0.3002; CARELESS_GUESS: 0.3002 <= u < 0.4151; OFF_TASK: 0.4151 <= u < 0.5153; DISENGAGED_NON_RESPONSE: 0.5153 <= u < 1 |
-| Selected hidden behaviour | minimal_compliance |
-| Visible learner action | submit_answer |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | correct |
-| Generated probability correct | 0.394 |
-| Behaviour prior correctness | 0.4 |
-| Correctness sampling value | 0.1054 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.4. ARM-adjusted pCorrect=0.394. Runtime sample=0.105424. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.6 | The current task asks the student to determine if a specific ordered pair satisfies a system of equations, similar in cognitive demand to previous questions about systems of equations and choosing among options, indicating similar task goals with minor variation. |
-| M2 | 0.8 | The instructional format remains consistent as a directive question with explicit multiple-choice options, showing repeated structure with little change from prior turns. |
-| M3 | 0.3 | The language is mostly specific, referencing the exact ordered pair and system of equations, though the phrase 'Choose one: yes or no' is somewhat generic, resulting in mostly specific language with minor generic elements. |
-| M4 | 0.7 | The student is given a constrained choice between 'yes' or 'no', indicating a mostly constrained path with limited decision space. |
-| R1 | 0.7 | The message connects clearly to the goal of verifying solutions to a system of equations, making the purpose mostly clear though not explicitly stated. |
-| R2 | 0.7 | The instruction to 'Choose one: yes or no' provides a clear next action and expected outcome, though success criteria are implicit, resulting in clear action but limited success framing. |
-| R3 | 0.7 | The message includes positive reinforcement ('Good, that previous answer is correct.') and maintains a neutral to mildly supportive tone, fostering a mildly supportive learning climate. |
-| R4 | 0.3 | The message offers minimal autonomy by restricting the student to a binary choice without invitation for explanation or alternative approaches. |
-
-- Aggregate M_t: 0.6
-- Aggregate R_t: 0.6
-- Attention update: reward trace 0.667, monotony sensitivity 1.1166, effective decline 0.2768, resulting A_t 0.08
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.6864, monotony sensitivity 1.1166, effective decline 0.2922, resulting A_t 0.07
 
 ### Turn 8
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_specific_praise
-- Action explanation: Progress and engagement justify specific praise.
+- Action: action_reframe_prompt_variant
+- Action explanation: State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| offTaskRateLastK | 0.1429 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
 | progress | 1 |
-| engagement | 0.85 |
-| pacingPressure | 0.1 |
-| autonomyOpportunity | 0.5325 |
-| remediateNeed | 0.1 |
-| encouragementNeed | 0.1785 |
+| offTask | 0.0357 |
+| engagement | 0.8464 |
+| pacingPressure | 0.1036 |
+| autonomyOpportunity | 0.5452 |
+| remediateNeed | 0.1036 |
+| encouragementNeed | 0.1778 |
 | praiseOpportunity | 1 |
+| reviewNeed | 0.0071 |
 | previousAnswerCorrect | true |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.3929
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_specific_praise | 1 | Progress and engagement justify specific praise. |
-| action_offer_choice | 0.8047 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.3664 | Pacing pressure suggests slowing down the interaction. |
-| action_continue_standard | 0.3102 | No stronger adaptive action qualified; continuing standard instruction. |
-| action_give_general_encouragement | 0.3058 | Affective support is appropriate to sustain effort. |
+| action_offer_choice | 0.8957 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 0.4015 | Pacing pressure suggests slowing down the interaction. |
+| action_reframe_prompt_variant | 0.3929 | Reframing can vary structure and reduce monotony. |
+| action_continue_standard | 0.3041 | No stronger adaptive action qualified; continuing standard instruction. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.22 | R 0.65 | M 0.35
-- Estimate minus actual ARM: A 0.16 | R 0 | M -0.15
-- Transcript: Good, that previous answer is correct. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? What is your answer?
+- Estimated ARM: A 0.21 | R 0.65 | M 0.7
+- Estimate minus actual ARM: A 0.16 | R -0.02 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -892,260 +937,20 @@ Teacher validation correctness:
 | Incorrect attempts on current step | 1 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.06 | R 0.65 | M 0.5
-- Student ARM change: A -0.02 | R 0.05 | M -0.1
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I don't know.
-- Structured answer: none
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.5518 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1437; MINIMAL_COMPLIANCE: 0.1519; HELP_SEEKING_CONFUSION: 0.0675; CARELESS_GUESS: 0.1054; OFF_TASK: 0.0734; DISENGAGED_NON_RESPONSE: 0.4582 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1437; MINIMAL_COMPLIANCE: 0.1519; HELP_SEEKING_CONFUSION: 0.0675; CARELESS_GUESS: 0.1054; OFF_TASK: 0.0734; DISENGAGED_NON_RESPONSE: 0.4582 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1437; MINIMAL_COMPLIANCE: 0.1437 <= u < 0.2956; HELP_SEEKING_CONFUSION: 0.2956 <= u < 0.363; CARELESS_GUESS: 0.363 <= u < 0.4684; OFF_TASK: 0.4684 <= u < 0.5418; DISENGAGED_NON_RESPONSE: 0.5418 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | no_answer |
-| Generated probability correct | 0.0045 |
-| Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.5518 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0.0045. Runtime sample=0.551834. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.4 | The current message shifts from conceptual classification questions to a direct problem-solving task, so similarity to turns 1 and 2 is low (0.2), but turn 3 is more similar as it involves working with solutions to systems (0.8). Average is (0.2+0.2+0.8)/3=0.4. |
-| M2 | 0.6 | All prior turns use a question-based instructional style, either prompting or directing with choices. The current turn is directive with questions, so structure is similar with minor variations, scored 0.6 for each, average 0.6. |
-| M3 | 0.3 | The message is mostly specific, referencing the exact system of equations and the method (substitution), so linguistic genericness is low at 0.3. |
-| M4 | 0.7 | The instruction is mostly constrained, directing the student to solve by substitution and answer a specific question, with no alternative approaches or open-ended prompts, so absence of choice is high at 0.7. |
-| R1 | 0.7 | The message connects clearly to the goal of solving the system and verifying the answer, making the purpose mostly clear (0.7). |
-| R2 | 0.9 | The instruction is clear about what to do (solve by substitution) and what to provide (the x value), so payoff clarity is high (0.9). |
-| R3 | 0.7 | The tone is positive and encouraging, affirming the previous correct answer, so encouragement is rated 0.7. |
-| R4 | 0.3 | The message offers limited autonomy, as it directs a specific method and asks a specific question, so autonomy is low at 0.3. |
-
-- Aggregate M_t: 0.5
-- Aggregate R_t: 0.65
-- Attention update: reward trace 0.6624, monotony sensitivity 1.1166, effective decline 0.259, resulting A_t 0.06
-
-### Turn 9
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| isMinimal | true |
-| minimalRateLastK | 0.2857 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.3167 |
-| engagement | 0.4742 |
-| pacingPressure | 0.516 |
-| autonomyOpportunity | 0.3609 |
-| supportNeed | 0.6967 |
-| remediateNeed | 0.6967 |
-| encouragementNeed | 0.279 |
-| praiseOpportunity | 0.156 |
-| reviewNeed | 0.8617 |
-| previousAnswerIncorrect | true |
-| previousAnswerUnknown | true |
-| repeatedIncorrectCount | 1 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 0.8739 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.6665 | A check-in is appropriate to clarify understanding and current state. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4662 | Affective support is appropriate to sustain effort. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.19 | R 0.65 | M 0.35
-- Estimate minus actual ARM: A 0.15 | R 0.05 | M -0.35
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Try to make the first equation in a slope-intercept form. y= What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | unknown |
-| Incorrect attempts on current step | 2 |
-| Submitted answer | none |
-| Normalized student answer | n/a |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | non_answer_action |
-| Method / confidence | deterministic_text / low |
-
-Student:
-
-- Student ARM: A 0.04 | R 0.6 | M 0.7
-- Student ARM change: A -0.02 | R -0.05 | M 0.2
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I'm not sure what to do here.
-- Structured answer: none
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.9079 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0558; MINIMAL_COMPLIANCE: 0.0981; HELP_SEEKING_CONFUSION: 0.0545; CARELESS_GUESS: 0.1193; OFF_TASK: 0.116; DISENGAGED_NON_RESPONSE: 0.5564 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0558; MINIMAL_COMPLIANCE: 0.0981; HELP_SEEKING_CONFUSION: 0.0545; CARELESS_GUESS: 0.1193; OFF_TASK: 0.116; DISENGAGED_NON_RESPONSE: 0.5564 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0558; MINIMAL_COMPLIANCE: 0.0558 <= u < 0.1538; HELP_SEEKING_CONFUSION: 0.1538 <= u < 0.2083; CARELESS_GUESS: 0.2083 <= u < 0.3276; OFF_TASK: 0.3276 <= u < 0.4436; DISENGAGED_NON_RESPONSE: 0.4436 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | no_answer |
-| Generated probability correct | 0 |
-| Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.9079 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.907923. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the task of solving a system of equations by substitution as in turn 3, with minor added instruction to rewrite the first equation, so high similarity (0.9). Turns 1 and 2 have different task demands, so lower similarity. |
-| M2 | 0.9 | The current message uses a directive problem-solving format with a question, very similar to turn 3 (0.9). Turns 1 and 2 have different instructional formats, so lower similarity. |
-| M3 | 0.3 | The message is mostly specific, referencing the exact system of equations and steps, but the instruction to 'Try to make the first equation in slope-intercept form' is somewhat generic, so a moderately low genericness score (0.3). |
-| M4 | 0.7 | The message constrains the student to solve by substitution and to rewrite the first equation in slope-intercept form, limiting choice, so mostly constrained (0.7). |
-| R1 | 0.7 | The message implies relevance by directing the student to solve the system and find x, linking to prior steps, but does not explicitly state purpose, so mostly clear purpose (0.7). |
-| R2 | 0.9 | The instructions are clear about what to do and what answer to provide, with explicit steps, so high clarity (0.9). |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, so neutral support (0.5). |
-| R4 | 0.3 | The message offers limited autonomy, directing specific methods and steps, so minimal autonomy (0.3). |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.6
-- Attention update: reward trace 0.6454, monotony sensitivity 1.1166, effective decline 0.2989, resulting A_t 0.04
-
-### Turn 10
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| isHelpSeeking | true |
-| minimalRateLastK | 0.1429 |
-| helpSeekingRateLastK | 0.2857 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.7556 |
-| confusion | 0.4071 |
-| engagement | 0.7156 |
-| pacingPressure | 0.407 |
-| autonomyOpportunity | 0.4353 |
-| supportNeed | 0.9121 |
-| remediateNeed | 0.9121 |
-| encouragementNeed | 0.2144 |
-| praiseOpportunity | 0.5456 |
-| reviewNeed | 0.7644 |
-| previousAnswerIncorrect | true |
-| previousAnswerUnknown | true |
-| repeatedIncorrectCount | 2 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 0.8407 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.7892 | A check-in is appropriate to clarify understanding and current state. |
-| action_offer_choice | 0.5804 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.16 | R 0.75 | M 0.7
-- Estimate minus actual ARM: A 0.13 | R 0.15 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Plug the y, represented as in terms of x, into the second equation to solve for x. What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | unknown |
-| Incorrect attempts on current step | 3 |
-| Submitted answer | none |
-| Normalized student answer | n/a |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | non_answer_action |
-| Method / confidence | deterministic_text / low |
-
-Student:
-
-- Student ARM: A 0.03 | R 0.6 | M 0.7
-- Student ARM change: A -0.01 | R 0 | M 0
+- Student ARM: A 0.05 | R 0.67 | M 0.7
+- Student ARM change: A -0.02 | R -0.08 | M 0
 - Behavioural state: off_task
 - Action: off_task
-- Transcript: Hmm, I think I lost track of the substitution steps here. Can we maybe go over it again?
+- Transcript: Hmm, I think I got a bit lost there. Can we maybe go over what each system means again?
 - Structured answer: none
 
 Student behavioural sampling:
@@ -1153,10 +958,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.4095 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0521; MINIMAL_COMPLIANCE: 0.0937; HELP_SEEKING_CONFUSION: 0.0538; CARELESS_GUESS: 0.1182; OFF_TASK: 0.114; DISENGAGED_NON_RESPONSE: 0.5682 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0521; MINIMAL_COMPLIANCE: 0.0937; HELP_SEEKING_CONFUSION: 0.0538; CARELESS_GUESS: 0.1182; OFF_TASK: 0.114; DISENGAGED_NON_RESPONSE: 0.5682 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0521; MINIMAL_COMPLIANCE: 0.0521 <= u < 0.1458; HELP_SEEKING_CONFUSION: 0.1458 <= u < 0.1996; CARELESS_GUESS: 0.1996 <= u < 0.3178; OFF_TASK: 0.3178 <= u < 0.4318; DISENGAGED_NON_RESPONSE: 0.4318 <= u < 1 |
+| Random draw u | 0.4714 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0756; MINIMAL_COMPLIANCE: 0.1128; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1234; OFF_TASK: 0.1097; DISENGAGED_NON_RESPONSE: 0.521 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0756; MINIMAL_COMPLIANCE: 0.1128; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1234; OFF_TASK: 0.1097; DISENGAGED_NON_RESPONSE: 0.521 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0756; MINIMAL_COMPLIANCE: 0.0756 <= u < 0.1884; HELP_SEEKING_CONFUSION: 0.1884 <= u < 0.2458; CARELESS_GUESS: 0.2458 <= u < 0.3693; OFF_TASK: 0.3693 <= u < 0.479; DISENGAGED_NON_RESPONSE: 0.479 <= u < 1 |
 | Selected hidden behaviour | off_task |
 | Visible learner action | off_task |
 
@@ -1169,83 +974,84 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.4095 |
+| Correctness sampling value | 0.4714 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.409526. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.471368. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same cognitive operation as turn 2 (solving the same system by substitution) with minimal variation, and is similar to turn 3 with a slight difference in approach, but different from turn 1. |
-| M2 | 0.9 | The instructional delivery format is highly similar to turns 2 and 3, both being directive and question-led prompts to solve by substitution, differing from turn 1's yes/no format. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact system of equations and steps to solve, with minor generic scaffolding in phrasing. |
-| M4 | 0.7 | The message constrains the student to a specific method (substitution) and a specific step (finding x), offering limited choice, thus mostly constrained but not fully rigid. |
-| R1 | 0.7 | The message connects to a meaningful goal by instructing to solve the system and find x, implying progress in problem solving, though the purpose is implicit rather than explicitly stated. |
-| R2 | 0.7 | The instructions clearly specify the next action (solve by substitution, plug y into second equation, find x) and expected outcome (x value), though success criteria are not explicitly detailed. |
-| R3 | 0.7 | The tone is mildly supportive, with phrases like 'Not quite yet' indicating encouragement to try again without negative or critical language. |
-| R4 | 0.3 | The message offers limited autonomy, directing the student to a specific method and step, with no open-ended prompts or choices. |
+| M1 | 0.9 | The current message asks the same type of question (identifying system type) as the previous three turns, only changing the specific solution type, indicating explicit repetition with minor variation, so M1 is high (0.9). |
+| M2 | 0.9 | The instructional delivery format is the same across all turns: a direct question with multiple-choice options, so structural repetition is high (0.9). |
+| M3 | 0.3 | The language is mostly specific, referencing the exact problem context (types of systems and solutions) and giving clear options, so linguistic genericness is low to moderate (0.3). |
+| M4 | 0.7 | The student is given a forced choice among three options, which constrains response options, so absence of choice is mostly constrained (0.7). |
+| R1 | 0.7 | The message clearly connects to a meaningful goal by asking about system types and solutions, continuing the instructional progression, so relevance is mostly clear (0.7). |
+| R2 | 1 | The instruction is explicit and clear about what to do (choose one system type), with a clear expected outcome, so payoff clarity is high (1.0). |
+| R3 | 0.7 | The tone is neutral to mildly supportive, with no negative or discouraging language, so encouragement is mildly supportive (0.7). |
+| R4 | 0.3 | The message offers limited autonomy since the student must choose one of three fixed options without open-ended input, so autonomy is minimal (0.3). |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.6
-- Attention update: reward trace 0.6331, monotony sensitivity 1.1166, effective decline 0.301, resulting A_t 0.03
+- Aggregate R_t: 0.67
+- Attention update: reward trace 0.6819, monotony sensitivity 1.1166, effective decline 0.2929, resulting A_t 0.05
 
-### Turn 11
+### Turn 9
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
 
 Teacher observable cues:
 
 | Cue | Value |
 | --- | --- |
 | hasAnyQuestion | true |
+| isHelpSeeking | true |
 | isConfused | true |
 | requestsRepetition | true |
-| minimalRateLastK | 0.1429 |
-| helpSeekingRateLastK | 0.1429 |
+| offTaskRateLastK | 0.1429 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
 | progress | 1 |
-| confusion | 0.4786 |
+| confusion | 0.8 |
+| offTask | 0.0357 |
 | frustration | 0.15 |
-| engagement | 1 |
-| pacingPressure | 0.3018 |
-| autonomyOpportunity | 0.6 |
-| supportNeed | 1 |
-| remediateNeed | 1 |
-| encouragementNeed | 0.2809 |
-| praiseOpportunity | 0.8 |
-| reviewNeed | 0.6636 |
+| engagement | 0.9964 |
+| pacingPressure | 0.3125 |
+| autonomyOpportunity | 0.6127 |
+| supportNeed | 0.95 |
+| remediateNeed | 0.95 |
+| encouragementNeed | 0.2801 |
+| praiseOpportunity | 0.7991 |
+| reviewNeed | 0.7671 |
 | previousAnswerIncorrect | true |
 | previousAnswerUnknown | true |
-| repeatedIncorrectCount | 3 |
+| repeatedIncorrectCount | 1 |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.9208
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_request_checkin | 0.8186 | A check-in is appropriate to clarify understanding and current state. |
-| action_offer_choice | 0.7395 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_suggest_slower_pace | 0.7335 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.9208 | A check-in is appropriate to clarify understanding and current state. |
+| action_suggest_slower_pace | 0.7806 | Pacing pressure suggests slowing down the interaction. |
+| action_offer_choice | 0.7454 | Choice opportunity detected from engagement and re-engagement cues. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.13 | R 0.6 | M 0.7
-- Estimate minus actual ARM: A 0.11 | R 0.05 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.18 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.14 | R 0.07 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -1253,23 +1059,23 @@ Teacher validation correctness:
 | --- | --- |
 | Correct | no |
 | Validation category | unknown |
-| Incorrect attempts on current step | 4 |
+| Incorrect attempts on current step | 2 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.02 | R 0.55 | M 0.7
-- Student ARM change: A -0.01 | R -0.05 | M 0
+- Student ARM: A 0.04 | R 0.68 | M 0.7
+- Student ARM change: A -0.01 | R 0.01 | M 0
 - Behavioural state: disengaged_non_response
 - Action: no_response
-- Transcript: I don't know.
+- Transcript: I don't really get this one.
 - Structured answer: none
 
 Student behavioural sampling:
@@ -1277,10 +1083,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.7114 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0407; MINIMAL_COMPLIANCE: 0.083; HELP_SEEKING_CONFUSION: 0.0512; CARELESS_GUESS: 0.1141; OFF_TASK: 0.1171; DISENGAGED_NON_RESPONSE: 0.594 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0407; MINIMAL_COMPLIANCE: 0.083; HELP_SEEKING_CONFUSION: 0.0512; CARELESS_GUESS: 0.1141; OFF_TASK: 0.1171; DISENGAGED_NON_RESPONSE: 0.594 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0407; MINIMAL_COMPLIANCE: 0.0407 <= u < 0.1237; HELP_SEEKING_CONFUSION: 0.1237 <= u < 0.1749; CARELESS_GUESS: 0.1749 <= u < 0.2889; OFF_TASK: 0.2889 <= u < 0.406; DISENGAGED_NON_RESPONSE: 0.406 <= u < 1 |
+| Random draw u | 0.8776 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0732; MINIMAL_COMPLIANCE: 0.1096; HELP_SEEKING_CONFUSION: 0.0571; CARELESS_GUESS: 0.1231; OFF_TASK: 0.107; DISENGAGED_NON_RESPONSE: 0.53 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0732; MINIMAL_COMPLIANCE: 0.1096; HELP_SEEKING_CONFUSION: 0.0571; CARELESS_GUESS: 0.1231; OFF_TASK: 0.107; DISENGAGED_NON_RESPONSE: 0.53 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0732; MINIMAL_COMPLIANCE: 0.0732 <= u < 0.1828; HELP_SEEKING_CONFUSION: 0.1828 <= u < 0.2399; CARELESS_GUESS: 0.2399 <= u < 0.363; OFF_TASK: 0.363 <= u < 0.47; DISENGAGED_NON_RESPONSE: 0.47 <= u < 1 |
 | Selected hidden behaviour | disengaged_non_response |
 | Visible learner action | no_response |
 
@@ -1293,36 +1099,275 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.7114 |
+| Correctness sampling value | 0.8776 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.711379. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.87757. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message explicitly repeats the same cognitive operation and task demand as the previous three turns: solving the system by substitution to find x, with only minor wording changes. |
-| M2 | 0.9 | The structure remains consistent as a directive question prompting the student to solve by substitution, with stepwise guidance, matching the previous turns closely. |
-| M3 | 0.3 | The language is mostly specific to the current task, referencing the exact system of equations and steps to group terms, though some phrasing is somewhat generic (e.g., 'Group the common terms'). |
-| M4 | 0.7 | The message constrains the student to a specific method (substitution) and a specific step (finding x), with no alternative strategies or open-ended choices, indicating a mostly constrained path. |
-| R1 | 0.7 | The message clearly connects to the goal of solving the system by substitution and finding x, making the purpose mostly clear though not explicitly stated as a learning objective. |
-| R2 | 0.7 | The instructions specify the next action (solve by substitution, group terms) and expected outcome (x value), providing clear but somewhat limited success framing. |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, supporting a neutral learning climate. |
-| R4 | 0.3 | The message offers minimal autonomy, as it directs the student to a specific method and step without inviting alternative approaches or reasoning explanations. |
+| M1 | 0.9 | The current message repeats the same cognitive operation and task demand as previous turns, asking the student to identify a system type based on solution characteristics, with only minor changes in the specific solution queried. |
+| M2 | 0.9 | The instructional delivery format is identical across all turns: a question-led, multiple-choice style prompt asking the student to choose among system types, maintaining the same interaction pattern and presentation style. |
+| M3 | 0 | The message is highly specific, referencing the exact task and options, thus not generic at all. |
+| M4 | 1 | The message constrains the student to a single choice among three fixed options, offering no alternative strategies or open-ended exploration, indicating a fully rigid decision space. |
+| R1 | 1 | The message clearly connects to a meaningful goal by asking the student to identify the system type with infinitely many solutions, which is relevant to understanding linear systems. |
+| R2 | 1 | The instruction is precise and clear, explicitly telling the student what to do (choose one option) and what the expected outcome is (identify the correct system type). |
+| R3 | 0.7 | The tone is neutral to mildly supportive, with no negative or discouraging language, supporting a safe learning climate. |
+| R4 | 0 | There is no invitation for the student to explain reasoning or choose alternative approaches; the student must select one fixed answer, indicating no autonomy. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.55
-- Attention update: reward trace 0.6105, monotony sensitivity 1.1166, effective decline 0.3048, resulting A_t 0.02
+- Aggregate R_t: 0.68
+- Attention update: reward trace 0.6814, monotony sensitivity 1.1166, effective decline 0.293, resulting A_t 0.04
 
-### Turn 12
+### Turn 10
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| isMinimal | true |
+| minimalRateLastK | 0.2857 |
+| offTaskRateLastK | 0.1429 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.3833 |
+| offTask | 0.0357 |
+| engagement | 0.5073 |
+| pacingPressure | 0.498 |
+| autonomyOpportunity | 0.4001 |
+| supportNeed | 0.8033 |
+| remediateNeed | 0.8033 |
+| encouragementNeed | 0.2684 |
+| praiseOpportunity | 0.2143 |
+| reviewNeed | 0.8355 |
+| previousAnswerIncorrect | true |
+| previousAnswerUnknown | true |
+| repeatedIncorrectCount | 2 |
+
+Teacher action choice:
+
+- Selected action score: 0.8916
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_suggest_slower_pace | 0.8916 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.6641 | A check-in is appropriate to clarify understanding and current state. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_offer_choice | 0.4634 | Choice opportunity detected from engagement and re-engagement cues. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.15 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.12 | R 0.08 | M 0.01
+- Transcript: Let's slow down a bit. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | misconception |
+| Incorrect attempts on current step | 3 |
+| Submitted answer | independent system |
+| Normalized student answer | independent system |
+| Expected answer | dependent system |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | choice_distractor_independent_system / high |
+
+Student:
+
+- Student ARM: A 0.03 | R 0.67 | M 0.69
+- Student ARM change: A -0.01 | R -0.01 | M -0.01
+- Behavioural state: careless_guess
+- Action: submit_answer
+- Transcript: I think the system with infinitely many solutions is the independent system.
+- Structured answer: independent system
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.3326 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0685; MINIMAL_COMPLIANCE: 0.1053; HELP_SEEKING_CONFUSION: 0.0568; CARELESS_GUESS: 0.1211; OFF_TASK: 0.1045; DISENGAGED_NON_RESPONSE: 0.5439 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0685; MINIMAL_COMPLIANCE: 0.1053; HELP_SEEKING_CONFUSION: 0.0568; CARELESS_GUESS: 0.1211; OFF_TASK: 0.1045; DISENGAGED_NON_RESPONSE: 0.5439 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0685; MINIMAL_COMPLIANCE: 0.0685 <= u < 0.1738; HELP_SEEKING_CONFUSION: 0.1738 <= u < 0.2305; CARELESS_GUESS: 0.2305 <= u < 0.3517; OFF_TASK: 0.3517 <= u < 0.4561; DISENGAGED_NON_RESPONSE: 0.4561 <= u < 1 |
+| Selected hidden behaviour | careless_guess |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | incorrect |
+| Generated probability correct | 0.1824 |
+| Behaviour prior correctness | 0.2 |
+| Correctness sampling value | 0.3326 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.1824. Runtime sample=0.33259. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.87 | The current message repeats the same cognitive operation as turns 2 and 3 (asking to identify the system with infinitely many solutions), with turn 1 being a similar but different question about no solution systems. |
+| M2 | 0.9 | The instructional delivery format is a question-led, multiple-choice style repeated with little to no variation across the last three turns. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact problem context and options, though somewhat formulaic and repetitive, so minor genericness is present. |
+| M4 | 0.7 | The student is given a constrained choice among three fixed options, limiting decision space to a mostly constrained path. |
+| R1 | 0.7 | The message clearly connects to the goal of understanding types of systems and their solutions, making the purpose mostly clear. |
+| R2 | 1 | The instruction is explicit and clear about what the student should do and the expected outcome (choosing the correct system type). |
+| R3 | 0.7 | The tone is neutral to mildly supportive, without negative or discouraging language, providing mild encouragement. |
+| R4 | 0.3 | The message offers limited autonomy, as the student must choose from fixed options without open-ended input or exploration. |
+
+- Aggregate M_t: 0.69
+- Aggregate R_t: 0.67
+- Attention update: reward trace 0.6783, monotony sensitivity 1.1166, effective decline 0.2917, resulting A_t 0.03
+
+### Turn 11
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
+
+Teacher:
+
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| minimalRateLastK | 0.1429 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.8667 |
+| engagement | 0.7767 |
+| pacingPressure | 0.2199 |
+| autonomyOpportunity | 0.4795 |
+| supportNeed | 0.9867 |
+| remediateNeed | 0.9867 |
+| encouragementNeed | 0.1981 |
+| praiseOpportunity | 0.6442 |
+| reviewNeed | 0.6867 |
+| previousAnswerIncorrect | true |
+| previousAnswerMisconception | true |
+| repeatedIncorrectCount | 3 |
+
+Teacher action choice:
+
+- Selected action score: 0.4407
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_offer_choice | 0.6141 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 0.5635 | Pacing pressure suggests slowing down the interaction. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_request_checkin | 0.4407 | A check-in is appropriate to clarify understanding and current state. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.13 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.11 | R 0 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | unknown |
+| Incorrect attempts on current step | 4 |
+| Submitted answer | none |
+| Normalized student answer | n/a |
+| Expected answer | dependent system |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | non_answer_action |
+| Method / confidence | deterministic_text / low |
+
+Student:
+
+- Student ARM: A 0.02 | R 0.75 | M 0.7
+- Student ARM change: A -0.01 | R 0.08 | M 0.01
+- Behavioural state: disengaged_non_response
+- Action: no_response
+- Transcript: I don't get it.
+- Structured answer: none
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.974 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0809; MINIMAL_COMPLIANCE: 0.1105; HELP_SEEKING_CONFUSION: 0.058; CARELESS_GUESS: 0.1243; OFF_TASK: 0.0964; DISENGAGED_NON_RESPONSE: 0.5299 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0809; MINIMAL_COMPLIANCE: 0.1105; HELP_SEEKING_CONFUSION: 0.058; CARELESS_GUESS: 0.1243; OFF_TASK: 0.0964; DISENGAGED_NON_RESPONSE: 0.5299 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0809; MINIMAL_COMPLIANCE: 0.0809 <= u < 0.1913; HELP_SEEKING_CONFUSION: 0.1913 <= u < 0.2493; CARELESS_GUESS: 0.2493 <= u < 0.3737; OFF_TASK: 0.3737 <= u < 0.4701; DISENGAGED_NON_RESPONSE: 0.4701 <= u < 1 |
+| Selected hidden behaviour | disengaged_non_response |
+| Visible learner action | no_response |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | no_answer |
+| Generated probability correct | 0 |
+| Behaviour prior correctness | 0 |
+| Correctness sampling value | 0.974 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.973995. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.9 | The current message repeats the exact same question and task demand as the previous three teacher turns, indicating explicit repetition of the instructional goal. |
+| M2 | 0.9 | The structure of the message is identical to previous turns: a direct question with multiple choice options, maintaining the same instructional delivery format. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact problem and options, though it could be slightly more contextualized to reduce genericness. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, limiting choice and agency, but still allows selection among them. |
+| R1 | 1 | The message clearly connects to a meaningful goal by asking about types of systems and their solutions, making the purpose explicit. |
+| R2 | 1 | The instruction is clear and precise: choose which system has infinitely many solutions from the given options, with an explicit expected outcome. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, encouraging student participation without negative or discouraging language. |
+| R4 | 0.3 | The message offers limited autonomy by requiring a choice among fixed options, with no open-ended reasoning or alternative approaches invited. |
+
+- Aggregate M_t: 0.7
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.6978, monotony sensitivity 1.1166, effective decline 0.2904, resulting A_t 0.02
+
+### Turn 12
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
+
+Teacher:
+
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
 
 Teacher observable cues:
 
@@ -1330,22 +1375,20 @@ Teacher observable cues:
 | --- | --- |
 | isMinimal | true |
 | minimalRateLastK | 0.4286 |
-| helpSeekingRateLastK | 0.1429 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
-| progress | 0.3167 |
-| confusion | 0.0286 |
-| engagement | 0.4742 |
-| pacingPressure | 0.7017 |
-| autonomyOpportunity | 0.3609 |
+| progress | 0.3389 |
+| engagement | 0.4864 |
+| pacingPressure | 0.61 |
+| autonomyOpportunity | 0.3697 |
 | supportNeed | 1 |
 | remediateNeed | 1 |
-| encouragementNeed | 0.279 |
-| praiseOpportunity | 0.156 |
-| reviewNeed | 0.8702 |
+| encouragementNeed | 0.2757 |
+| praiseOpportunity | 0.1758 |
+| reviewNeed | 0.8506 |
 | previousAnswerIncorrect | true |
 | previousAnswerUnknown | true |
 | repeatedIncorrectCount | 4 |
@@ -1358,52 +1401,52 @@ Teacher action choice:
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
 | action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.7088 | A check-in is appropriate to clarify understanding and current state. |
+| action_request_checkin | 0.6799 | A check-in is appropriate to clarify understanding and current state. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4806 | Affective support is appropriate to sustain effort. |
+| action_give_general_encouragement | 0.4532 | Affective support is appropriate to sustain effort. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.11 | R 0.6 | M 0.69
-- Estimate minus actual ARM: A 0.1 | R 0.05 | M -0.01
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.11 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.1 | R 0.15 | M 0
+- Transcript: Let's take it a bit slower. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
 | Field | Value |
 | --- | --- |
 | Correct | no |
-| Validation category | incorrect |
+| Validation category | unknown |
 | Incorrect attempts on current step | 5 |
-| Submitted answer | 3 |
-| Normalized student answer | 3 |
-| Expected answer | 8 |
+| Submitted answer | none |
+| Normalized student answer | n/a |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | structured_answer |
-| Method / confidence | arithmetic_equivalence / high |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | non_answer_action |
+| Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.01 | R 0.55 | M 0.7
-- Student ARM change: A -0.01 | R 0 | M 0
-- Behavioural state: careless_guess
-- Action: submit_answer
-- Transcript: I think the x value is 3. I just grouped the terms quickly and guessed that would work.
-- Structured answer: 3
+- Student ARM: A 0.01 | R 0.6 | M 0.7
+- Student ARM change: A -0.01 | R -0.15 | M 0
+- Behavioural state: off_task
+- Action: off_task
+- Transcript: Hmm, I think I lost track of what we were talking about. Can you remind me what the options were again?
+- Structured answer: none
 
 Student behavioural sampling:
 
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.2407 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0379; MINIMAL_COMPLIANCE: 0.0379 <= u < 0.1171; HELP_SEEKING_CONFUSION: 0.1171 <= u < 0.1674; CARELESS_GUESS: 0.1674 <= u < 0.2802; OFF_TASK: 0.2802 <= u < 0.395; DISENGAGED_NON_RESPONSE: 0.395 <= u < 1 |
-| Selected hidden behaviour | careless_guess |
-| Visible learner action | submit_answer |
+| Random draw u | 0.3396 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0452; MINIMAL_COMPLIANCE: 0.0452 <= u < 0.1307; HELP_SEEKING_CONFUSION: 0.1307 <= u < 0.183; CARELESS_GUESS: 0.183 <= u < 0.2988; OFF_TASK: 0.2988 <= u < 0.4088; DISENGAGED_NON_RESPONSE: 0.4088 <= u < 1 |
+| Selected hidden behaviour | off_task |
+| Visible learner action | off_task |
 
 Student simulator generated answer outcome:
 
@@ -1411,81 +1454,86 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 
 | Field | Value |
 | --- | --- |
-| Intended answer outcome | incorrect |
-| Generated probability correct | 0.17 |
-| Behaviour prior correctness | 0.2 |
-| Correctness sampling value | 0.2407 |
+| Intended answer outcome | no_answer |
+| Generated probability correct | 0 |
+| Behaviour prior correctness | 0 |
+| Correctness sampling value | 0.3396 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.17. Runtime sample=0.240708. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.339626. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same instructional goal of solving for x by substitution with minor variations in the specific algebraic step, showing high task repetition. |
-| M2 | 0.9 | The message uses the same instructional delivery format as previous turns: directive instructions followed by a question, indicating high structural repetition. |
-| M3 | 0.3 | The language is mostly specific to the current task, referencing the exact equations and steps, with minor generic scaffolding language. |
-| M4 | 0.7 | The message constrains the student to a specific method and step, limiting choice but not fully rigid, indicating mostly constrained path. |
-| R1 | 0.7 | The message clearly connects to the goal of solving the system by substitution, making the purpose mostly clear. |
-| R2 | 0.7 | The instructions specify the action and expected outcome clearly, though success criteria are implicit, so payoff clarity is rated mostly clear. |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, supporting a neutral learning climate. |
-| R4 | 0.3 | The message offers limited autonomy, mainly directing the student to perform a specific step with little invitation for input or alternative approaches. |
+| M1 | 0.9 | The current message is an explicit repetition of the same question and task demand as the previous three turns, with only minor wording changes, so M1 is high at 0.9. |
+| M2 | 0.9 | The delivery format is the same across all turns: a direct question with multiple choice options, so structural repetition is high at 0.9. |
+| M3 | 0.3 | The message is mostly specific to the task, referencing the types of systems and solutions, but the initial phrase 'Let's take it a bit slower' is generic, so M3 is moderately low at 0.3. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, indicating a mostly constrained path, so M4 is 0.7. |
+| R1 | 0.7 | The message connects to a meaningful goal by asking about types of systems and solutions, with some implicit purpose in slowing down, so R1 is mostly clear at 0.7. |
+| R2 | 0.7 | The instruction is clear about what to do (choose one option), but the success condition is implicit, so R2 is 0.7. |
+| R3 | 0.7 | The tone is mildly supportive with the phrase 'Let's take it a bit slower', encouraging careful thought, so R3 is 0.7. |
+| R4 | 0.3 | The student is given a choice among fixed options but no open-ended input or reasoning invitation, so autonomy is minimal at 0.3. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.55
-- Attention update: reward trace 0.5941, monotony sensitivity 1.1166, effective decline 0.3077, resulting A_t 0.01
+- Aggregate R_t: 0.6
+- Attention update: reward trace 0.6712, monotony sensitivity 1.1166, effective decline 0.2947, resulting A_t 0.01
 
 ### Turn 13
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
 
 Teacher observable cues:
 
 | Cue | Value |
 | --- | --- |
+| hasAnyQuestion | true |
+| isHelpSeeking | true |
+| isConfused | true |
+| requestsRepetition | true |
 | minimalRateLastK | 0.2857 |
-| helpSeekingRateLastK | 0.1429 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
 | progress | 1 |
-| confusion | 0.0286 |
-| engagement | 0.85 |
-| pacingPressure | 0.3464 |
-| autonomyOpportunity | 0.5325 |
-| supportNeed | 0.9329 |
-| remediateNeed | 0.9329 |
-| encouragementNeed | 0.1785 |
-| praiseOpportunity | 0.7625 |
-| reviewNeed | 0.3486 |
+| confusion | 0.8 |
+| frustration | 0.15 |
+| engagement | 1 |
+| pacingPressure | 0.4143 |
+| autonomyOpportunity | 0.6 |
+| supportNeed | 1 |
+| remediateNeed | 1 |
+| encouragementNeed | 0.2809 |
+| praiseOpportunity | 0.8 |
+| reviewNeed | 0.76 |
 | previousAnswerIncorrect | true |
+| previousAnswerUnknown | true |
 | repeatedIncorrectCount | 5 |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.9632
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 0.7308 | Pacing pressure suggests slowing down the interaction. |
-| action_offer_choice | 0.7012 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_request_checkin | 0.9632 | A check-in is appropriate to clarify understanding and current state. |
+| action_suggest_slower_pace | 0.9359 | Pacing pressure suggests slowing down the interaction. |
+| action_offer_choice | 0.7615 | Choice opportunity detected from engagement and re-engagement cues. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_specific_praise | 0.4164 | Progress and engagement justify specific praise. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.09 | R 0.6 | M 0.7
-- Estimate minus actual ARM: A 0.08 | R 0 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.09 | R 0.6 | M 0.8
+- Estimate minus actual ARM: A 0.08 | R -0.15 | M 0.1
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -1496,20 +1544,20 @@ Teacher validation correctness:
 | Incorrect attempts on current step | 6 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.01 | R 0.6 | M 0.7
-- Student ARM change: A 0 | R 0.05 | M 0
+- Student ARM: A 0.01 | R 0.75 | M 0.7
+- Student ARM change: A 0 | R 0.15 | M 0
 - Behavioural state: disengaged_non_response
 - Action: no_response
-- Transcript: I'm not sure what to do here.
+- Transcript: I don't get it.
 - Structured answer: none
 
 Student behavioural sampling:
@@ -1517,10 +1565,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.5845 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0452; MINIMAL_COMPLIANCE: 0.0452 <= u < 0.1307; HELP_SEEKING_CONFUSION: 0.1307 <= u < 0.183; CARELESS_GUESS: 0.183 <= u < 0.2988; OFF_TASK: 0.2988 <= u < 0.4088; DISENGAGED_NON_RESPONSE: 0.4088 <= u < 1 |
+| Random draw u | 0.6006 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0757; MINIMAL_COMPLIANCE: 0.1059; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1235; OFF_TASK: 0.095; DISENGAGED_NON_RESPONSE: 0.5425 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0757; MINIMAL_COMPLIANCE: 0.1059; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1235; OFF_TASK: 0.095; DISENGAGED_NON_RESPONSE: 0.5425 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0757; MINIMAL_COMPLIANCE: 0.0757 <= u < 0.1815; HELP_SEEKING_CONFUSION: 0.1815 <= u < 0.2389; CARELESS_GUESS: 0.2389 <= u < 0.3624; OFF_TASK: 0.3624 <= u < 0.4575; DISENGAGED_NON_RESPONSE: 0.4575 <= u < 1 |
 | Selected hidden behaviour | disengaged_non_response |
 | Visible learner action | no_response |
 
@@ -1533,59 +1581,58 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.5845 |
+| Correctness sampling value | 0.6006 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.584461. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.600616. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the same task demand as turns 2 and 3 with explicit instruction to group terms to find x, showing explicit repetition (0.9). Turn 1 is similar but with a different framing (0.6). |
-| M2 | 0.9 | The instructional delivery format is nearly identical to turns 2 and 3 (0.9) with directive question-led style, and similar but slightly varied from turn 1 (0.6). |
-| M3 | 0.3 | The language is mostly specific to the task with explicit references to the system of equations and steps, though some generic phrasing like 'Group the common terms' reduces specificity slightly (0.3). |
-| M4 | 0.7 | The message constrains the student to a mostly rigid path by instructing a specific method and steps, allowing limited choice (0.7). |
-| R1 | 0.7 | The message connects to a meaningful goal by asking for the resulting x value and guiding the student through the substitution method, making the purpose mostly clear (0.7). |
-| R2 | 0.7 | The instructions are clear about what to do and what outcome is expected (finding x), though success criteria are implicit, so payoff clarity is rated mostly clear (0.7). |
-| R3 | 0.7 | The tone is neutral to mildly supportive with 'Not quite yet' indicating encouragement to try again, supporting a safe learning climate (0.7). |
-| R4 | 0.3 | The message offers limited autonomy, mainly directing the student to follow specific steps with little invitation for input or alternative approaches (0.3). |
+| M1 | 0.9 | The current message repeats the exact same question about types of systems and their solutions as the previous three turns, indicating explicit task repetition. |
+| M2 | 0.9 | The structure is identical to previous turns: a direct question with multiple choice options, showing repeated instructional delivery format. |
+| M3 | 0.3 | The message is mostly specific, referencing the exact problem and options, though it could be slightly more contextualized, so scored as mostly specific with minor omission. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, indicating a mostly constrained path with limited choice. |
+| R1 | 1 | The message clearly connects to the goal of identifying the system type with infinitely many solutions, making the purpose explicit and well-integrated. |
+| R2 | 1 | The instruction is precise: choose one system type from the given options, with a clear expected outcome. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, encouraging student engagement without negative or discouraging language. |
+| R4 | 0.3 | The message offers limited autonomy, as the student must select from fixed options without open-ended input or reasoning invitation. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.6
-- Attention update: reward trace 0.5957, monotony sensitivity 1.1166, effective decline 0.3074, resulting A_t 0.01
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.6926, monotony sensitivity 1.1166, effective decline 0.2913, resulting A_t 0.01
 
 ### Turn 14
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
 
 Teacher observable cues:
 
 | Cue | Value |
 | --- | --- |
-| isHelpSeeking | true |
-| minimalRateLastK | 0.2857 |
-| helpSeekingRateLastK | 0.4286 |
+| isMinimal | true |
+| minimalRateLastK | 0.5714 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
-| progress | 0.7556 |
-| confusion | 0.4357 |
-| engagement | 0.7156 |
-| pacingPressure | 0.4088 |
-| autonomyOpportunity | 0.4353 |
+| progress | 0.3389 |
+| offTask | 0.1 |
+| engagement | 0.4764 |
+| pacingPressure | 0.6314 |
+| autonomyOpportunity | 0.3652 |
 | supportNeed | 1 |
 | remediateNeed | 1 |
-| encouragementNeed | 0.2144 |
-| praiseOpportunity | 0.5456 |
-| reviewNeed | 0.7729 |
+| encouragementNeed | 0.2736 |
+| praiseOpportunity | 0.1733 |
+| reviewNeed | 0.8706 |
 | previousAnswerIncorrect | true |
 | previousAnswerUnknown | true |
 | repeatedIncorrectCount | 6 |
@@ -1597,16 +1644,16 @@ Teacher action choice:
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 0.8723 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.8497 | A check-in is appropriate to clarify understanding and current state. |
-| action_offer_choice | 0.5869 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.6935 | A check-in is appropriate to clarify understanding and current state. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_give_general_encouragement | 0.4429 | Affective support is appropriate to sustain effort. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.07 | R 0.55 | M 0.7
-- Estimate minus actual ARM: A 0.06 | R -0.05 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.08 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.07 | R 0.2 | M 0
+- Transcript: Let's slow down a bit. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -1617,20 +1664,20 @@ Teacher validation correctness:
 | Incorrect attempts on current step | 7 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.01 | R 0.6 | M 0.7
-- Student ARM change: A 0 | R 0 | M 0
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I don't get it.
+- Student ARM: A 0.01 | R 0.55 | M 0.7
+- Student ARM change: A 0 | R -0.2 | M 0
+- Behavioural state: off_task
+- Action: off_task
+- Transcript: Hmm, I think I lost track of what we were talking about. Can you remind me what the options were again?
 - Structured answer: none
 
 Student behavioural sampling:
@@ -1638,12 +1685,12 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.9203 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0452; MINIMAL_COMPLIANCE: 0.0452 <= u < 0.1307; HELP_SEEKING_CONFUSION: 0.1307 <= u < 0.183; CARELESS_GUESS: 0.183 <= u < 0.2988; OFF_TASK: 0.2988 <= u < 0.4088; DISENGAGED_NON_RESPONSE: 0.4088 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
+| Random draw u | 0.3783 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0379; MINIMAL_COMPLIANCE: 0.0379 <= u < 0.1171; HELP_SEEKING_CONFUSION: 0.1171 <= u < 0.1674; CARELESS_GUESS: 0.1674 <= u < 0.2802; OFF_TASK: 0.2802 <= u < 0.395; DISENGAGED_NON_RESPONSE: 0.395 <= u < 1 |
+| Selected hidden behaviour | off_task |
+| Visible learner action | off_task |
 
 Student simulator generated answer outcome:
 
@@ -1654,80 +1701,83 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.9203 |
+| Correctness sampling value | 0.3783 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.92029. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.378303. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message is an explicit repetition of the exact same task demand and cognitive operation as the previous three turns, all asking to solve the same system of equations by substitution and find the x value. |
-| M2 | 0.9 | The instructional delivery format is identical across the current and previous three turns, all being directive prompts with the same question and guidance style. |
-| M3 | 0 | The message is highly specific, referencing the exact problem and steps to solve it, with no generic language. |
-| M4 | 1 | The message is fully rigid, giving a single prescribed action with no alternative strategies or choices offered. |
-| R1 | 0.7 | The message has a mostly clear purpose, indicating the task to solve the system and find x, though it lacks an explicit statement of why this matters. |
-| R2 | 1 | The instruction is precise and clear about what to do and what the expected answer is, specifying the method and the value to find. |
-| R3 | 0.7 | The tone is mildly supportive with 'Not quite yet' indicating encouragement to try again without negative language. |
-| R4 | 0 | There is no invitation for student autonomy or decision making; the message is fully directive with no choices or open-ended prompts. |
+| M1 | 0.9 | The current message repeats the exact same question and cognitive operation as the previous three turns, indicating explicit repetition (0.9). |
+| M2 | 0.9 | The delivery format is identical across the current and previous turns: a direct question with multiple-choice options, indicating identical structure (0.9). |
+| M3 | 0.3 | The message is mostly specific, referencing the exact problem context and choices, though the initial phrase 'Let's slow down a bit' is somewhat generic, so mostly specific with minor omission (0.3). |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, indicating a mostly constrained path but not fully rigid (0.7). |
+| R1 | 0.7 | The message connects to a meaningful goal by asking about types of systems and solutions, making the purpose mostly clear though not explicitly stated (0.7). |
+| R2 | 0.7 | The instruction is clear about what to do (choose one system type), but the success condition is implicit rather than explicit, so clear action but limited success framing (0.7). |
+| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, so neutral tone (0.5). |
+| R4 | 0.3 | The message offers limited autonomy by requiring a choice among fixed options without open-ended input, indicating minimal autonomy (0.3). |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.6
-- Attention update: reward trace 0.5969, monotony sensitivity 1.1166, effective decline 0.3072, resulting A_t 0.01
+- Aggregate R_t: 0.55
+- Attention update: reward trace 0.6538, monotony sensitivity 1.1166, effective decline 0.2975, resulting A_t 0.01
 
 ### Turn 15
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
 
 Teacher observable cues:
 
 | Cue | Value |
 | --- | --- |
-| isMinimal | true |
+| hasAnyQuestion | true |
+| isHelpSeeking | true |
+| isConfused | true |
+| requestsRepetition | true |
 | minimalRateLastK | 0.4286 |
-| helpSeekingRateLastK | 0.2857 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
-| progress | 0.3389 |
-| confusion | 0.0571 |
-| engagement | 0.4864 |
-| pacingPressure | 0.576 |
-| autonomyOpportunity | 0.3697 |
+| progress | 1 |
+| confusion | 0.8 |
+| frustration | 0.15 |
+| engagement | 1 |
+| pacingPressure | 0.4714 |
+| autonomyOpportunity | 0.6 |
 | supportNeed | 1 |
 | remediateNeed | 1 |
-| encouragementNeed | 0.2757 |
-| praiseOpportunity | 0.1758 |
-| reviewNeed | 0.8677 |
+| encouragementNeed | 0.2809 |
+| praiseOpportunity | 0.8 |
+| reviewNeed | 0.76 |
 | previousAnswerIncorrect | true |
 | previousAnswerUnknown | true |
 | repeatedIncorrectCount | 7 |
 
 Teacher action choice:
 
-- Selected action score: 1
+- Selected action score: 0.9746
 
 | Candidate action | Score | Rationale |
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
 | action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.7393 | A check-in is appropriate to clarify understanding and current state. |
+| action_request_checkin | 0.9746 | A check-in is appropriate to clarify understanding and current state. |
+| action_offer_choice | 0.7455 | Choice opportunity detected from engagement and re-engagement cues. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4892 | Affective support is appropriate to sustain effort. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.06 | R 0.55 | M 0.7
-- Estimate minus actual ARM: A 0.05 | R -0.08 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.07 | R 0.55 | M 0.7
+- Estimate minus actual ARM: A 0.06 | R -0.2 | M 0
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -1738,20 +1788,20 @@ Teacher validation correctness:
 | Incorrect attempts on current step | 8 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.01 | R 0.63 | M 0.7
-- Student ARM change: A 0 | R 0.03 | M 0
+- Student ARM: A 0.01 | R 0.75 | M 0.7
+- Student ARM change: A 0 | R 0.2 | M 0
 - Behavioural state: disengaged_non_response
 - Action: no_response
-- Transcript: I'm not sure about this one.
+- Transcript: I don't get it.
 - Structured answer: none
 
 Student behavioural sampling:
@@ -1759,10 +1809,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.86 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0503; MINIMAL_COMPLIANCE: 0.0894; HELP_SEEKING_CONFUSION: 0.0534; CARELESS_GUESS: 0.1176; OFF_TASK: 0.107; DISENGAGED_NON_RESPONSE: 0.5824 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0503; MINIMAL_COMPLIANCE: 0.0894; HELP_SEEKING_CONFUSION: 0.0534; CARELESS_GUESS: 0.1176; OFF_TASK: 0.107; DISENGAGED_NON_RESPONSE: 0.5824 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0503; MINIMAL_COMPLIANCE: 0.0503 <= u < 0.1397; HELP_SEEKING_CONFUSION: 0.1397 <= u < 0.193; CARELESS_GUESS: 0.193 <= u < 0.3106; OFF_TASK: 0.3106 <= u < 0.4176; DISENGAGED_NON_RESPONSE: 0.4176 <= u < 1 |
+| Random draw u | 0.8512 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0757; MINIMAL_COMPLIANCE: 0.1059; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1235; OFF_TASK: 0.095; DISENGAGED_NON_RESPONSE: 0.5425 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0757; MINIMAL_COMPLIANCE: 0.1059; HELP_SEEKING_CONFUSION: 0.0574; CARELESS_GUESS: 0.1235; OFF_TASK: 0.095; DISENGAGED_NON_RESPONSE: 0.5425 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0757; MINIMAL_COMPLIANCE: 0.0757 <= u < 0.1815; HELP_SEEKING_CONFUSION: 0.1815 <= u < 0.2389; CARELESS_GUESS: 0.2389 <= u < 0.3624; OFF_TASK: 0.3624 <= u < 0.4575; DISENGAGED_NON_RESPONSE: 0.4575 <= u < 1 |
 | Selected hidden behaviour | disengaged_non_response |
 | Visible learner action | no_response |
 
@@ -1775,61 +1825,58 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.86 |
+| Correctness sampling value | 0.8512 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.860035. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.851212. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the exact same task demand and cognitive operation as the previous three turns, asking to solve the same system of equations by substitution and find the x value, so M1 is high at 0.9. |
-| M2 | 0.9 | The instructional delivery format is identical across the current and previous three turns: directive, stepwise, question-led prompting, so M2 is high at 0.9. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact equations and steps to group terms, so linguistic genericness is low to moderate at 0.3. |
-| M4 | 0.7 | The message constrains the student to a single prescribed method (substitution) and a specific question, limiting choice, so absence of choice is mostly constrained at 0.7. |
-| R1 | 0.7 | The message implies relevance by prompting to solve the system and find x, linking to the goal of solving equations, so relevance is mostly clear at 0.7. |
-| R2 | 1 | The instructions are explicit and clear about what to do and what answer to provide, so payoff clarity is high at 1.0. |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, so encouragement/support is neutral at 0.5. |
-| R4 | 0.3 | The message offers limited autonomy, as it directs a specific method and question without inviting alternative approaches or reasoning, so autonomy is minimal at 0.3. |
+| M1 | 0.9 | The current message repeats the exact same question about types of systems and solutions as the previous three turns, indicating explicit task repetition. |
+| M2 | 0.9 | The current message maintains the same instructional delivery format as the previous turns: a direct question with multiple choice options, showing structural repetition. |
+| M3 | 0.3 | The language is mostly specific, referencing the exact problem and options, though it lacks additional context or elaboration, so it is mostly specific with minor omission. |
+| M4 | 0.7 | The message constrains the student to choose one of three fixed options, limiting choice and agency, indicating a mostly constrained path. |
+| R1 | 1 | The message clearly connects to the meaningful goal of identifying the system type with infinitely many solutions, making the purpose explicit and well-integrated. |
+| R2 | 1 | The instruction is precise and clear: choose one system type from the given options, with an explicit expected outcome. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, without negative or discouraging language, providing a mildly supportive environment. |
+| R4 | 0.3 | The message offers limited autonomy by requiring a choice among fixed options, with minimal opportunity for open-ended input or reasoning. |
 
 - Aggregate M_t: 0.7
-- Aggregate R_t: 0.63
-- Attention update: reward trace 0.6059, monotony sensitivity 1.1166, effective decline 0.3056, resulting A_t 0.01
+- Aggregate R_t: 0.75
+- Attention update: reward trace 0.68, monotony sensitivity 1.1166, effective decline 0.2933, resulting A_t 0.01
 
 ### Turn 16
 
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
 
 Teacher:
 
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
 
 Teacher observable cues:
 
 | Cue | Value |
 | --- | --- |
 | isMinimal | true |
-| isHelpSeeking | true |
 | minimalRateLastK | 0.5714 |
-| helpSeekingRateLastK | 0.4286 |
 
 Teacher internal policy signals:
 
 | Field | Value |
 | --- | --- |
-| progress | 0.3833 |
-| confusion | 0.4357 |
+| progress | 0.3389 |
 | offTask | 0.1 |
-| engagement | 0.5008 |
-| pacingPressure | 0.7319 |
-| autonomyOpportunity | 0.3829 |
+| engagement | 0.4764 |
+| pacingPressure | 0.6028 |
+| autonomyOpportunity | 0.3652 |
 | supportNeed | 1 |
 | remediateNeed | 1 |
-| encouragementNeed | 0.2671 |
-| praiseOpportunity | 0.2127 |
-| reviewNeed | 0.979 |
+| encouragementNeed | 0.2736 |
+| praiseOpportunity | 0.1733 |
+| reviewNeed | 0.8706 |
 | previousAnswerIncorrect | true |
 | previousAnswerUnknown | true |
 | repeatedIncorrectCount | 8 |
@@ -1842,15 +1889,15 @@ Teacher action choice:
 | --- | ---: | --- |
 | action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
 | action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.8973 | A check-in is appropriate to clarify understanding and current state. |
+| action_request_checkin | 0.6999 | A check-in is appropriate to clarify understanding and current state. |
 | action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4704 | Affective support is appropriate to sustain effort. |
+| action_give_general_encouragement | 0.4445 | Affective support is appropriate to sustain effort. |
 
 Teacher state-aware ARM estimate:
 
-- Estimated ARM: A 0.05 | R 0.55 | M 0.7
-- Estimate minus actual ARM: A 0.04 | R 0 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
+- Estimated ARM: A 0.06 | R 0.75 | M 0.7
+- Estimate minus actual ARM: A 0.05 | R 0.15 | M 0
+- Transcript: Let's take it a bit slower. There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
 
 Teacher validation correctness:
 
@@ -1861,501 +1908,17 @@ Teacher validation correctness:
 | Incorrect attempts on current step | 9 |
 | Submitted answer | none |
 | Normalized student answer | n/a |
-| Expected answer | 8 |
+| Expected answer | dependent system |
 | Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
 | Validation input source | non_answer_action |
 | Method / confidence | deterministic_text / low |
 
 Student:
 
-- Student ARM: A 0.01 | R 0.55 | M 0.7
-- Student ARM change: A 0 | R -0.08 | M 0
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I don't know.
-- Structured answer: none
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.772 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0379; MINIMAL_COMPLIANCE: 0.0379 <= u < 0.1171; HELP_SEEKING_CONFUSION: 0.1171 <= u < 0.1674; CARELESS_GUESS: 0.1674 <= u < 0.2802; OFF_TASK: 0.2802 <= u < 0.395; DISENGAGED_NON_RESPONSE: 0.395 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | no_answer |
-| Generated probability correct | 0 |
-| Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.772 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.772031. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message is an explicit repetition of the exact same task demand and cognitive operation as the previous three teacher turns, all asking to solve the same system of equations by substitution and find the x value with identical wording. |
-| M2 | 0.9 | The instructional delivery format is identical across the current and previous three turns: directive style, question-led, with explicit grouping instructions, showing no structural variation. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact system of equations and the method (substitution), but lacks deeper contextualization or varied scaffolding, so it is mostly specific with minor omission of broader task elements. |
-| M4 | 0.7 | The message constrains the student to a single prescribed action: solve by substitution and find the x value, with no alternative strategies or open-ended exploration, indicating a mostly constrained path. |
-| R1 | 0.7 | The message implies relevance by directing the student to solve the system and find the x value, connecting to the goal of solving equations, though it lacks an explicit statement of purpose or broader goal. |
-| R2 | 0.7 | The instruction is clear about what to do next (solve by substitution, group terms) and what to find (x value), but does not explicitly state success criteria or outcome clarity beyond the question. |
-| R3 | 0.5 | The tone is neutral, neither encouraging nor discouraging, simply directive without positive reinforcement or motivational language. |
-| R4 | 0.3 | The message offers minimal autonomy, as it directs a specific method and question without inviting student choice or reasoning beyond providing the answer. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.55
-- Attention update: reward trace 0.5907, monotony sensitivity 1.1166, effective decline 0.3083, resulting A_t 0.01
-
-### Turn 17
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| isMinimal | true |
-| minimalRateLastK | 0.7143 |
-| helpSeekingRateLastK | 0.2857 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.3167 |
-| confusion | 0.0571 |
-| offTask | 0.1 |
-| engagement | 0.4642 |
-| pacingPressure | 0.6945 |
-| autonomyOpportunity | 0.3564 |
-| supportNeed | 1 |
-| remediateNeed | 1 |
-| encouragementNeed | 0.2768 |
-| praiseOpportunity | 0.1535 |
-| reviewNeed | 0.8988 |
-| previousAnswerIncorrect | true |
-| previousAnswerUnknown | true |
-| repeatedIncorrectCount | 9 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.752 | A check-in is appropriate to clarify understanding and current state. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4815 | Affective support is appropriate to sustain effort. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.04 | R 0.55 | M 0.7
-- Estimate minus actual ARM: A 0.03 | R -0.12 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | unknown |
-| Incorrect attempts on current step | 10 |
-| Submitted answer | none |
-| Normalized student answer | n/a |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | non_answer_action |
-| Method / confidence | deterministic_text / low |
-
-Student:
-
-- Student ARM: A 0.01 | R 0.67 | M 0.7
-- Student ARM change: A 0 | R 0.12 | M 0
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I'm not sure what to do here.
-- Structured answer: none
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.9024 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0577; MINIMAL_COMPLIANCE: 0.0948; HELP_SEEKING_CONFUSION: 0.0548; CARELESS_GUESS: 0.1198; OFF_TASK: 0.1031; DISENGAGED_NON_RESPONSE: 0.5699 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0577; MINIMAL_COMPLIANCE: 0.0948; HELP_SEEKING_CONFUSION: 0.0548; CARELESS_GUESS: 0.1198; OFF_TASK: 0.1031; DISENGAGED_NON_RESPONSE: 0.5699 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0577; MINIMAL_COMPLIANCE: 0.0577 <= u < 0.1525; HELP_SEEKING_CONFUSION: 0.1525 <= u < 0.2073; CARELESS_GUESS: 0.2073 <= u < 0.327; OFF_TASK: 0.327 <= u < 0.4301; DISENGAGED_NON_RESPONSE: 0.4301 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | no_answer |
-| Generated probability correct | 0 |
-| Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.9024 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.902351. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message is exactly the same as the previous three teacher turns, explicitly repeating the same task demand and cognitive operation (solving the same system by substitution). |
-| M2 | 0.9 | The instructional delivery format is identical to the previous three turns: directive, stepwise instruction with a question prompt, so structural repetition is very high. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact system of equations and the method (substitution), but slightly generic in phrasing like 'Group the common terms' without deeper context, so moderately low genericness (0.3). |
-| M4 | 0.7 | The message constrains the student to a single method (substitution) and a specific question (find x), with no alternative strategies or open-ended exploration, indicating mostly constrained choice (0.7). |
-| R1 | 0.7 | The message clearly connects to the goal of solving the system by substitution and finding x, making the purpose mostly clear though not explicitly stating why this matters, so 0.7. |
-| R2 | 1 | The instruction is precise and clearly states what to do and what the expected answer is (the x value), so payoff and outcome clarity is maximal (1.0). |
-| R3 | 0.7 | The tone is neutral to mildly supportive with 'Not quite yet' indicating encouragement to try again, so mildly supportive (0.7). |
-| R4 | 0.3 | The message is directive with no invitation for student input or alternative approaches, so minimal autonomy (0.3). |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.67
-- Attention update: reward trace 0.6123, monotony sensitivity 1.1166, effective decline 0.3045, resulting A_t 0.01
-
-### Turn 18
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| isHelpSeeking | true |
-| minimalRateLastK | 0.4286 |
-| helpSeekingRateLastK | 0.5714 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.7556 |
-| confusion | 0.4643 |
-| engagement | 0.7156 |
-| pacingPressure | 0.5338 |
-| autonomyOpportunity | 0.4353 |
-| supportNeed | 1 |
-| remediateNeed | 1 |
-| encouragementNeed | 0.2144 |
-| praiseOpportunity | 0.5456 |
-| reviewNeed | 0.7815 |
-| previousAnswerIncorrect | true |
-| previousAnswerUnknown | true |
-| repeatedIncorrectCount | 10 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.8692 | A check-in is appropriate to clarify understanding and current state. |
-| action_offer_choice | 0.5809 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.03 | R 0.6 | M 0.7
-- Estimate minus actual ARM: A 0.02 | R -0.07 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | incorrect |
-| Incorrect attempts on current step | 11 |
-| Submitted answer | 2 |
-| Normalized student answer | 2 |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | structured_answer |
-| Method / confidence | arithmetic_equivalence / high |
-
-Student:
-
-- Student ARM: A 0.01 | R 0.67 | M 0.7
-- Student ARM change: A 0 | R 0 | M 0
-- Behavioural state: careless_guess
-- Action: submit_answer
-- Transcript: I think the x value is 2. I just guessed based on the numbers in the equations.
-- Structured answer: 2
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.3168 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0577; MINIMAL_COMPLIANCE: 0.0948; HELP_SEEKING_CONFUSION: 0.0548; CARELESS_GUESS: 0.1198; OFF_TASK: 0.1031; DISENGAGED_NON_RESPONSE: 0.5699 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0577; MINIMAL_COMPLIANCE: 0.0948; HELP_SEEKING_CONFUSION: 0.0548; CARELESS_GUESS: 0.1198; OFF_TASK: 0.1031; DISENGAGED_NON_RESPONSE: 0.5699 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0577; MINIMAL_COMPLIANCE: 0.0577 <= u < 0.1525; HELP_SEEKING_CONFUSION: 0.1525 <= u < 0.2073; CARELESS_GUESS: 0.2073 <= u < 0.327; OFF_TASK: 0.327 <= u < 0.4301; DISENGAGED_NON_RESPONSE: 0.4301 <= u < 1 |
-| Selected hidden behaviour | careless_guess |
-| Visible learner action | submit_answer |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | incorrect |
-| Generated probability correct | 0.1784 |
-| Behaviour prior correctness | 0.2 |
-| Correctness sampling value | 0.3168 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.1784. Runtime sample=0.31683. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message is an explicit repetition of the same task demand and cognitive operation as the previous three turns, all asking to solve the same system of equations by substitution. |
-| M2 | 0.9 | The instructional delivery format is identical across all previous turns: a directive question with stepwise guidance, indicating structural repetition. |
-| M3 | 0 | The message is highly specific, referencing the exact problem and steps to solve it, thus minimal linguistic genericness (score 0.0). |
-| M4 | 1 | The message constrains the student to a single prescribed action with no alternative strategies or choices, indicating full rigidity (score 1.0). |
-| R1 | 0.7 | The message clearly connects to a meaningful goal by instructing to solve the system and find the x value, showing mostly clear purpose. |
-| R2 | 1 | The instruction is precise and explicitly states the expected outcome and next action, indicating full clarity. |
-| R3 | 0.7 | The tone is mildly supportive with a gentle 'Not quite yet' and no negative phrasing, providing mild encouragement. |
-| R4 | 0.3 | The message offers minimal autonomy, as it directs the student to a specific method and answer without inviting alternative approaches or reasoning. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.67
-- Attention update: reward trace 0.628, monotony sensitivity 1.1166, effective decline 0.3018, resulting A_t 0.01
-
-### Turn 19
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| minimalRateLastK | 0.4286 |
-| helpSeekingRateLastK | 0.4286 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.9778 |
-| confusion | 0.0857 |
-| engagement | 0.8378 |
-| pacingPressure | 0.3006 |
-| autonomyOpportunity | 0.5237 |
-| supportNeed | 1 |
-| remediateNeed | 1 |
-| encouragementNeed | 0.1818 |
-| praiseOpportunity | 0.7428 |
-| reviewNeed | 0.3768 |
-| previousAnswerIncorrect | true |
-| repeatedIncorrectCount | 11 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 0.704 | Pacing pressure suggests slowing down the interaction. |
-| action_offer_choice | 0.684 | Choice opportunity detected from engagement and re-engagement cues. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_request_checkin | 0.464 | A check-in is appropriate to clarify understanding and current state. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.02 | R 0.55 | M 0.7
-- Estimate minus actual ARM: A 0.01 | R 0 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | unknown |
-| Incorrect attempts on current step | 12 |
-| Submitted answer | none |
-| Normalized student answer | n/a |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | non_answer_action |
-| Method / confidence | deterministic_text / low |
-
-Student:
-
-- Student ARM: A 0.01 | R 0.55 | M 0.7
-- Student ARM change: A 0 | R -0.12 | M 0
-- Behavioural state: disengaged_non_response
-- Action: no_response
-- Transcript: I don't know.
-- Structured answer: none
-
-Student behavioural sampling:
-
-| Field | Value |
-| --- | --- |
-| Random source | Math.random() |
-| Random draw u | 0.8597 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0379; MINIMAL_COMPLIANCE: 0.0379 <= u < 0.1171; HELP_SEEKING_CONFUSION: 0.1171 <= u < 0.1674; CARELESS_GUESS: 0.1674 <= u < 0.2802; OFF_TASK: 0.2802 <= u < 0.395; DISENGAGED_NON_RESPONSE: 0.395 <= u < 1 |
-| Selected hidden behaviour | disengaged_non_response |
-| Visible learner action | no_response |
-
-Student simulator generated answer outcome:
-
-_Hidden simulator calibration; this is not visible to the teacher policy._
-
-| Field | Value |
-| --- | --- |
-| Intended answer outcome | no_answer |
-| Generated probability correct | 0 |
-| Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.8597 |
-| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.859741. |
-
-ARM component scoring:
-
-| Component | Value | Brief computation explanation |
-| --- | ---: | --- |
-| M1 | 0.9 | The current message repeats the exact same task demand and cognitive operation as the previous three turns, asking to solve the same system of equations by substitution and find the x value, so M1 is high at 0.9. |
-| M2 | 0.9 | The instructional delivery format is identical to the previous three turns, using directive questioning with stepwise guidance and prompting, so M2 is high at 0.9. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact system of equations and the method (substitution), so linguistic genericness is low (0.3). |
-| M4 | 0.7 | The message constrains the student to a single prescribed method and specific question, limiting choice, so absence of choice is fairly high at 0.7. |
-| R1 | 0.7 | The message clearly connects to a meaningful goal of solving the system by substitution and finding x, so relevance is mostly clear at 0.7. |
-| R2 | 0.7 | The instructions and expected outcome are clear, specifying the method and the value to find, so payoff clarity is fairly high at 0.7. |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, so encouragement/support is neutral at 0.5. |
-| R4 | 0.3 | The message offers little autonomy or opportunity for student decision-making, so autonomy is minimal at 0.3. |
-
-- Aggregate M_t: 0.7
-- Aggregate R_t: 0.55
-- Attention update: reward trace 0.6068, monotony sensitivity 1.1166, effective decline 0.3055, resulting A_t 0.01
-
-### Turn 20
-
-- Lesson step: Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value?
-- Step ID: problem_05_substitution_solve_x_step_01
-
-Teacher:
-
-- Action: action_give_hint
-- Action explanation: Support need detected; lightweight hint is appropriate.
-
-Teacher observable cues:
-
-| Cue | Value |
-| --- | --- |
-| isMinimal | true |
-| minimalRateLastK | 0.7143 |
-| helpSeekingRateLastK | 0.2857 |
-
-Teacher internal policy signals:
-
-| Field | Value |
-| --- | --- |
-| progress | 0.3167 |
-| confusion | 0.0571 |
-| offTask | 0.1 |
-| engagement | 0.4642 |
-| pacingPressure | 0.6392 |
-| autonomyOpportunity | 0.3564 |
-| supportNeed | 1 |
-| remediateNeed | 1 |
-| encouragementNeed | 0.2768 |
-| praiseOpportunity | 0.1535 |
-| reviewNeed | 0.8988 |
-| previousAnswerIncorrect | true |
-| previousAnswerUnknown | true |
-| repeatedIncorrectCount | 12 |
-
-Teacher action choice:
-
-- Selected action score: 1
-
-| Candidate action | Score | Rationale |
-| --- | ---: | --- |
-| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
-| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
-| action_request_checkin | 0.7484 | A check-in is appropriate to clarify understanding and current state. |
-| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
-| action_give_general_encouragement | 0.4671 | Affective support is appropriate to sustain effort. |
-
-Teacher state-aware ARM estimate:
-
-- Estimated ARM: A 0.02 | R 0.65 | M 0.7
-- Estimate minus actual ARM: A 0.01 | R 0.1 | M 0
-- Transcript: Not quite yet. Solve the following system of equations by substitution. -x+y=-5, 2x-5y=1. What is the resulting x value? Group the common terms, x with x and constants with constants to find the x value. What is your answer?
-
-Teacher validation correctness:
-
-| Field | Value |
-| --- | --- |
-| Correct | no |
-| Validation category | unknown |
-| Incorrect attempts on current step | 13 |
-| Submitted answer | none |
-| Normalized student answer | n/a |
-| Expected answer | 8 |
-| Accepted answers | n/a |
-| Validation mode | arithmetic_equivalence |
-| Answer type | arithmetic |
-| Validation input source | non_answer_action |
-| Method / confidence | deterministic_text / low |
-
-Student:
-
-- Student ARM: A 0.01 | R 0.55 | M 0.7
-- Student ARM change: A 0 | R 0 | M 0
+- Student ARM: A 0.01 | R 0.6 | M 0.7
+- Student ARM change: A 0 | R -0.15 | M 0
 - Behavioural state: disengaged_non_response
 - Action: no_response
 - Transcript: I don't get it.
@@ -2366,10 +1929,10 @@ Student behavioural sampling:
 | Field | Value |
 | --- | --- |
 | Random source | Math.random() |
-| Random draw u | 0.5459 |
-| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0379; MINIMAL_COMPLIANCE: 0.0791; HELP_SEEKING_CONFUSION: 0.0504; CARELESS_GUESS: 0.1128; OFF_TASK: 0.1148; DISENGAGED_NON_RESPONSE: 0.605 |
-| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0379; MINIMAL_COMPLIANCE: 0.0379 <= u < 0.1171; HELP_SEEKING_CONFUSION: 0.1171 <= u < 0.1674; CARELESS_GUESS: 0.1674 <= u < 0.2802; OFF_TASK: 0.2802 <= u < 0.395; DISENGAGED_NON_RESPONSE: 0.395 <= u < 1 |
+| Random draw u | 0.5273 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0452; MINIMAL_COMPLIANCE: 0.0855; HELP_SEEKING_CONFUSION: 0.0523; CARELESS_GUESS: 0.1158; OFF_TASK: 0.11; DISENGAGED_NON_RESPONSE: 0.5912 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0452; MINIMAL_COMPLIANCE: 0.0452 <= u < 0.1307; HELP_SEEKING_CONFUSION: 0.1307 <= u < 0.183; CARELESS_GUESS: 0.183 <= u < 0.2988; OFF_TASK: 0.2988 <= u < 0.4088; DISENGAGED_NON_RESPONSE: 0.4088 <= u < 1 |
 | Selected hidden behaviour | disengaged_non_response |
 | Visible learner action | no_response |
 
@@ -2382,24 +1945,498 @@ _Hidden simulator calibration; this is not visible to the teacher policy._
 | Intended answer outcome | no_answer |
 | Generated probability correct | 0 |
 | Behaviour prior correctness | 0 |
-| Correctness sampling value | 0.5459 |
+| Correctness sampling value | 0.5273 |
 | Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
-| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.545938. |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.527321. |
 
 ARM component scoring:
 
 | Component | Value | Brief computation explanation |
 | --- | ---: | --- |
-| M1 | 0.9 | The current message is a verbatim repetition of the previous three teacher turns, all asking the same question and giving the same instructions to solve the system by substitution and find x. |
-| M2 | 0.9 | The instructional delivery format is identical across all turns: a directive prompt with stepwise guidance and a direct question for the answer, indicating structural repetition. |
-| M3 | 0.3 | The language is mostly specific to the task, referencing the exact system of equations and the method (substitution), but lacks additional contextualization or motivational cues, so it is mostly specific with minor omissions. |
-| M4 | 0.7 | The message constrains the student to a single method (substitution) and a single answer (x value), with no alternative strategies or open-ended exploration, indicating a mostly constrained path. |
-| R1 | 0.7 | The message implicitly connects to the goal of solving the system by substitution and finding x, making the purpose mostly clear though not explicitly stated. |
-| R2 | 0.7 | The instructions clearly specify what to do (solve by substitution, group terms) and what to find (x value), providing clear action but limited framing of success criteria. |
-| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, providing a neutral supportive environment. |
-| R4 | 0.3 | The message offers minimal autonomy, as it directs a specific method and answer without inviting alternative approaches or reasoning explanations. |
+| M1 | 0.9 | The current message repeats the exact same task demand as the previous three turns, asking the same question with the same options, so high repetition score of 0.9 is appropriate. |
+| M2 | 0.9 | The delivery format is identical across all turns: a direct question with multiple choice options, so structural repetition is also high at 0.9. |
+| M3 | 0.3 | The message includes specific references to the types of systems and the question about infinitely many solutions, so it is mostly specific with minor generic scaffolding, scoring 0.3. |
+| M4 | 0.7 | The student is given a forced choice among three options, limiting their decision space, so the absence of choice is mostly constrained, scoring 0.7. |
+| R1 | 0.7 | The message connects to a meaningful goal by asking about types of systems and solutions, with some implicit purpose, so mostly clear purpose at 0.7. |
+| R2 | 0.7 | The instruction is clear about what to do (choose one option), but the success condition is implicit, so payoff clarity is 0.7. |
+| R3 | 0.7 | The tone is neutral to mildly supportive with 'Let's take it a bit slower', so encouragement is mildly supportive at 0.7. |
+| R4 | 0.3 | The student is not invited to explain or explore beyond choosing one option, so autonomy is minimal at 0.3. |
 
 - Aggregate M_t: 0.7
+- Aggregate R_t: 0.6
+- Attention update: reward trace 0.6582, monotony sensitivity 1.1166, effective decline 0.2968, resulting A_t 0.01
+
+### Turn 17
+
+- Lesson step: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions?
+- Step ID: problem_03_identify_dependent_system_step_01
+
+Teacher:
+
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| isMinimal | true |
+| minimalRateLastK | 0.7143 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.3389 |
+| offTask | 0.1 |
+| engagement | 0.4764 |
+| pacingPressure | 0.6778 |
+| autonomyOpportunity | 0.3652 |
+| supportNeed | 1 |
+| remediateNeed | 1 |
+| encouragementNeed | 0.2736 |
+| praiseOpportunity | 0.1733 |
+| reviewNeed | 0.8706 |
+| previousAnswerIncorrect | true |
+| previousAnswerUnknown | true |
+| repeatedIncorrectCount | 9 |
+
+Teacher action choice:
+
+- Selected action score: 0.7181
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.7181 | A check-in is appropriate to clarify understanding and current state. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+| action_give_general_encouragement | 0.4693 | Affective support is appropriate to sustain effort. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.05 | R 0.6 | M 0.7
+- Estimate minus actual ARM: A 0.04 | R -0.08 | M -0.08
+- Transcript: There are three types of systems of linear equations in two variables, and three types of solutions. Which system has infinitely many solutions? Choose one: independent system or inconsistent system or dependent system.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | yes |
+| Validation category | correct |
+| Incorrect attempts on current step | 9 |
+| Submitted answer | dependent system |
+| Normalized student answer | dependent system |
+| Expected answer | dependent system |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | dependent system / high |
+
+Student:
+
+- Student ARM: A 0.01 | R 0.68 | M 0.78
+- Student ARM change: A 0 | R 0.08 | M 0.08
+- Behavioural state: minimal_compliance
+- Action: submit_answer
+- Transcript: The system with infinitely many solutions is the dependent system.
+- Structured answer: dependent system
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.1188 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.045; MINIMAL_COMPLIANCE: 0.0836; HELP_SEEKING_CONFUSION: 0.0503; CARELESS_GUESS: 0.1247; OFF_TASK: 0.1184; DISENGAGED_NON_RESPONSE: 0.5781 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.045; MINIMAL_COMPLIANCE: 0.0836; HELP_SEEKING_CONFUSION: 0.0503; CARELESS_GUESS: 0.1247; OFF_TASK: 0.1184; DISENGAGED_NON_RESPONSE: 0.5781 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.045; MINIMAL_COMPLIANCE: 0.045 <= u < 0.1285; HELP_SEEKING_CONFUSION: 0.1285 <= u < 0.1788; CARELESS_GUESS: 0.1788 <= u < 0.3035; OFF_TASK: 0.3035 <= u < 0.4219; DISENGAGED_NON_RESPONSE: 0.4219 <= u < 1 |
+| Selected hidden behaviour | minimal_compliance |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | correct |
+| Generated probability correct | 0.3711 |
+| Behaviour prior correctness | 0.4 |
+| Correctness sampling value | 0.1188 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.4. ARM-adjusted pCorrect=0.3711. Runtime sample=0.118798. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.9 | The current message repeats the exact same question about types of systems and solutions as the previous three teacher turns, indicating explicit repetition of the task demand. |
+| M2 | 0.9 | The current message maintains the same instructional delivery format as the previous three turns: a direct question with multiple choice options, showing identical structure reused. |
+| M3 | 0.3 | The message is mostly specific, referencing the exact problem and providing clear options, though it lacks additional context or elaboration, so it is mostly specific with minor omission of task elements. |
+| M4 | 1 | The message is fully rigid, giving a single prescribed question with fixed answer choices, allowing no alternative approaches or open-ended exploration. |
+| R1 | 1 | The message clearly connects to a meaningful goal by asking which system has infinitely many solutions, making the purpose explicit and well-integrated. |
+| R2 | 1 | The message provides a precise action (choose one option) and an explicit success condition (identifying the correct system type), making the payoff clear. |
+| R3 | 0.7 | The tone is mildly supportive, neutral but not discouraging, maintaining a safe learning climate without explicit encouragement. |
+| R4 | 0 | The message offers no autonomy or agency; it is fully directive with no invitation for student input beyond selecting a fixed choice. |
+
+- Aggregate M_t: 0.78
+- Aggregate R_t: 0.68
+- Attention update: reward trace 0.6641, monotony sensitivity 1.1166, effective decline 0.3107, resulting A_t 0.01
+
+### Turn 18
+
+- Lesson step: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y
+- Step ID: problem_04_check_ordered_pair_not_solution_step_01
+
+Teacher:
+
+- Action: action_reframe_prompt_variant
+- Action explanation: State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| minimalRateLastK | 0.4286 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.8222 |
+| engagement | 0.7522 |
+| pacingPressure | 0.4015 |
+| autonomyOpportunity | 0.4618 |
+| supportNeed | 0.0356 |
+| remediateNeed | 0.4015 |
+| encouragementNeed | 0.2046 |
+| praiseOpportunity | 1 |
+| reviewNeed | 0.0889 |
+| previousAnswerCorrect | true |
+
+Teacher action choice:
+
+- Selected action score: 0.3584
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_specific_praise | 1 | Progress and engagement justify specific praise. |
+| action_offer_choice | 0.8089 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 0.8066 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.37 | A check-in is appropriate to clarify understanding and current state. |
+| action_give_general_encouragement | 0.3637 | Affective support is appropriate to sustain effort. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.04 | R 0.55 | M 0.7
+- Estimate minus actual ARM: A 0.03 | R 0 | M 0.35
+- Transcript: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y Choose one: yes or no.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | unknown |
+| Incorrect attempts on current step | 1 |
+| Submitted answer | none |
+| Normalized student answer | n/a |
+| Expected answer | no |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | non_answer_action |
+| Method / confidence | deterministic_text / low |
+
+Student:
+
+- Student ARM: A 0.01 | R 0.55 | M 0.35
+- Student ARM change: A 0 | R -0.13 | M -0.43
+- Behavioural state: disengaged_non_response
+- Action: no_response
+- Transcript: I don't get it.
+- Structured answer: none
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.9342 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.1235; MINIMAL_COMPLIANCE: 0.1373; HELP_SEEKING_CONFUSION: 0.0708; CARELESS_GUESS: 0.0906; OFF_TASK: 0.0565; DISENGAGED_NON_RESPONSE: 0.5213 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.1235; MINIMAL_COMPLIANCE: 0.1373; HELP_SEEKING_CONFUSION: 0.0708; CARELESS_GUESS: 0.0906; OFF_TASK: 0.0565; DISENGAGED_NON_RESPONSE: 0.5213 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.1235; MINIMAL_COMPLIANCE: 0.1235 <= u < 0.2608; HELP_SEEKING_CONFUSION: 0.2608 <= u < 0.3316; CARELESS_GUESS: 0.3316 <= u < 0.4222; OFF_TASK: 0.4222 <= u < 0.4787; DISENGAGED_NON_RESPONSE: 0.4787 <= u < 1 |
+| Selected hidden behaviour | disengaged_non_response |
+| Visible learner action | no_response |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | no_answer |
+| Generated probability correct | 0.005 |
+| Behaviour prior correctness | 0 |
+| Correctness sampling value | 0.9342 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0.005. Runtime sample=0.934152. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.2 | The current message asks the student to verify if a specific ordered pair satisfies a system of equations, which is a different cognitive operation than identifying system types in prior turns, so low repetition (0.2). |
+| M2 | 0.2 | The current message uses a yes/no choice format, differing from the prior multiple-choice question format, indicating a clear structural shift (0.2). |
+| M3 | 0.3 | The message is mostly specific, referencing the exact ordered pair and system of equations, though the phrasing 'Choose one: yes or no' is somewhat generic, so a low genericness score (0.3). |
+| M4 | 0.7 | The student is constrained to choose one of two options (yes or no), indicating a mostly constrained path with limited choice (0.7). |
+| R1 | 0.7 | The message clearly connects to the goal of determining if the ordered pair solves the system, making the purpose mostly clear (0.7). |
+| R2 | 0.7 | The instruction is clear about what to do (choose yes or no) but does not elaborate on success criteria, so payoff clarity is rated mostly clear (0.7). |
+| R3 | 0.5 | The tone is neutral without explicit encouragement or discouragement, so a neutral support level (0.5). |
+| R4 | 0.3 | The student is given a closed choice with no invitation for explanation or alternative approaches, indicating minimal autonomy (0.3). |
+
+- Aggregate M_t: 0.35
 - Aggregate R_t: 0.55
-- Attention update: reward trace 0.5914, monotony sensitivity 1.1166, effective decline 0.3082, resulting A_t 0.01
+- Attention update: reward trace 0.6331, monotony sensitivity 1.1166, effective decline 0.2349, resulting A_t 0.01
+
+### Turn 19
+
+- Lesson step: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y
+- Step ID: problem_04_check_ordered_pair_not_solution_step_01
+
+Teacher:
+
+- Action: action_request_checkin
+- Action explanation: State-aware estimate indicates attention risk or non-response; checking current understanding before adding more task load.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| isMinimal | true |
+| minimalRateLastK | 0.7143 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 0.3389 |
+| offTask | 0.1 |
+| engagement | 0.4764 |
+| pacingPressure | 0.6671 |
+| autonomyOpportunity | 0.3652 |
+| supportNeed | 0.6922 |
+| remediateNeed | 0.6922 |
+| encouragementNeed | 0.2736 |
+| praiseOpportunity | 0.1733 |
+| reviewNeed | 0.8706 |
+| previousAnswerIncorrect | true |
+| previousAnswerUnknown | true |
+| repeatedIncorrectCount | 1 |
+
+Teacher action choice:
+
+- Selected action score: 0.7295
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_give_scaffold | 1 | Support need and confusion indicate scaffolded support. |
+| action_suggest_slower_pace | 1 | Pacing pressure suggests slowing down the interaction. |
+| action_request_checkin | 0.7295 | A check-in is appropriate to clarify understanding and current state. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.03 | R 0.55 | M 0.53
+- Estimate minus actual ARM: A 0.02 | R -0.13 | M -0.25
+- Transcript: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y Choose one: yes or no.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | misconception |
+| Incorrect attempts on current step | 2 |
+| Submitted answer | yes |
+| Normalized student answer | yes |
+| Expected answer | no |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | structured_answer |
+| Method / confidence | choice_distractor_yes / high |
+
+Student:
+
+- Student ARM: A 0.01 | R 0.68 | M 0.78
+- Student ARM change: A 0 | R 0.13 | M 0.43
+- Behavioural state: careless_guess
+- Action: submit_answer
+- Transcript: I think the answer is yes because if you plug in x=8 and y=5, it seems like the equations might work out.
+- Structured answer: yes
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.2464 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.045; MINIMAL_COMPLIANCE: 0.0836; HELP_SEEKING_CONFUSION: 0.0503; CARELESS_GUESS: 0.1247; OFF_TASK: 0.1184; DISENGAGED_NON_RESPONSE: 0.5781 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.045; MINIMAL_COMPLIANCE: 0.0836; HELP_SEEKING_CONFUSION: 0.0503; CARELESS_GUESS: 0.1247; OFF_TASK: 0.1184; DISENGAGED_NON_RESPONSE: 0.5781 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.045; MINIMAL_COMPLIANCE: 0.045 <= u < 0.1285; HELP_SEEKING_CONFUSION: 0.1285 <= u < 0.1788; CARELESS_GUESS: 0.1788 <= u < 0.3035; OFF_TASK: 0.3035 <= u < 0.4219; DISENGAGED_NON_RESPONSE: 0.4219 <= u < 1 |
+| Selected hidden behaviour | careless_guess |
+| Visible learner action | submit_answer |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | incorrect |
+| Generated probability correct | 0.1711 |
+| Behaviour prior correctness | 0.2 |
+| Correctness sampling value | 0.2464 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0.2. ARM-adjusted pCorrect=0.1711. Runtime sample=0.246433. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.9 | The current turn repeats the exact task from turn 3, so high repetition score; turns 1 and 2 have different task demands, so low similarity there, averaging to 0.9. |
+| M2 | 0.9 | The current turn shares identical structure with turn 3 (directive question with yes/no choice), but turns 1 and 2 have a different multiple-choice format, so moderate similarity there, averaging to 0.9. |
+| M3 | 0.3 | The message is mostly specific, referencing the exact ordered pair and system of equations, so low linguistic genericness (0.3). |
+| M4 | 1 | The instruction is fully rigid, giving a single prescribed action with a forced yes/no choice, so absence of choice is 1.0. |
+| R1 | 1 | The message clearly connects to a meaningful goal of determining if the pair is a solution, so relevance is 1.0. |
+| R2 | 1 | The instruction is explicit and clear about what to do and the expected outcome (choose yes or no), so payoff clarity is 1.0. |
+| R3 | 0.7 | The tone is neutral to mildly supportive, no negative or discouraging language, so encouragement is 0.7. |
+| R4 | 0 | There is no invitation for open-ended input or choice beyond yes/no, so autonomy is 0.0. |
+
+- Aggregate M_t: 0.78
+- Aggregate R_t: 0.68
+- Attention update: reward trace 0.6459, monotony sensitivity 1.1166, effective decline 0.3138, resulting A_t 0.01
+
+### Turn 20
+
+- Lesson step: Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y
+- Step ID: problem_04_check_ordered_pair_not_solution_step_01
+
+Teacher:
+
+- Action: action_suggest_slower_pace
+- Action explanation: State-aware estimate indicates attention risk; slowing the pace is more appropriate than another hint.
+
+Teacher observable cues:
+
+| Cue | Value |
+| --- | --- |
+| minimalRateLastK | 0.4286 |
+
+Teacher internal policy signals:
+
+| Field | Value |
+| --- | --- |
+| progress | 1 |
+| engagement | 0.85 |
+| pacingPressure | 0.2714 |
+| autonomyOpportunity | 0.5325 |
+| supportNeed | 0.84 |
+| remediateNeed | 0.84 |
+| encouragementNeed | 0.1785 |
+| praiseOpportunity | 0.7625 |
+| reviewNeed | 0.62 |
+| previousAnswerIncorrect | true |
+| previousAnswerMisconception | true |
+| repeatedIncorrectCount | 2 |
+
+Teacher action choice:
+
+- Selected action score: 0.6625
+
+| Candidate action | Score | Rationale |
+| --- | ---: | --- |
+| action_give_hint | 1 | Support need detected; lightweight hint is appropriate. |
+| action_give_scaffold | 1 | Support need and confusion indicate scaffolded support. |
+| action_offer_choice | 0.7529 | Choice opportunity detected from engagement and re-engagement cues. |
+| action_suggest_slower_pace | 0.6625 | Pacing pressure suggests slowing down the interaction. |
+| action_give_bottom_out | 0.5 | Severe difficulty suggests bottom-out support. |
+
+Teacher state-aware ARM estimate:
+
+- Estimated ARM: A 0.02 | R 0.47 | M 0.78
+- Estimate minus actual ARM: A 0.01 | R -0.13 | M 0.09
+- Transcript: Let's slow down a bit to make sure we're on the right track. Determine whether the ordered pair (8,5) is a solution to the following system. 5x-4y=20, 2x+1=3y Choose one: yes or no.
+
+Teacher validation correctness:
+
+| Field | Value |
+| --- | --- |
+| Correct | no |
+| Validation category | unknown |
+| Incorrect attempts on current step | 3 |
+| Submitted answer | none |
+| Normalized student answer | n/a |
+| Expected answer | no |
+| Accepted answers | n/a |
+| Validation mode | normalized_string_equality |
+| Answer type | string |
+| Validation input source | non_answer_action |
+| Method / confidence | deterministic_text / low |
+
+Student:
+
+- Student ARM: A 0.01 | R 0.6 | M 0.69
+- Student ARM change: A 0 | R -0.08 | M -0.09
+- Behavioural state: disengaged_non_response
+- Action: no_response
+- Transcript: I'm not sure about this one.
+- Structured answer: none
+
+Student behavioural sampling:
+
+| Field | Value |
+| --- | --- |
+| Random source | Math.random() |
+| Random draw u | 0.6741 |
+| Raw behavioural probabilities | ENGAGED_ATTEMPT: 0.0469; MINIMAL_COMPLIANCE: 0.087; HELP_SEEKING_CONFUSION: 0.0529; CARELESS_GUESS: 0.1153; OFF_TASK: 0.108; DISENGAGED_NON_RESPONSE: 0.5899 |
+| Normalised behavioural probabilities | ENGAGED_ATTEMPT: 0.0469; MINIMAL_COMPLIANCE: 0.087; HELP_SEEKING_CONFUSION: 0.0529; CARELESS_GUESS: 0.1153; OFF_TASK: 0.108; DISENGAGED_NON_RESPONSE: 0.5899 |
+| Cumulative probability ranges | ENGAGED_ATTEMPT: 0 <= u < 0.0469; MINIMAL_COMPLIANCE: 0.0469 <= u < 0.1339; HELP_SEEKING_CONFUSION: 0.1339 <= u < 0.1868; CARELESS_GUESS: 0.1868 <= u < 0.3021; OFF_TASK: 0.3021 <= u < 0.4101; DISENGAGED_NON_RESPONSE: 0.4101 <= u < 1 |
+| Selected hidden behaviour | disengaged_non_response |
+| Visible learner action | no_response |
+
+Student simulator generated answer outcome:
+
+_Hidden simulator calibration; this is not visible to the teacher policy._
+
+| Field | Value |
+| --- | --- |
+| Intended answer outcome | no_answer |
+| Generated probability correct | 0 |
+| Behaviour prior correctness | 0 |
+| Correctness sampling value | 0.6741 |
+| Formula | behaviourPrior + 0.15 * A_t + 0.07 * R_t - 0.1 * M_t |
+| Calibration rationale | Selected behaviour prior=0. ARM-adjusted pCorrect=0. Runtime sample=0.674119. |
+
+ARM component scoring:
+
+| Component | Value | Brief computation explanation |
+| --- | ---: | --- |
+| M1 | 0.87 | The current message repeats the exact same task demand as turns 2 and 3 (checking if (8,5) is a solution to the system with yes/no choice), scoring high similarity (0.9). Turn 1 is related but different, scored 0.7. Average yields about 0.867. |
+| M2 | 0.87 | The current message repeats the same instructional delivery format as turns 2 and 3 (directive question with forced choice), scoring 0.9 each. Turn 1 is a similar question format but with multiple choice, scored 0.7. Average about 0.867. |
+| M3 | 0.3 | The message is mostly specific, referencing the exact problem and steps, with a minor generic phrase 'Let's slow down a bit', so scored 0.3. |
+| M4 | 0.7 | The message constrains the student to a single choice (yes or no), indicating a mostly constrained path, scored 0.7. |
+| R1 | 0.7 | The message includes a soft purpose statement 'Let's slow down a bit to make sure we're on the right track', indicating mostly clear purpose, scored 0.7. |
+| R2 | 0.7 | The instruction is clear about what to do and expected output (choose yes or no), but success criteria are implicit, scored 0.7. |
+| R3 | 0.7 | The tone is mildly supportive with a gentle prompt to slow down, scored 0.7. |
+| R4 | 0.3 | The message offers minimal autonomy, as the student must choose yes or no with no open-ended input, scored 0.3. |
+
+- Aggregate M_t: 0.69
+- Aggregate R_t: 0.6
+- Attention update: reward trace 0.6334, monotony sensitivity 1.1166, effective decline 0.299, resulting A_t 0.01
 

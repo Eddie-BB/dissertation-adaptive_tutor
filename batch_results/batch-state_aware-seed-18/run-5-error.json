@@ -1,0 +1,8 @@
+{
+  "runIndex": 5,
+  "status": "failed",
+  "conditionId": "state_aware",
+  "seed": 18,
+  "message": "Invalid state: Controller is already closed",
+  "details": null
+}

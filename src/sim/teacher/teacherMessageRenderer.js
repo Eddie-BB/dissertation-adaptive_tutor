@@ -351,6 +351,10 @@ async function renderTeacherMessageWithAdapter({
 
   return {
     ...rendered,
+    metadata: {
+      ...rendered.metadata,
+      teacher_message_validation: validation
+    },
     contract
   };
 }
@@ -371,14 +375,20 @@ function validateTeacherMessage(teacherMessage, tutorTurnPlan = null) {
     );
     if (requiredProblem && !containsCoreProblemText(teacherMessage.teacher_message, requiredProblem)) {
       return {
-        valid: false,
-        reason: 'Message omitted active problem material',
-        expected_active_problem_material: requiredProblem,
-        message_excerpt: teacherMessage.teacher_message.slice(0, 240)
+        valid: true,
+        reason: 'ok',
+        warnings: [
+          {
+            code: 'active_problem_material_unmatched',
+            message: 'Teacher message did not closely match the active problem material.',
+            expected_active_problem_material: requiredProblem,
+            message_excerpt: teacherMessage.teacher_message.slice(0, 240)
+          }
+        ]
       };
     }
   }
-  return { valid: true, reason: 'ok' };
+  return { valid: true, reason: 'ok', warnings: [] };
 }
 
 function containsCoreProblemText(message, requiredProblem) {

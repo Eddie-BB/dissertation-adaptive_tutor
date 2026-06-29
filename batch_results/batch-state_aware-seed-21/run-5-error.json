@@ -1,0 +1,430 @@
+{
+  "runIndex": 5,
+  "status": "failed",
+  "conditionId": "state_aware",
+  "seed": 21,
+  "message": "Teacher message validation failed: Message omitted active problem material",
+  "details": {
+    "phase": "teacher_message_validation",
+    "status": "terminated",
+    "run_id": "run-state_aware-batch-state_aware-seed-21-state_aware-seed-21-r1-run-5-21",
+    "turn_number": 3,
+    "condition_id": "state_aware",
+    "lesson_step": {
+      "problem_id": "problem_02_identify_inconsistent_system",
+      "step_id": "problem_02_identify_inconsistent_system_step_01",
+      "step_title": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?"
+    },
+    "selected_tutor_action": "ACTION_REFRAME_PROMPT_VARIANT",
+    "teacher_rationale": "State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.",
+    "tutor_turn_plan": {
+      "protocol": "tutor_turn_plan_v1",
+      "selected_policy_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "modifier_action": null,
+      "feedback": {
+        "type": "brief_correction_or_acknowledgement",
+        "grounding": "previous_validation_only",
+        "required": false,
+        "validation": {
+          "isCorrect": false,
+          "category": "misconception"
+        }
+      },
+      "previous_step_id": "problem_02_identify_inconsistent_system_step_01",
+      "current_step": {
+        "problem_id": "problem_02_identify_inconsistent_system",
+        "step_id": "problem_02_identify_inconsistent_system_step_01",
+        "step_title": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+        "step_body": "",
+        "choices": [
+          "independent system",
+          "inconsistent system",
+          "dependent system"
+        ],
+        "answer_type": "string"
+      },
+      "current_step_id": "problem_02_identify_inconsistent_system_step_01",
+      "step_advanced": false,
+      "expects_student_response": true,
+      "must_include_current_problem": true,
+      "must_ask_for_response": true,
+      "brevity": {
+        "max_sentences": 3,
+        "avoid_exaggerated_praise": true
+      },
+      "required_content": {
+        "current_problem_material": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+        "current_step_body": "",
+        "selected_hint": null,
+        "worked_example": null,
+        "bottom_out": null,
+        "response_instruction": "Choose one: independent system or inconsistent system or dependent system."
+      },
+      "constraints": [
+        "Use only the required content and visible history.",
+        "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+        "Do not praise current-step work before the student attempts the current step.",
+        "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+        "Keep the message brief and avoid repeated or exaggerated praise."
+      ],
+      "message_skeleton": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system."
+    },
+    "teacher_decision_debug": {
+      "conditionId": "state_aware",
+      "conditionSpecId": "state_aware",
+      "thresholds": {
+        "confusion": 0.48,
+        "disengagement": 0.52,
+        "off_task": 0.46,
+        "minimal": 0.5,
+        "frustration": 0.52,
+        "progress_low": 0.35,
+        "progress_high": 0.75,
+        "encouragement": 0.55,
+        "choice": 0.6,
+        "pacing_slow": 0.42,
+        "remediate": 0.72,
+        "review": 0.56
+      },
+      "sensitivities": {
+        "scaffolding": 1.2,
+        "pacing": 1.2,
+        "choice": 1.1,
+        "encouragement": 1.05,
+        "affect": 1.15
+      },
+      "signals": {
+        "progress": 0.8444444444444444,
+        "confusion": 0,
+        "disengagement": 0,
+        "offTask": 0,
+        "frustration": 0,
+        "engagement": 0.7644444444444445,
+        "pacingPressure": 0.2544444444444445,
+        "autonomyOpportunity": 0.4706666666666667,
+        "supportNeed": 0.7511111111111112,
+        "remediateNeed": 0.7511111111111112,
+        "encouragementNeed": 0.2013666666666667,
+        "praiseOpportunity": 0.6244444444444444,
+        "reviewNeed": 0.6977777777777778,
+        "previousAnswerCorrect": false,
+        "previousAnswerIncorrect": true,
+        "previousAnswerPartiallyCorrect": false,
+        "previousAnswerMisconception": true,
+        "previousAnswerUnknown": false,
+        "repeatedIncorrectCount": 1
+      },
+      "stateEstimate": {
+        "estimated_M_t": 0.7,
+        "estimated_R_t": 0.8,
+        "estimated_A_t": 0.5,
+        "estimated_reward_trace_t": 0.6395,
+        "componentScores": {
+          "M1": {
+            "value": 0.9,
+            "reason": "The current message repeats the same cognitive operation as the previous turn: asking the student to identify a system type from the same set of options, differing only in the solution characteristic, thus scoring high for task repetition."
+          },
+          "M2": {
+            "value": 0.9,
+            "reason": "The instructional delivery format is identical to the previous turn: a direct question with multiple-choice options, so structural repetition is very high."
+          },
+          "M3": {
+            "value": 0.3,
+            "reason": "The language is mostly specific, referencing the exact task and options, though it could be slightly more grounded by including more context or examples, so a moderately low genericness score is appropriate."
+          },
+          "M4": {
+            "value": 0.7,
+            "reason": "The student is constrained to choose one of three fixed options, indicating a mostly constrained path with limited choice, but not fully rigid since there are multiple options."
+          },
+          "R1": {
+            "value": 1,
+            "reason": "The message clearly connects to the meaningful goal of identifying system types by explicitly stating the question and options, making the purpose explicit and well-integrated."
+          },
+          "R2": {
+            "value": 1,
+            "reason": "The instruction is precise and clear: choose one option from the given list, with an explicit question about the system with no solution, so payoff and outcome clarity is high."
+          },
+          "R3": {
+            "value": 0.7,
+            "reason": "The message includes positive reinforcement ('Good, that previous answer is correct.') which supports a motivating and safe learning climate, though encouragement is mild rather than strongly enthusiastic."
+          },
+          "R4": {
+            "value": 0.5,
+            "reason": "The student is invited to choose among options but not to explain reasoning or explore beyond the fixed choices, so some limited agency is present but autonomy is moderate."
+          }
+        },
+        "components": {
+          "M1": 0.9,
+          "M2": 0.9,
+          "M3": 0.3,
+          "M4": 0.7,
+          "R1": 1,
+          "R2": 1,
+          "R3": 0.7,
+          "R4": 0.5
+        },
+        "evidence": [
+          "student_appraisal_llm_component_scorer",
+          "student_appraisal_arm_aggregation",
+          "visible_teacher_message_history"
+        ],
+        "scorer_type": "llm",
+        "scoring_mechanism": "shared_student_appraisal_scorer_and_arm_aggregation",
+        "taskSignature": {
+          "task_category": "general",
+          "structure_category": "question_led"
+        },
+        "historyFeatures": {
+          "m1_similarity_list": [
+            {
+              "turn_id": "1",
+              "sim_i": 0.9,
+              "reason": "Both messages ask the student to identify a type of system of linear equations by choosing from the same set of options, differing only in the specific solution type queried (one solution vs no solution), indicating explicit repetition of the same task demand with rephrasing."
+            }
+          ],
+          "m2_similarity_list": [
+            {
+              "turn_id": "1",
+              "sim_i": 0.9,
+              "reason": "Both messages use a question format with a multiple-choice selection from the same three options, maintaining identical instructional delivery format and interaction pattern."
+            }
+          ]
+        },
+        "adapterMetadata": {
+          "adapter_id": "student_appraisal_llm",
+          "provider": "openai",
+          "model": "gpt-4.1-mini",
+          "generation_mode": "openai_responses_json_schema",
+          "used_fallback": false,
+          "raw_output_type": "string",
+          "scorer_type": "llm_appraisal"
+        },
+        "visibleInputsUsed": [
+          "teacher_message_history",
+          "student_message_history_if_present_in_history",
+          "current_step_context",
+          "previous_teacher_visible_estimate_state"
+        ]
+      },
+      "selectedScore": 0.3601333333333333,
+      "enabledActions": [
+        "ACTION_CONTINUE_STANDARD",
+        "ACTION_REFRAME_PROMPT_VARIANT",
+        "ACTION_REQUEST_CHECKIN",
+        "ACTION_GIVE_HINT",
+        "ACTION_GIVE_SCAFFOLD",
+        "ACTION_PROVIDE_WORKED_EXAMPLE",
+        "ACTION_GIVE_BOTTOM_OUT",
+        "ACTION_CALL_DYNAMIC_HINT",
+        "ACTION_OFFER_CHOICE",
+        "ACTION_GIVE_GENERAL_ENCOURAGEMENT",
+        "ACTION_GIVE_SPECIFIC_PRAISE",
+        "ACTION_ADDRESS_FRUSTRATION",
+        "ACTION_SUGGEST_SLOWER_PACE",
+        "ACTION_SUGGEST_BREAK",
+        "ACTION_SKIP_OPTIONAL_CONTENT"
+      ],
+      "disabledActions": [
+        {
+          "action": "ACTION_GIVE_SCAFFOLD",
+          "reasons": [
+            "capability_scaffold_disabled"
+          ]
+        },
+        {
+          "action": "ACTION_PROVIDE_WORKED_EXAMPLE",
+          "reasons": [
+            "capability_worked_example_disabled"
+          ]
+        },
+        {
+          "action": "ACTION_CALL_DYNAMIC_HINT",
+          "reasons": [
+            "capability_dynamic_hint_disabled"
+          ]
+        },
+        {
+          "action": "ACTION_SKIP_OPTIONAL_CONTENT",
+          "reasons": [
+            "capability_skip_disabled"
+          ]
+        }
+      ],
+      "consideredActions": [
+        {
+          "action": "ACTION_CONTINUE_STANDARD",
+          "score": 0.2257833333333333,
+          "rationale": "No stronger adaptive action qualified; continuing standard instruction."
+        },
+        {
+          "action": "ACTION_OFFER_CHOICE",
+          "score": 0.6455111111111111,
+          "rationale": "Choice opportunity detected from engagement and re-engagement cues."
+        },
+        {
+          "action": "ACTION_GIVE_HINT",
+          "score": 1,
+          "rationale": "Support need detected; lightweight hint is appropriate."
+        },
+        {
+          "action": "ACTION_GIVE_BOTTOM_OUT",
+          "score": 0.4721333333333334,
+          "rationale": "Severe difficulty suggests bottom-out support."
+        },
+        {
+          "action": "ACTION_REQUEST_CHECKIN",
+          "score": 0.3195555555555556,
+          "rationale": "A check-in is appropriate to clarify understanding and current state."
+        },
+        {
+          "action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "score": 0.3601333333333333,
+          "rationale": "Reframing can vary structure and reduce monotony."
+        },
+        {
+          "action": "ACTION_GIVE_GENERAL_ENCOURAGEMENT",
+          "score": 0.335935,
+          "rationale": "Affective support is appropriate to sustain effort."
+        },
+        {
+          "action": "ACTION_GIVE_SPECIFIC_PRAISE",
+          "score": 0.3282422222222221,
+          "rationale": "Progress and engagement justify specific praise."
+        },
+        {
+          "action": "ACTION_ADDRESS_FRUSTRATION",
+          "score": 0,
+          "rationale": "Frustration cues indicate the need for empathetic support."
+        },
+        {
+          "action": "ACTION_SUGGEST_SLOWER_PACE",
+          "score": 0.5013333333333334,
+          "rationale": "Pacing pressure suggests slowing down the interaction."
+        },
+        {
+          "action": "ACTION_SUGGEST_BREAK",
+          "score": 0.12,
+          "rationale": "Disengagement and affect cues suggest a break."
+        }
+      ]
+    },
+    "visible_history_turns": 2,
+    "explanation": "Teacher message validation failed: Message omitted active problem material",
+    "renderer_diagnostics": {
+      "phase": "teacher_message_validation",
+      "status": "terminated",
+      "run_id": "run-state_aware-batch-state_aware-seed-21-state_aware-seed-21-r1-run-5-21",
+      "turn_number": 3,
+      "condition_id": "state_aware",
+      "selected_tutor_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "lesson_step": {
+        "problem_id": "problem_02_identify_inconsistent_system",
+        "step_id": "problem_02_identify_inconsistent_system_step_01",
+        "step_title": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?"
+      },
+      "tutor_turn_plan_summary": {
+        "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+        "modifier_action": null,
+        "feedback_type": "brief_correction_or_acknowledgement",
+        "expects_student_response": true,
+        "must_include_current_problem": true,
+        "active_problem_material_available": true
+      },
+      "prompt_input_summary": {
+        "visible_history_turns": 2,
+        "current_step_keys": [
+          "answer_type",
+          "choices",
+          "problem_id",
+          "step_body",
+          "step_id",
+          "step_title"
+        ],
+        "required_content_keys": [
+          "bottom_out",
+          "current_problem_material",
+          "current_step_body",
+          "response_instruction",
+          "selected_hint",
+          "worked_example"
+        ]
+      },
+      "parsed_llm_output_keys": [
+        "teacher_message"
+      ],
+      "adapter_metadata": {
+        "adapter_id": "teacher_message_llm",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "generation_mode": "openai_responses_json_schema",
+        "used_fallback": false,
+        "raw_output_type": "string",
+        "generation_task": "teacher_message_generation",
+        "condition_id": "state_aware",
+        "teacher_action": "ACTION_REFRAME_PROMPT_VARIANT",
+        "tutor_turn_plan": {
+          "protocol": "tutor_turn_plan_v1",
+          "selected_policy_action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "modifier_action": null,
+          "feedback": {
+            "type": "brief_correction_or_acknowledgement",
+            "grounding": "previous_validation_only",
+            "required": false,
+            "validation": {
+              "isCorrect": false,
+              "category": "misconception"
+            }
+          },
+          "previous_step_id": "problem_02_identify_inconsistent_system_step_01",
+          "current_step": {
+            "problem_id": "problem_02_identify_inconsistent_system",
+            "step_id": "problem_02_identify_inconsistent_system_step_01",
+            "step_title": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+            "step_body": "",
+            "choices": [
+              "independent system",
+              "inconsistent system",
+              "dependent system"
+            ],
+            "answer_type": "string"
+          },
+          "current_step_id": "problem_02_identify_inconsistent_system_step_01",
+          "step_advanced": false,
+          "expects_student_response": true,
+          "must_include_current_problem": true,
+          "must_ask_for_response": true,
+          "brevity": {
+            "max_sentences": 3,
+            "avoid_exaggerated_praise": true
+          },
+          "required_content": {
+            "current_problem_material": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+            "current_step_body": "",
+            "selected_hint": null,
+            "worked_example": null,
+            "bottom_out": null,
+            "response_instruction": "Choose one: independent system or inconsistent system or dependent system."
+          },
+          "constraints": [
+            "Use only the required content and visible history.",
+            "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+            "Do not praise current-step work before the student attempts the current step.",
+            "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+            "Keep the message brief and avoid repeated or exaggerated praise."
+          ],
+          "message_skeleton": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution? Choose one: independent system or inconsistent system or dependent system."
+        }
+      },
+      "validation": {
+        "valid": false,
+        "reason": "Message omitted active problem material",
+        "expected_active_problem_material": "There are three types of systems of linear equations in two variables, and three types of solutions. Which system has no solution?",
+        "message_excerpt": "Let's reconsider the types of systems of linear equations in two variables. Which type of system has no solution? Choose one: independent system or inconsistent system or dependent system."
+      },
+      "timestamp": "2026-06-29T16:30:00.775Z"
+    },
+    "timestamp": "2026-06-29T16:30:00.775Z"
+  }
+}

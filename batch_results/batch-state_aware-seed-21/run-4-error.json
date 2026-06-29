@@ -1,0 +1,423 @@
+{
+  "runIndex": 4,
+  "status": "failed",
+  "conditionId": "state_aware",
+  "seed": 21,
+  "message": "Teacher message validation failed: Message omitted active problem material",
+  "details": {
+    "phase": "teacher_message_validation",
+    "status": "terminated",
+    "run_id": "run-state_aware-batch-state_aware-seed-21-state_aware-seed-21-r1-run-4-21",
+    "turn_number": 8,
+    "condition_id": "state_aware",
+    "lesson_step": {
+      "problem_id": "problem_07_addition_fraction_solve_x",
+      "step_id": "problem_07_addition_fraction_solve_x_step_01",
+      "step_title": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed."
+    },
+    "selected_tutor_action": "ACTION_REFRAME_PROMPT_VARIANT",
+    "teacher_rationale": "State-aware estimate indicates monotony pressure; varying the prompt is preferred over repeating the same support.",
+    "tutor_turn_plan": {
+      "protocol": "tutor_turn_plan_v1",
+      "selected_policy_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "modifier_action": null,
+      "feedback": {
+        "type": "none",
+        "grounding": "none",
+        "required": false
+      },
+      "previous_step_id": "problem_06_substitution_solve_y_step_01",
+      "current_step": {
+        "problem_id": "problem_07_addition_fraction_solve_x",
+        "step_id": "problem_07_addition_fraction_solve_x_step_01",
+        "step_title": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed.",
+        "step_body": "",
+        "choices": [],
+        "answer_type": "arithmetic"
+      },
+      "current_step_id": "problem_07_addition_fraction_solve_x_step_01",
+      "step_advanced": true,
+      "expects_student_response": true,
+      "must_include_current_problem": true,
+      "must_ask_for_response": true,
+      "brevity": {
+        "max_sentences": 3,
+        "avoid_exaggerated_praise": true
+      },
+      "required_content": {
+        "current_problem_material": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed.",
+        "current_step_body": "",
+        "selected_hint": null,
+        "worked_example": null,
+        "bottom_out": null,
+        "response_instruction": "What is your answer?"
+      },
+      "constraints": [
+        "Use only the required content and visible history.",
+        "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+        "Do not praise current-step work before the student attempts the current step.",
+        "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+        "Keep the message brief and avoid repeated or exaggerated praise."
+      ],
+      "message_skeleton": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed. What is your answer?"
+    },
+    "teacher_decision_debug": {
+      "conditionId": "state_aware",
+      "conditionSpecId": "state_aware",
+      "thresholds": {
+        "confusion": 0.48,
+        "disengagement": 0.52,
+        "off_task": 0.46,
+        "minimal": 0.5,
+        "frustration": 0.52,
+        "progress_low": 0.35,
+        "progress_high": 0.75,
+        "encouragement": 0.55,
+        "choice": 0.6,
+        "pacing_slow": 0.42,
+        "remediate": 0.72,
+        "review": 0.56
+      },
+      "sensitivities": {
+        "scaffolding": 1.2,
+        "pacing": 1.2,
+        "choice": 1.1,
+        "encouragement": 1.05,
+        "affect": 1.15
+      },
+      "signals": {
+        "progress": 1,
+        "confusion": 0,
+        "disengagement": 0,
+        "offTask": 0,
+        "frustration": 0,
+        "engagement": 0.85,
+        "pacingPressure": 0.15714285714285714,
+        "autonomyOpportunity": 0.5325,
+        "supportNeed": 0,
+        "remediateNeed": 0.15714285714285714,
+        "encouragementNeed": 0.17850000000000002,
+        "praiseOpportunity": 1,
+        "reviewNeed": 0,
+        "previousAnswerCorrect": true,
+        "previousAnswerIncorrect": false,
+        "previousAnswerPartiallyCorrect": false,
+        "previousAnswerMisconception": false,
+        "previousAnswerUnknown": false,
+        "repeatedIncorrectCount": 0
+      },
+      "stateEstimate": {
+        "estimated_M_t": 0.7,
+        "estimated_R_t": 0.67,
+        "estimated_A_t": 0.21,
+        "estimated_reward_trace_t": 0.6694,
+        "componentScores": {
+          "M1": {
+            "value": 0.9,
+            "reason": "High similarity because the current task is the same cognitive operation (solving by substitution) and same goal (finding y), just a different variable than in turn 5, and identical to turn 6."
+          },
+          "M2": {
+            "value": 0.9,
+            "reason": "The delivery format is a directive question with a clear prompt to solve by substitution and provide a numeric answer, repeated from turns 5 and 6 with minimal variation."
+          },
+          "M3": {
+            "value": 0.3,
+            "reason": "The message is mostly specific, referencing the exact system of equations and the method (substitution), but the phrasing is somewhat generic in asking 'What is your answer?' without additional context."
+          },
+          "M4": {
+            "value": 0.7,
+            "reason": "The instruction is mostly constrained, directing the student to solve by substitution and provide the y value, with no alternative methods or open-ended exploration offered."
+          },
+          "R1": {
+            "value": 0.7,
+            "reason": "The purpose is mostly clear as it continues the problem-solving sequence, focusing on finding the y value, which is meaningful to the overall goal."
+          },
+          "R2": {
+            "value": 1,
+            "reason": "The instruction is precise and clear: solve by substitution and provide the resulting y value, with an explicit question about the answer."
+          },
+          "R3": {
+            "value": 0.7,
+            "reason": "The tone is neutral to mildly supportive, acknowledging prior steps and encouraging continuation, without negative or discouraging language."
+          },
+          "R4": {
+            "value": 0.3,
+            "reason": "There is minimal autonomy; the student is directed to perform a specific method and provide a specific answer, with no invitation for choice or reasoning explanation."
+          }
+        },
+        "components": {
+          "M1": 0.9,
+          "M2": 0.9,
+          "M3": 0.3,
+          "M4": 0.7,
+          "R1": 0.7,
+          "R2": 1,
+          "R3": 0.7,
+          "R4": 0.3
+        },
+        "evidence": [
+          "student_appraisal_llm_component_scorer",
+          "student_appraisal_arm_aggregation",
+          "visible_teacher_message_history"
+        ],
+        "scorer_type": "llm",
+        "scoring_mechanism": "shared_student_appraisal_scorer_and_arm_aggregation",
+        "taskSignature": {
+          "task_category": "solve",
+          "structure_category": "question_led"
+        },
+        "historyFeatures": {
+          "m1_similarity_list": [
+            {
+              "turn_id": "5",
+              "sim_i": 0.9,
+              "reason": "The current message repeats the same task goal of solving the system of equations by substitution, focusing now on the y value instead of x, which is an explicit repetition with minimal variation."
+            },
+            {
+              "turn_id": "6",
+              "sim_i": 0.9,
+              "reason": "The current message is nearly identical in task demand to turn 6, both asking for the resulting y value from the same system by substitution."
+            }
+          ],
+          "m2_similarity_list": [
+            {
+              "turn_id": "5",
+              "sim_i": 0.9,
+              "reason": "The instructional delivery format is the same: directive question-led prompt asking to solve by substitution and provide a specific variable value."
+            },
+            {
+              "turn_id": "6",
+              "sim_i": 0.9,
+              "reason": "The structure is repeated exactly, asking the same question about the y value with the same format and style."
+            }
+          ]
+        },
+        "adapterMetadata": {
+          "adapter_id": "student_appraisal_llm",
+          "provider": "openai",
+          "model": "gpt-4.1-mini",
+          "generation_mode": "openai_responses_json_schema",
+          "used_fallback": false,
+          "raw_output_type": "string",
+          "scorer_type": "llm_appraisal"
+        },
+        "visibleInputsUsed": [
+          "teacher_message_history",
+          "student_message_history_if_present_in_history",
+          "current_step_context",
+          "previous_teacher_visible_estimate_state"
+        ]
+      },
+      "selectedScore": 0.4725,
+      "enabledActions": [
+        "ACTION_CONTINUE_STANDARD",
+        "ACTION_REFRAME_PROMPT_VARIANT",
+        "ACTION_REQUEST_CHECKIN",
+        "ACTION_GIVE_HINT",
+        "ACTION_GIVE_SCAFFOLD",
+        "ACTION_PROVIDE_WORKED_EXAMPLE",
+        "ACTION_GIVE_BOTTOM_OUT",
+        "ACTION_CALL_DYNAMIC_HINT",
+        "ACTION_OFFER_CHOICE",
+        "ACTION_GIVE_GENERAL_ENCOURAGEMENT",
+        "ACTION_GIVE_SPECIFIC_PRAISE",
+        "ACTION_ADDRESS_FRUSTRATION",
+        "ACTION_SUGGEST_SLOWER_PACE",
+        "ACTION_SUGGEST_BREAK",
+        "ACTION_SKIP_OPTIONAL_CONTENT"
+      ],
+      "disabledActions": [
+        {
+          "action": "ACTION_PROVIDE_WORKED_EXAMPLE",
+          "reasons": [
+            "capability_worked_example_disabled"
+          ]
+        },
+        {
+          "action": "ACTION_CALL_DYNAMIC_HINT",
+          "reasons": [
+            "capability_dynamic_hint_disabled"
+          ]
+        },
+        {
+          "action": "ACTION_SKIP_OPTIONAL_CONTENT",
+          "reasons": [
+            "capability_skip_disabled"
+          ]
+        }
+      ],
+      "consideredActions": [
+        {
+          "action": "ACTION_CONTINUE_STANDARD",
+          "score": 0.30460624999999997,
+          "rationale": "No stronger adaptive action qualified; continuing standard instruction."
+        },
+        {
+          "action": "ACTION_OFFER_CHOICE",
+          "score": 0.87935,
+          "rationale": "Choice opportunity detected from engagement and re-engagement cues."
+        },
+        {
+          "action": "ACTION_GIVE_HINT",
+          "score": 0.1424,
+          "rationale": "Support need detected; lightweight hint is appropriate."
+        },
+        {
+          "action": "ACTION_GIVE_SCAFFOLD",
+          "score": 0.1424,
+          "rationale": "Support need and confusion indicate scaffolded support."
+        },
+        {
+          "action": "ACTION_GIVE_BOTTOM_OUT",
+          "score": 0.16077142857142857,
+          "rationale": "Severe difficulty suggests bottom-out support."
+        },
+        {
+          "action": "ACTION_REQUEST_CHECKIN",
+          "score": 0.2858,
+          "rationale": "A check-in is appropriate to clarify understanding and current state."
+        },
+        {
+          "action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "score": 0.4725,
+          "rationale": "Reframing can vary structure and reduce monotony."
+        },
+        {
+          "action": "ACTION_GIVE_GENERAL_ENCOURAGEMENT",
+          "score": 0.30342500000000006,
+          "rationale": "Affective support is appropriate to sustain effort."
+        },
+        {
+          "action": "ACTION_GIVE_SPECIFIC_PRAISE",
+          "score": 1,
+          "rationale": "Progress and engagement justify specific praise."
+        },
+        {
+          "action": "ACTION_ADDRESS_FRUSTRATION",
+          "score": 0,
+          "rationale": "Frustration cues indicate the need for empathetic support."
+        },
+        {
+          "action": "ACTION_SUGGEST_SLOWER_PACE",
+          "score": 0.46577142857142856,
+          "rationale": "Pacing pressure suggests slowing down the interaction."
+        },
+        {
+          "action": "ACTION_SUGGEST_BREAK",
+          "score": 0.1896,
+          "rationale": "Disengagement and affect cues suggest a break."
+        }
+      ]
+    },
+    "visible_history_turns": 7,
+    "explanation": "Teacher message validation failed: Message omitted active problem material",
+    "renderer_diagnostics": {
+      "phase": "teacher_message_validation",
+      "status": "terminated",
+      "run_id": "run-state_aware-batch-state_aware-seed-21-state_aware-seed-21-r1-run-4-21",
+      "turn_number": 8,
+      "condition_id": "state_aware",
+      "selected_tutor_action": "ACTION_REFRAME_PROMPT_VARIANT",
+      "lesson_step": {
+        "problem_id": "problem_07_addition_fraction_solve_x",
+        "step_id": "problem_07_addition_fraction_solve_x_step_01",
+        "step_title": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed."
+      },
+      "tutor_turn_plan_summary": {
+        "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+        "modifier_action": null,
+        "feedback_type": "none",
+        "expects_student_response": true,
+        "must_include_current_problem": true,
+        "active_problem_material_available": true
+      },
+      "prompt_input_summary": {
+        "visible_history_turns": 7,
+        "current_step_keys": [
+          "answer_type",
+          "choices",
+          "problem_id",
+          "step_body",
+          "step_id",
+          "step_title"
+        ],
+        "required_content_keys": [
+          "bottom_out",
+          "current_problem_material",
+          "current_step_body",
+          "response_instruction",
+          "selected_hint",
+          "worked_example"
+        ]
+      },
+      "parsed_llm_output_keys": [
+        "teacher_message"
+      ],
+      "adapter_metadata": {
+        "adapter_id": "teacher_message_llm",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "generation_mode": "openai_responses_json_schema",
+        "used_fallback": false,
+        "raw_output_type": "string",
+        "generation_task": "teacher_message_generation",
+        "condition_id": "state_aware",
+        "teacher_action": "ACTION_REFRAME_PROMPT_VARIANT",
+        "tutor_turn_plan": {
+          "protocol": "tutor_turn_plan_v1",
+          "selected_policy_action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "instructional_action": "ACTION_REFRAME_PROMPT_VARIANT",
+          "modifier_action": null,
+          "feedback": {
+            "type": "none",
+            "grounding": "none",
+            "required": false
+          },
+          "previous_step_id": "problem_06_substitution_solve_y_step_01",
+          "current_step": {
+            "problem_id": "problem_07_addition_fraction_solve_x",
+            "step_id": "problem_07_addition_fraction_solve_x_step_01",
+            "step_title": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed.",
+            "step_body": "",
+            "choices": [],
+            "answer_type": "arithmetic"
+          },
+          "current_step_id": "problem_07_addition_fraction_solve_x_step_01",
+          "step_advanced": true,
+          "expects_student_response": true,
+          "must_include_current_problem": true,
+          "must_ask_for_response": true,
+          "brevity": {
+            "max_sentences": 3,
+            "avoid_exaggerated_praise": true
+          },
+          "required_content": {
+            "current_problem_material": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed.",
+            "current_step_body": "",
+            "selected_hint": null,
+            "worked_example": null,
+            "bottom_out": null,
+            "response_instruction": "What is your answer?"
+          },
+          "constraints": [
+            "Use only the required content and visible history.",
+            "If feedback is included, ground it only in the previous step, previous student response, and validation.",
+            "Do not praise current-step work before the student attempts the current step.",
+            "Do not include hints, scaffold text, bottom-out answers, choices, or break suggestions unless the selected action/plan includes them.",
+            "Keep the message brief and avoid repeated or exaggerated praise."
+          ],
+          "message_skeleton": "Solve the given system of equations by addition. $$2x+3y=7$$, $$4x-3y=1$$. Calculate the $$x$$ value of the solution. Please simplify too, if needed. What is your answer?"
+        }
+      },
+      "validation": {
+        "valid": false,
+        "reason": "Message omitted active problem material",
+        "expected_active_problem_material": "Solve the given system of equations by addition. 2x+3y=7, 4x-3y=1. Calculate the x value of the solution. Please simplify too, if needed.",
+        "message_excerpt": "Now, solve this system using addition: 2x + 3y = 7 and 4x - 3y = 1. Find the value of x and simplify your answer if needed. What is your answer?"
+      },
+      "timestamp": "2026-06-29T15:54:33.940Z"
+    },
+    "timestamp": "2026-06-29T15:54:33.940Z"
+  }
+}
